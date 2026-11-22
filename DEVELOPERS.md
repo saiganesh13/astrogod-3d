@@ -111,7 +111,8 @@ Always edit the files in `src/`, then rebuild. Do not edit `index.html` by hand;
 
 | To change… | Edit |
 |---|---|
-| Text in any language, button labels, banner copy | `src/i18n.js` (`EN` for English; `UI.hi`, `UI.ta`… for native scripts; `MIX` for the -English modes) |
+| Button labels, banner copy, any on-screen text | `src/i18n.js` (`EN`, plus `MIX_BASE` / `MIX` for the local astrology words; the UI is English in every mode) |
+| Names of planets, rasis, nakshatras in each script | `TERMS` in `src/i18n.js` (galaxy names: `OBJECT_KEYS` + `UI.hi`, `UI.ta`…) |
 | Graha / rasi / nakshatra / tithi names | `TERMS` in `src/i18n.js` |
 | Indian star names (yogataras, Saptarishi…) | `ALIAS` in `tools/makedata.js`, then regenerate `sky-data.js` (below) |
 | Banner links (currently all `https://astrogod.io`) | `src/page.html`, search for `astrogod.io` |
@@ -172,8 +173,10 @@ node build.js
 
 ## 6. Things to know
 
-- **Translations:** the Hindi, Tamil, Telugu, Malayalam and Kannada text was machine-written and should be
-  read by native speakers before a big launch. Every word is in `src/i18n.js`.
+- **Languages:** menus, buttons, labels, captions and messages are always English (the "-English" wording, which
+  keeps local astrology words such as Vakram). The language choice only changes the names of sky objects: grahas,
+  rasis, nakshatras, tithis, star names and a few named objects (`OBJECT_KEYS` in `pack()`, `src/i18n.js`). The
+  native-script names were machine-written and should be read by native speakers before a big launch.
 - **Rahu/Ketu** use the mean node. Some panchangams use the true node, which can differ by up to about 1.5°.
 - **Nakshatra yogataras:** the commonly used identifications are built in; a few (Hastham, Poosam,
   Ayilyam, Revathi) differ between traditions.

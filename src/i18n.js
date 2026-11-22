@@ -416,11 +416,17 @@ window.I18N = (function () {
     },
   };
 
+  const OBJECT_KEYS = ['milkyWay', 'andromeda', 'virgoCl', 'lmc', 'smc', 'asteroidBelt', 'kuiperBelt', 'sgrA', 'saptarishi', 'poleStar'];
   function pack(code) {
     if (!TERMS[code]) code = 'en';
     const mix = code.endsWith('-en');
-    const ui = Object.assign({}, EN, mix ? MIX_BASE : {}, mix ? MIX[code] : UI[code] || {});
-    return { code, ui, t: TERMS[code], star: STAR[code] || STAR_EN, locale: mix ? 'en-GB' : LOCALE[code.slice(0, 2)] || 'en-GB', mix, native: !mix && code !== 'en' };
+    const native = !mix && code !== 'en';
+    // Menus, buttons, labels and messages are always English (the -English wording, with local astrology words like Vakram).
+    // Only the names of sky objects follow the chosen script: grahas, rasis, nakshatras and stars come from TERMS/STAR,
+    // and these named objects from UI[code].
+    const ui = Object.assign({}, EN, code === 'en' ? {} : MIX_BASE, mix ? MIX[code] : MIX[code + '-en'] || {});
+    if (native) for (const k of OBJECT_KEYS) if (UI[code] && UI[code][k]) ui[k] = UI[code][k];
+    return { code, ui, t: TERMS[code], star: STAR[code] || STAR_EN, locale: 'en-GB', mix, native };
   }
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? v[k] : ''));
   return { LANGS, TERMS, STAR, pack, fill, codes: Object.keys(TERMS) };
