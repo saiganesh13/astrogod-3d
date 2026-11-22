@@ -390,6 +390,50 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
  }
 @media (max-width:340px){ .brand-wm{display:none} }
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+/* ---------- Refined panels and popups (AstroGod rhythm: quiet surfaces, hairlines, 12px controls) ---------- */
+:root{--pin:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z'/%3E%3C/svg%3E")}
+.sidebar{gap:18px}
+.side-sec{gap:12px}
+.side-sec h2,.sheet-head h2{font-size:16px;font-weight:600;letter-spacing:-.012em}
+.side-rule{background:linear-gradient(90deg,transparent,var(--line-2) 15%,var(--line-2) 85%,transparent)}
+.fgroup{display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line)}
+.field label{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--text-3)}
+input,select{height:44px;border-radius:12px;transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover{border-color:var(--accent-line)}
+input::placeholder{color:var(--text-3)}
+.row2{gap:8px}
+.fgroup input,.fgroup select{padding:0 11px}
+.fgroup input[type="time"]{padding:0 7px 0 10px;font-variant-numeric:tabular-nums}
+.fgroup .row2{grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr)}   /* the time box needs room for AM/PM and its clock icon */
+@media (min-width:1024px) and (max-width:1279px){ .fgroup{padding:0;background:none;border:0;border-radius:0} }   /* narrow sidebar: no inset card, so the fields keep their width */
+#placeInfo{position:relative;padding-left:19px;font-size:12px;line-height:1.5;color:var(--text-3)}
+#placeInfo::before{content:"";position:absolute;left:0;top:3px;width:12px;height:12px;background:var(--accent);-webkit-mask:var(--pin) center/contain no-repeat;mask:var(--pin) center/contain no-repeat}
+#placeInfo b{color:var(--text-2)}
+details summary{list-style:none;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--accent-ink)}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"";width:11px;height:11px;background:currentColor;-webkit-mask:var(--chev) center/contain no-repeat;mask:var(--chev) center/contain no-repeat;transform:rotate(-90deg);transition:transform .2s}
+details[open] summary::before{transform:none}
+#birth>.btn{width:100%}
+#birth>.btn.primary{min-height:46px;margin-top:2px}
+#btnNow{background:transparent;border:1px solid var(--line-2);color:var(--text)}
+#btnNow:hover{background:var(--surface-2);border-color:var(--accent-line);filter:none}
+.sub-h{margin:2px 0 -4px;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--text-3)}
+.togs{gap:7px}
+.tog{min-height:32px;padding:0 13px;font-size:12.5px}
+.ag-card{border-radius:16px;box-shadow:var(--card-shadow)}
+.promo{border-radius:18px;padding:16px}
+.xclose{width:34px;height:34px;background:var(--surface-2);border-color:var(--line)}
+#grahas{padding:14px 18px 18px;gap:16px}
+.summary{padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:8px 6px}
+td{padding:9px 6px}
+.legend{gap:7px;font-size:11.5px;color:var(--text-3)}
+#tip{padding:14px 16px;width:272px;border-radius:16px;line-height:1.5}
+#tip h3{font-size:17px;margin:0 0 6px}
+#tip p{margin:4px 0}
+#toast{border-radius:999px;padding:10px 18px;font-size:13px}
+#findList,#placeList{border-radius:14px;padding:6px}
 </style>
 
 <div id="app">
@@ -412,6 +456,7 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
       <div class="sheet-grab" aria-hidden="true"></div>
       <div class="sheet-head"><h2 data-i18n="birthDetails">Birth details</h2>
         <button class="xclose sheet-x" type="button" data-close="birth" data-i18n-aria="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="fgroup">
       <div class="field"><label for="fName" data-i18n="name">Name (optional)</label><input id="fName" placeholder="e.g. Karthik" data-i18n-ph="namePh"></div>
       <div class="row2">
         <div class="field"><label for="fDate" data-i18n="dob">Date of birth</label><input id="fDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="bday" required></div>
@@ -433,6 +478,7 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
           <div class="field"><label for="fTz" data-i18n="tz">Time zone</label><select id="fTz"></select></div>
         </div>
       </details>
+      </div>
       <button class="btn primary" type="submit" data-i18n="showBirth">Show my birth sky</button>
       <button class="btn" type="button" id="btnNow" data-i18n="showNow">Show the sky right now</button>
       <p class="hint" id="exampleNote"></p>
@@ -450,6 +496,7 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
       <div class="sheet-head"><h2 data-i18n="tabs.2">Display</h2>
         <button class="xclose sheet-x" type="button" data-close="view" data-i18n-aria="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <div class="field"><label for="langSel" data-i18n="lang">Language</label><select id="langSel"></select></div>
+      <p class="sub-h" data-i18n="showLbl">Show on the map</p>
       <div class="togs only-sky">
         <button class="tog" type="button" data-opt="lines" aria-pressed="true" data-i18n="tog.lines">Constellations</button>
         <button class="tog" type="button" data-opt="labels" aria-pressed="true" data-i18n="tog.labels">Labels</button>
