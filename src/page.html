@@ -128,10 +128,24 @@ svg{flex:none}
 .only-space{display:none!important}
 #app.mode-space .only-space{display:inline-flex!important}
 #app.mode-space .only-sky{display:none!important}
+#app.mode-aether #space3d{display:block}
+#app.mode-aether #gl{visibility:hidden}
+.only-aether{display:none!important}
+#app.mode-aether .only-aether{display:inline-flex!important}
+#app.mode-aether .only-sky{display:none!important}
+#viewSeg .sh{display:none}
+.journey{display:inline-flex;align-items:center;gap:7px;height:38px;flex:none;padding:0 16px 0 13px;border:0;border-radius:999px;background:var(--gold-grad);color:var(--gold-ink);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.journey:hover{filter:brightness(1.06)}
+.journey .ic-pause{display:none}
+.journey[aria-pressed="true"] .ic-play{display:none}
+.journey[aria-pressed="true"] .ic-pause{display:block}
 #zoombar .seg{min-width:0}
 #zoombar .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .phone-only{display:none}
-@media (max-width:1023px){ #app.mode-space #zOut,#app.mode-space #zIn{display:none} #app.mode-space #zoombar #sizeSeg{display:none!important} .phone-only{display:inline-flex}
+@media (max-width:1023px){ #app.mode-space #zOut,#app.mode-space #zIn,#app.mode-aether #zOut,#app.mode-aether #zIn{display:none}
+  #viewSeg .lg{display:none} #viewSeg .sh{display:inline}
+  #zoombar #speedSeg{flex:1 1 0;min-width:0} #zoombar #speedSeg button{flex:1;padding:0 4px;font-size:12px}
+  .journey{padding:0 14px 0 11px} #app.mode-space #zoombar #sizeSeg{display:none!important} .phone-only{display:inline-flex}
   #zoombar{flex-wrap:wrap;border-radius:24px;row-gap:6px}
   #zoombar #viewSeg{order:-2;flex:1 1 100%} #zoombar #viewSeg button{flex:1;padding:0 6px;font-size:12.5px}
   #zoombar .find{flex:1 1 160px}
@@ -191,6 +205,7 @@ svg{flex:none}
 #timebar .promo{display:none}
 @media (min-width:1024px){ #birth .promo{display:none} }   /* desktop: Display settings come right after the birth form */
 #app.mode-space .togs.only-space{display:flex!important}
+#app.mode-aether .togs.only-aether{display:flex!important}
 .ag-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:8px 16px;border-radius:12px;background:var(--cta-bg);color:var(--cta-ink);font-size:13.5px;font-weight:600;text-decoration:none;text-align:center}
 .ag-btn:hover{filter:brightness(1.07)}
 
@@ -448,6 +463,11 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
         <button class="tog" type="button" data-sopt="stars" aria-pressed="true" data-i18n="sopt.stars">Stars</button>
         <button class="tog" type="button" data-sopt="mw" aria-pressed="true" data-i18n="tog.mw">Milky Way</button>
       </div>
+      <div class="togs only-aether">
+        <button class="tog" type="button" data-sopt="names" aria-pressed="true" data-i18n="aLabels">Names</button>
+        <button class="tog" type="button" data-sopt="orbits" aria-pressed="true" data-i18n="sopt.orbits">Orbits</button>
+        <button class="tog" type="button" data-sopt="mw" aria-pressed="true" data-i18n="tog.mw">Milky Way</button>
+      </div>
       <aside class="promo" data-i18n-aria="joinTitle" aria-label="AstroGod">
         <span class="pr-coin pr-logo" aria-hidden="true"><img src="%%LOGO_FIGURE%%" alt="" width="21" height="28"></span>
         <div class="pr-text"><p class="pr-k" data-i18n="joinKicker">ASTROGOD</p><h3 data-i18n="joinTitle"></h3><p data-i18n="joinText"></p></div>
@@ -475,7 +495,10 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
 
     <div id="zoombar" class="card" role="toolbar" aria-label="Find and zoom">
       <button class="zb reopen" type="button" id="openBirth" data-open="birth" data-i18n-aria="birthDetails" aria-label="Birth details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <div class="seg" id="viewSeg" role="group" aria-label="From Earth or from space"><button type="button" data-view="sky" aria-pressed="true" data-i18n="fromEarth">From Earth</button><button type="button" data-view="space" aria-pressed="false" data-i18n="fromSpace">From Space</button></div>
+      <div class="seg" id="viewSeg" role="group" aria-label="From Earth, from space or from the aether"><button type="button" data-view="sky" aria-pressed="true"><span class="lg" data-i18n="fromEarth">From Earth</span><span class="sh" data-i18n="vEarth">Earth</span></button><button type="button" data-view="space" aria-pressed="false"><span class="lg" data-i18n="fromSpace">From Space</span><span class="sh" data-i18n="vSpace">Space</span></button><button type="button" data-view="aether" aria-pressed="false"><span class="lg" data-i18n="fromAether">From Aether</span><span class="sh" data-i18n="vAether">Aether</span></button></div>
+      <button class="journey only-aether" type="button" id="aJourney" aria-pressed="false"><svg class="ic-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg><svg class="ic-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4.5h4.2v15H6zM13.8 4.5H18v15h-4.2z"/></svg><span data-i18n="journey">Journey</span></button>
+      <div class="seg only-aether" id="speedSeg" role="group" data-i18n-aria="speed" aria-label="Travel speed"><button type="button" data-speed="slow" aria-pressed="false" data-i18n="slow">Slow</button><button type="button" data-speed="normal" aria-pressed="true" data-i18n="normal">Normal</button><button type="button" data-speed="fast" aria-pressed="false" data-i18n="fast">Fast</button></div>
+      <button class="zb only-aether" type="button" id="aetherHome" data-i18n-aria="home" aria-label="Back to Earth" title="Back to Earth"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></svg></button>
       <div class="seg only-space" id="sizeSeg" role="group" aria-label="Planet size"><button type="button" data-size="big" aria-pressed="true" data-i18n="bigSize">Enlarged</button><button type="button" data-size="real" aria-pressed="false" data-i18n="realSize">Real size</button></div>
       <button class="zb only-space" type="button" id="spaceHome" data-i18n-aria="home" aria-label="Back to Earth" title="Back to Earth"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></svg></button>
       <div class="find only-sky">

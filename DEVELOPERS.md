@@ -143,11 +143,19 @@ node build.js
 - **Sky features:** 5,044 stars to magnitude 6, all 88 constellations (the 12 zodiac figures in gold),
   the 12 rasi signs as dashed 30° boxes, Milky Way, daylight/twilight sky, see-through or no ground,
   and the sky turning to night when zoomed in.
-- **Earth / Open views:** "Earth" is the sky seen from the birth place. "Open" (`buildSpace()` /
+- **From Earth / From Space views:** "From Earth" is the sky seen from the birth place. "From Space" (`buildSpace()` /
   `updateSpace()` in `app.js`) is a free-flying 3D solar system at the same moment: true heliocentric
   positions in the J2000 ecliptic frame (1 unit = 1 AU), dashed orbits, IAU rotation axes, Earth/planet
   surface maps, a second WebGL renderer with a logarithmic depth buffer, and an "Enlarged / Real size"
   switch (enlarged = planets ×600, Sun ×20, Moon distance ×60; distances otherwise true).
+- **From Aether view** (`buildAether()` / `aetherRender()` in `app.js`): a log-scale journey out from Earth
+  to the dark void and back, on the same renderer as "From Space". `aeth.lD` is log10 of the viewing distance
+  in light-years (Earth close-up ≈ −5.4, the void = 10.3). Each frame draws three passes so every scale keeps
+  precision: galaxies and the cosmic web (unit 1 million ly), catalogue stars at estimated 3D distances, the
+  Oort cloud and a particle Milky Way (unit 1 ly), then the solar system scene (unit 1 AU) while it is close.
+  Galaxy positions for the named ones are real (RA/Dec/distance); the Virgo Cluster, local volume, dwarfs and
+  cosmic web are a fixed-seed illustration. Galaxies are deliberately flat pictures with no inner detail.
+  The Journey button plays out and back at Slow / Normal / Fast; tapping a named galaxy flies to it.
 - **Layouts:** desktop (1024 px and wider) has a sidebar; phones and tablets get a top bar, bottom tabs and
   bottom sheets (swipe down or tap the sky to close).
 

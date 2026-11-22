@@ -465,7 +465,7 @@
     fadeGlows();
     applyOptions(false);
     renderPanel();
-    if (S.view === 'space') updateSpace();
+    if (S.view !== 'sky') updateSpace();
     needsRender = true;
   }
 
@@ -560,7 +560,7 @@
   $('ptable').addEventListener('click', e => {
     const tr = e.target.closest('tr'); if (!tr) return;
     if (isPhone()) setSheet('');   // phones: put the Planets sheet away so the fly-to is visible
-    if (S.view === 'space') { const id = tr.dataset.id; if (SP && SP.bodies[id]) { S.sel = id; renderPanel(); focusSpace(id); showTipFor(id, true); } return; }
+    if (S.view !== 'sky') { const id = tr.dataset.id; if (S.view === 'aether') setView('space'); if (SP && SP.bodies[id]) { S.sel = id; renderPanel(); focusSpace(id); showTipFor(id, true); } return; }
     flyTo(tr.dataset.id);
   });
 
@@ -631,8 +631,8 @@
     if (f === zoomAnim.target) zoomAnim = null;
   }
   const zoomTarget = () => zoomAnim ? zoomAnim.target : S.fov;
-  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.3) : zoomTo(zoomTarget() / 2.5));
-  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(3.3) : zoomTo(zoomTarget() * 2.5));
+  $('zIn').addEventListener('click', () => S.view === 'aether' ? aetherZoom(-1) : S.view === 'space' ? spaceZoom(0.3) : zoomTo(zoomTarget() / 2.5));
+  $('zOut').addEventListener('click', () => S.view === 'aether' ? aetherZoom(1) : S.view === 'space' ? spaceZoom(3.3) : zoomTo(zoomTarget() * 2.5));
   $('zFit').addEventListener('click', () => zoomTo(isPhone() ? 95 : 78));
   let fly = null;
   function worldOf(id) {
@@ -1550,13 +1550,14 @@
     const zoomDirect = f => { if (!SP) return; ctl.zoomT = null; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
     spaceCanvas.addEventListener('contextmenu', e => e.preventDefault());
     spaceCanvas.addEventListener('pointerdown', e => {
+      if (S.view === 'aether') return;
       closeSheet();
       try { spaceCanvas.setPointerCapture(e.pointerId); } catch (err) { }
       ptr.set(e.pointerId, lxy(e)); moved = 0; pan = e.button === 2 || e.shiftKey; ctl.anim = null;
       if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; }
     });
     spaceCanvas.addEventListener('pointermove', e => {
-      if (!SP) return;
+      if (!SP || S.view === 'aether') return;
       const prev = ptr.get(e.pointerId), cur = lxy(e);
       if (!prev) {
         if (e.pointerType === 'mouse' && !tipPinned) { const id = pickSpace(...cur); spaceCanvas.style.cursor = id ? 'pointer' : ''; if (id !== tipFor) showTipFor(id, false); }
@@ -1587,6 +1588,7 @@
     // wheel: one notch ≈ ×1.6, and it speeds up (to ≈ ×4 a notch) while you keep scrolling
     let lastWheel = 0, streak = 0;
     spaceCanvas.addEventListener('wheel', e => {
+      if (S.view === 'aether') return;
       e.preventDefault(); ctl.anim = null;
       const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
       const now = performance.now();
@@ -1610,7 +1612,8 @@
     SP.scn.getObjectByName('stars').visible = S.sp.stars;
     SP.scn.getObjectByName('milkyway').visible = S.sp.mw;
     SP.scn.getObjectByName('zodiac').visible = S.sp.zodiac;
-    SP.scn.getObjectByName('spokes').visible = S.sp.rasi;
+    SP.scn.getObjectByName('spokes').visible = S.sp.rasi && S.view === 'space';
+    SP.back.visible = S.view !== 'aether';
     SP.orbits.visible = SP.moonOrbit.visible = S.sp.orbits;
     needsRender = true;
   }
@@ -1619,14 +1622,19 @@
     applySpaceOpts();
   }));
   function setView(view) {
+    const prev = S.view;
     S.view = view;
     appEl.classList.toggle('mode-space', view === 'space');
+    appEl.classList.toggle('mode-aether', view === 'aether');
     document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
     showTipFor(null); S.sel = null; renderPanel();
-    if (view === 'space') {
+    if (prev === 'aether' && view !== 'aether') leaveAether();
+    if (view !== 'sky') {
       const first = !SP;
       if (first) SP = buildSpace();
-      resize(); updateSpace(); if (first) startView(); applySpaceOpts();
+      resize(); updateSpace(); if (first) startView();
+      if (view === 'aether' && prev !== 'aether') enterAether();
+      applySpaceOpts();
     }
     needsRender = true;
   }
@@ -1641,6 +1649,516 @@
   document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
   document.querySelectorAll('#sizeSeg button').forEach(b => b.addEventListener('click', () => setBig(b.dataset.size === 'big')));
   $('spaceHome').addEventListener('click', () => { if (SP) focusSpace('Earth'); });
+
+
+  // ---------- From Aether: out from Earth, past the stars and galaxies, into the dark void ----------
+  // One camera path on a log scale (aeth.lD = log10 of the viewing distance in light-years), drawn in
+  // three passes so every scale keeps precision: galaxies (unit 1 million ly), stars and the Milky Way
+  // (unit 1 ly), then the solar system scene itself (unit 1 AU) while it is still close.
+  const LY_AU = 63241.077, AETH_MAX = 10.3;
+  const AETH_SPEED = { slow: 0.45, normal: 0.95, fast: 2.0, home: 4.0 };   // decades of distance per second
+  const aeth = { lD: 0, lD0: 0, lDT: null, rate: 9, yaw: 0, pitch: 0.32, playing: false, dir: 1, hold: 0, speed: 'normal', rush: false, lastT: 0, userAt: 0, focus: null, focusOn: false, fk: 0, cap: '', capT: 0 };
+  let AET = null, posAether = [], aetherZoom = () => { };
+  const sstep = (x, a, b) => { const t = clampV((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const rng = seed => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const gauss = r => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
+  const radec3 = (ra, dec) => toScene(C.radecVec(ra, dec)).normalize();
+  const easeIO = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  // Out here everything is added light, so the shaders skip depth (z = 0) and only clip what is behind you.
+  const AET_K = { value: 800 }, AET_MAXPX = { value: 80 };
+  const CPTS_VS = `attribute vec3 color; attribute float size; uniform float uK; uniform float uVis; uniform float uMaxPx; varying vec3 vC; varying float vA;
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); float d=length(mv.xyz); float px=size*uK/max(d,1e-12);
+      float a=uVis*smoothstep(0.5*size,2.5*size,d);
+      if(px<1.5){ a*=px*px/2.25; px=1.5; }
+      if(px>uMaxPx){ a*=pow(uMaxPx/px,2.0); px=uMaxPx; }
+      vC=color; vA=a; gl_Position=projectionMatrix*mv; gl_Position.z=0.0; gl_PointSize=a<0.002?0.0:px; }`;
+  const CPTS_FS = `varying vec3 vC; varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; gl_FragColor=vec4(vC*exp(-r*r*4.5)*vA,1.0); }`;
+  const addMat = o => new THREE.ShaderMaterial(Object.assign({ transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }, o));
+  const cptsMat = () => addMat({ uniforms: { uK: AET_K, uMaxPx: AET_MAXPX, uVis: { value: 1 } }, vertexShader: CPTS_VS, fragmentShader: CPTS_FS });
+  // stars at their (estimated) distances: brightness follows from absolute magnitude and how far you are
+  const STAR3_VS = `attribute vec3 color; attribute float absMag; uniform float uScale; uniform float uVis; varying vec3 vC;
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); float d=max(length(mv.xyz),1e-12);
+      float m=absMag+2.1714724*log(d/32.6156);
+      float k=clamp(0.32+(6.0-m)*0.14,0.0,1.0)*clamp((8.6-m)/2.6,0.0,1.0)*uVis;
+      vC=color*k; gl_Position=projectionMatrix*mv; gl_Position.z=0.0; gl_PointSize=k<0.004?0.0:clamp((6.9-m)*1.4,1.5,13.0)*uScale; }`;
+  const STAR3_FS = `varying vec3 vC; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; float a=exp(-r*r*6.0)+0.7*exp(-r*r*40.0); gl_FragColor=vec4(vC*a,1.0); }`;
+  // a galaxy seen as a flat picture (no detail inside; it fades away if you get too close)
+  const GAL_VS = `uniform float uVis; uniform float uSize; varying vec2 vUv; varying float vA;
+    void main(){ vUv=uv; float d=length((modelViewMatrix*vec4(0.0,0.0,0.0,1.0)).xyz); vA=uVis*smoothstep(0.45*uSize,1.3*uSize,d);
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_Position.z=0.0; }`;
+  const GAL_FS = `uniform sampler2D map; uniform vec3 uCol; varying vec2 vUv; varying float vA; void main(){ gl_FragColor=vec4(texture2D(map,vUv).rgb*uCol*vA,1.0); }`;
+
+  function galaxyTex(kind, seed) {
+    const N = 256, c = N / 2, cv = document.createElement('canvas'); cv.width = cv.height = N;
+    const g = cv.getContext('2d'), r = rng(seed);
+    g.fillStyle = '#000'; g.fillRect(0, 0, N, N); g.globalCompositeOperation = 'lighter';
+    const blob = (x, y, rad, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.fillRect(x - rad, y - rad, 2 * rad, 2 * rad); };
+    if (kind === 'spiral') {
+      blob(c, c, N * 0.47, '120,135,185', 0.3);
+      for (let i = 0; i < 2400; i++) {
+        const rad = 7 + Math.pow(r(), 0.85) * 108, th = (i % 2) * Math.PI + Math.log(rad / 7) / 0.36 + gauss(r) * 0.2;
+        const pink = r() < 0.07;
+        blob(c + Math.cos(th) * rad, c + Math.sin(th) * rad, 2 + r() * 5, pink ? '255,130,165' : '170,190,255', pink ? 0.45 : 0.2);
+      }
+      blob(c, c, 34, '255,222,165', 0.85); blob(c, c, 11, '255,242,215', 1);
+    } else if (kind === 'irregular') {
+      blob(c, c, N * 0.4, '170,170,190', 0.22);
+      for (let i = 0; i < 700; i++) { const x = c + gauss(r) * 30, y = c + gauss(r) * 17; const pink = r() < 0.1; blob(x, y, 3 + r() * 9, pink ? '255,140,170' : '185,200,255', pink ? 0.35 : 0.16); }
+    } else {   // 'disc': soft unresolved light of a whole galaxy, bright bulge
+      const gr = g.createRadialGradient(c, c, 0, c, c, c);
+      gr.addColorStop(0, 'rgba(255,236,200,1)'); gr.addColorStop(0.08, 'rgba(250,220,180,0.7)'); gr.addColorStop(0.3, 'rgba(170,175,210,0.25)'); gr.addColorStop(0.7, 'rgba(120,130,180,0.07)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, N, N);
+    }
+    return new THREE.CanvasTexture(cv);
+  }
+
+  const KNOWN_LY = { 'Rigil Kentaurus': 4.37, Toliman: 4.37, Sirius: 8.6, Procyon: 11.5, Altair: 16.7, Vega: 25, Fomalhaut: 25, Pollux: 34, Arcturus: 36.7, Capella: 42.9, Castor: 51, Aldebaran: 65, Regulus: 79,
+    Achernar: 139, Spica: 250, Canopus: 310, Polaris: 433, Betelgeuse: 548, Antares: 550, Rigel: 863, Deneb: 2615, Hadar: 390, Acrux: 320, Mimosa: 280 };
+  // [label key, RA°, Dec°, distance (million ly), diameter (million ly), kind, position angle°, inclination°]
+  const GALAXIES = [
+    ['andromeda', 10.6847, 41.2690, 2.54, 0.22, 'spiral', 38, 77], ['Triangulum', 23.4621, 30.6599, 2.73, 0.061, 'spiral', 23, 54],
+    ['lmc', 80.8942, -69.7561, 0.163, 0.032, 'irregular', 170, 35], ['smc', 13.1866, -72.8286, 0.20, 0.019, 'irregular', 45, 60],
+    ["Bode's Galaxy", 148.888, 69.065, 11.8, 0.09, 'spiral', 157, 59], ['Cigar Galaxy', 148.968, 69.680, 12, 0.037, 'irregular', 65, 80],
+    ['Centaurus A', 201.365, -43.019, 12, 0.06, 'elliptical'], ['Sombrero', 189.998, -11.623, 31.1, 0.05, 'spiral', 90, 84],
+    ['Whirlpool', 202.47, 47.195, 23, 0.076, 'spiral', 163, 20], ['Pinwheel', 210.802, 54.349, 21, 0.17, 'spiral', 39, 18],
+    ['M87', 187.706, 12.391, 53.5, 0.12, 'elliptical'],
+  ];
+  const galName = k => L.ui[k] || k;
+
+  function buildAether() {
+    const ly = new THREE.Scene(), mly = new THREE.Scene();
+    const camL = new THREE.PerspectiveCamera(55, W / H, 1e-9, 1e12), camM = new THREE.PerspectiveCamera(55, W / H, 1e-12, 1e9);
+    const nG = toScene(gnp).normalize(), cG = toScene(gc).normalize(), GC = cG.clone().multiplyScalar(26000);
+    const e1 = GC.clone().negate().addScaledVector(nG, GC.dot(nG)).normalize(), e2 = new THREE.Vector3().crossVectors(nG, e1);
+    const inDisc = (R, th, z) => GC.clone().addScaledVector(e1, R * Math.cos(th)).addScaledVector(e2, R * Math.sin(th)).addScaledVector(nG, z);
+    const cloud = () => ({ pos: [], col: [], size: [], add(p, c, s) { this.pos.push(p.x, p.y, p.z); this.col.push(c[0], c[1], c[2]); this.size.push(s); } });
+    const mkPoints = (cl, scn, name) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cl.pos), 3)); g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(cl.col), 3)); g.setAttribute('size', new THREE.BufferAttribute(new Float32Array(cl.size), 1));
+      const p = new THREE.Points(g, cptsMat()); p.frustumCulled = false; p.name = name; scn.add(p); return p;
+    };
+    const plane = new THREE.PlaneGeometry(1, 1);
+    const tex = { spiral: galaxyTex('spiral', 3), irregular: galaxyTex('irregular', 5), disc: galaxyTex('disc', 1) };
+    const mkPlane = (scn, kind, pos, diam, a, n, col) => {
+      const m = addMat({ uniforms: { map: { value: tex[kind] }, uCol: { value: new THREE.Vector3(...col) }, uVis: { value: 1 }, uSize: { value: diam } }, vertexShader: GAL_VS, fragmentShader: GAL_FS, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(plane, m); mesh.frustumCulled = false;
+      mesh.position.copy(pos); mesh.scale.setScalar(diam);
+      mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(a, new THREE.Vector3().crossVectors(n, a), n));
+      scn.add(mesh); return mesh;
+    };
+    const A = { ly, mly, camL, camM, GC, nG, named: [], labels: [], lg: [], far: [], halos: [] };
+    // a soft glowing core, so a galaxy still reads as a galaxy when you see it edge-on
+    const mkHalo = (pos, diam, group) => { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffe2b8, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending })); h.position.copy(pos); h.scale.setScalar(diam * 0.45); h.frustumCulled = false; h.userData.group = group; mly.add(h); A.halos.push(h); };
+    A.qGal = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nG);
+
+    {   // the catalogue stars in 3D
+      const r = rng(7), pos = new Float32Array(NS * 3), col = new Float32Array(NS * 3), am = new Float32Array(NS);
+      for (let i = 0; i < NS; i++) {
+        const m = D.stars[i * 4 + 2], bv = D.stars[i * 4 + 3], nm = SINFO[i][0];
+        let dly = KNOWN_LY[nm];
+        if (!dly) {   // estimated from colour: hot blue stars and red giants are bright, so they are farther
+          const b = isFinite(bv) ? bv : 0.6;
+          const M = (b < 0 ? -1.6 : b < 0.3 ? 0.9 : b < 0.6 ? 2.6 : b < 0.9 ? 1.9 : 0.4) + (r() - 0.5) * 1.4;
+          dly = clampV(3.26156 * Math.pow(10, (m - M + 5) / 5), 6, 4000);
+        }
+        const p = toScene([starDir[i * 3], starDir[i * 3 + 1], starDir[i * 3 + 2]]).multiplyScalar(dly);
+        pos.set([p.x, p.y, p.z], i * 3); col.set(bvColor(bv), i * 3); am[i] = m - 5 * Math.log10(dly / 32.6156);
+        if (KNOWN_LY[nm]) A.named.push({ i, p, absMag: am[i] });
+      }
+      const mk = (P, Cc, M, name) => {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('absMag', new THREE.BufferAttribute(M, 1));
+        const pts = new THREE.Points(g, addMat({ uniforms: { uScale: { value: dpr }, uVis: { value: 1 } }, vertexShader: STAR3_VS, fragmentShader: STAR3_FS }));
+        pts.frustumCulled = false; pts.name = name; ly.add(pts); return pts;
+      };
+      A.stars = mk(pos, col, am, 'stars3d');
+      A.sunPt = mk(new Float32Array(3), new Float32Array(bvColor(0.65)), new Float32Array([4.83]), 'sun');
+    }
+    {   // the Oort cloud: a faint shell of icy bodies far beyond the planets
+      const c = cloud(), r = rng(11);
+      for (let i = 0; i < 4000; i++) {
+        const d = new THREE.Vector3(gauss(r), gauss(r), gauss(r)).normalize(), k = 0.3 + 0.35 * r();
+        c.add(d.multiplyScalar(0.03 * Math.pow(55, r())), [0.6 * k, 0.72 * k, 0.95 * k], 0.0004 + 0.0005 * r());
+      }
+      A.oort = mkPoints(c, ly, 'oort');
+    }
+    {   // the Milky Way: bar and bulge, four trailing arms, a thin disc; the Sun sits between two arms
+      const c = cloud(), r = rng(21), pitch = 13 * DEG, th0 = 0.15 - Math.log(26000 / 4000) / Math.tan(pitch), K = 0.07;
+      const barA = 27 * DEG, bar = e1.clone().multiplyScalar(Math.cos(barA)).addScaledVector(e2, Math.sin(barA)), barP = new THREE.Vector3().crossVectors(nG, bar);
+      const N = isPhone() ? 45000 : 70000;
+      for (let i = 0; i < N; i++) {
+        const u = r();
+        if (u < 0.16) {
+          const p = GC.clone().addScaledVector(bar, gauss(r) * 5200).addScaledVector(barP, gauss(r) * 1900).addScaledVector(nG, gauss(r) * 1400), k = K * 0.32 * (0.6 + 0.6 * r());
+          c.add(p, [1.0 * k, 0.8 * k, 0.55 * k], 700 + 600 * r());
+        } else if (u < 0.86) {
+          let R = 3500 + (-Math.log(1 - r() * 0.985)) * 9500; if (R > 52000) R = 3500 + r() * 48000;
+          const th = th0 + (i % 4) * Math.PI / 2 + Math.log(R / 4000) / Math.tan(pitch) + gauss(r) * 0.12;
+          const p = inDisc(R + gauss(r) * (500 + R * 0.025), th, gauss(r) * (250 + 0.004 * R));
+          const q = r(), k = K * (q < 0.06 ? 1.5 : 0.7 + 0.5 * r()), cc = q < 0.06 ? [1.0, 0.45, 0.6] : q < 0.6 ? [0.62, 0.74, 1.0] : [0.95, 0.9, 0.8];
+          c.add(p, cc.map(x => x * k), 300 + 500 * r());
+        } else {
+          const R = -Math.log(1 - r() * 0.99) * 11000, k = K * 0.55;
+          c.add(inDisc(R, r() * 2 * Math.PI, gauss(r) * 600), [0.9 * k, 0.85 * k, 0.75 * k], 900 + 900 * r());
+        }
+      }
+      A.mw = mkPoints(c, ly, 'mwStars');
+      A.mwDisc = mkPlane(ly, 'disc', GC, 115000, e1, nG, [0.75, 0.72, 0.7]);
+      A.mwFar = mkPlane(mly, 'spiral', GC.clone().multiplyScalar(1e-6), 0.1, e1, nG, [1.35, 1.35, 1.35]);
+      mkHalo(GC.clone().multiplyScalar(1e-6), 0.1, 'mw');   // the Milky Way as a whole, from far away
+    }
+    {   // the band of the Milky Way across the sky, while you are still inside it
+      const m = addMat({
+        uniforms: { uGnp: { value: nG.clone() }, uGc: { value: cG.clone() }, uVis: { value: 1.35 } },
+        vertexShader: 'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_Position.z=0.0; }',
+        fragmentShader: mwMat.fragmentShader, side: THREE.BackSide,
+      });
+      A.band = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), m); A.band.frustumCulled = false; ly.add(A.band);
+    }
+    {   // named galaxies, Local Group dwarfs, the Virgo Cluster and the galaxies of our local volume
+      const near = cloud();
+      for (const [key, ra, dec, dist, diam, kind, pa, inc] of GALAXIES) {
+        const lE = new THREE.Vector3(...C.radecVec(ra, dec)), pos = toScene(V3(lE)).multiplyScalar(dist);
+        const lg = dist < 5;
+        if (kind === 'elliptical') near.add(pos, [0.95, 0.82, 0.62].map(x => x * 0.85), diam * 0.75);
+        else {
+          const east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 0, 1), lE).normalize(), north = new THREE.Vector3().crossVectors(lE, east);
+          const a = north.clone().multiplyScalar(Math.cos(pa * DEG)).addScaledVector(east, Math.sin(pa * DEG)), mm = new THREE.Vector3().crossVectors(lE, a);
+          const n = lE.clone().multiplyScalar(Math.cos(inc * DEG)).addScaledVector(mm, Math.sin(inc * DEG));
+          const mesh = mkPlane(mly, kind, pos, diam, toScene(V3(a)).normalize(), toScene(V3(n)).normalize(), kind === 'spiral' ? [1.35, 1.35, 1.35] : [1.1, 1.1, 1.15]);
+          (lg ? A.lg : A.far).push(mesh); mkHalo(pos, diam, lg ? 'lg' : 'far');
+          near.add(pos, [0.5, 0.48, 0.45], diam * 0.3);
+        }
+        A.labels.push({ key, pos, diamLy: diam * 1e6, posLy: pos.clone().multiplyScalar(1e6),
+          vis: key === 'lmc' || key === 'smc' ? lD => sstep(lD, 4.6, 5.0) * (1 - sstep(lD, 7.0, 7.5)) : lg ? lD => sstep(lD, 5.2, 5.6) * (1 - sstep(lD, 7.6, 8.1)) : lD => sstep(lD, 6.6, 7.0) * (1 - sstep(lD, 8.4, 8.9)) });
+      }
+      A.galPts = mkPoints(near, mly, 'galPts');
+      const r = rng(31), dw = cloud();
+      const M31 = radec3(10.6847, 41.2690).multiplyScalar(2.54);
+      for (let i = 0; i < 36; i++) {
+        const host = i < 20 ? new THREE.Vector3() : M31, s = i < 20 ? 0.35 : 0.25, k = 0.25 + 0.25 * r();
+        dw.add(host.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s)), [0.9 * k, 0.85 * k, 0.8 * k], 0.004 + 0.008 * r());
+      }
+      A.dwarfs = mkPoints(dw, mly, 'dwarfs');
+      const vc = cloud(), M87 = radec3(187.706, 12.391).multiplyScalar(53.5);
+      for (let i = 0; i < 320; i++) {
+        const ell = r() < 0.7, k = 0.45 + 0.5 * r();
+        vc.add(M87.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(2.6)), (ell ? [1.0, 0.85, 0.65] : [0.7, 0.8, 1.0]).map(x => x * k), 0.02 + 0.09 * r());
+      }
+      const sgp = radec3(283.75, 15.70), sx = new THREE.Vector3().crossVectors(sgp, new THREE.Vector3(0, 1, 0)).normalize(), sy = new THREE.Vector3().crossVectors(sgp, sx);
+      const groups = []; for (let i = 0; i < 45; i++) { const R = 8 + (-Math.log(1 - r() * 0.98)) * 38, th = r() * 2 * Math.PI; groups.push(M87.clone().multiplyScalar(0.45).addScaledVector(sx, R * Math.cos(th)).addScaledVector(sy, R * Math.sin(th)).addScaledVector(sgp, gauss(r) * 9)); }
+      for (let i = 0; i < 2600; i++) {
+        let p;
+        if (i < 1350) p = groups[i % groups.length].clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(1.6));
+        else { const R = (-Math.log(1 - r() * 0.98)) * 45, th = r() * 2 * Math.PI; p = M87.clone().multiplyScalar(0.45).addScaledVector(sx, R * Math.cos(th)).addScaledVector(sy, R * Math.sin(th)).addScaledVector(sgp, gauss(r) * 14); }
+        if (p.length() < 4) continue;
+        const k = 0.35 + 0.5 * r();
+        vc.add(p, (r() < 0.5 ? [1.0, 0.88, 0.72] : [0.72, 0.8, 1.0]).map(x => x * k), 0.02 + 0.08 * r());
+      }
+      A.volume = mkPoints(vc, mly, 'volume');
+      A.virgo = M87;
+      A.LGCly = M31.clone().multiplyScalar(0.5e6);
+    }
+    {   // the cosmic web: clusters joined by long filaments of galaxies, with voids between
+      const r = rng(41), nodes = [radec3(187.706, 12.391).multiplyScalar(53.5)];
+      for (let i = 0; i < 80; i++) nodes.push(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).normalize().multiplyScalar(2000 * Math.cbrt(r())));
+      const edges = new Set();
+      nodes.forEach((a, i) => nodes.map((b, j) => [j, a.distanceTo(b)]).filter(([j]) => j !== i).sort((x, y) => x[1] - y[1]).slice(0, 3).forEach(([j]) => edges.add(i < j ? i + ',' + j : j + ',' + i)));
+      const c = cloud(), col = () => { const k = 0.28 + 0.22 * r(); return (r() < 0.55 ? [0.7, 0.76, 1.0] : [1.0, 0.86, 0.7]).map(x => x * k); };
+      const E = [...edges].map(s => s.split(',').map(Number));
+      for (const [i, j] of E) {
+        const a = nodes[i], b = nodes[j], len = a.distanceTo(b), n = Math.round(len / 5), s = 7 + 0.02 * len;
+        for (let k = 0; k < n; k++) c.add(a.clone().lerp(b, r()).add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s)), col(), 2 + 4 * r());
+      }
+      for (const a of nodes) for (let k = 0; k < 220; k++) c.add(a.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(16)), col().map(x => x * 1.4), 2 + 4 * r());
+      for (let k = 0; k < 16000; k++) { const [i, j] = E[Math.floor(r() * E.length)]; c.add(nodes[i].clone().lerp(nodes[j], r()).add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(55)), col().map(x => x * 0.6), 3 + 5 * r()); }
+      A.web = mkPoints(c, mly, 'web');
+    }
+    return A;
+  }
+
+  // where the camera looks and from where, for a given scale
+  const _av = new THREE.Vector3();
+  const aetherPitch = lD => lD < 3.2 ? 0.32 : lD < 5.8 ? 0.32 + 0.58 * sstep(lD, 3.3, 4.6) : 0.9 - 0.62 * sstep(lD, 5.8, 6.8);
+  function aetherCams() {
+    const A = AET, lD = aeth.lD, d = Math.pow(10, lD) * (1 + Math.max(0, H / W * 0.75 - 1) * sstep(lD, 4.0, 5.0));   // pull back a little more on a tall phone screen
+    const s1 = sstep(lD, aeth.lD0 + 0.3, -4.4), s2 = sstep(lD, 3.7, 4.8), s3 = sstep(lD, 5.9, 6.5);
+    const T = SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU).multiplyScalar(1 - s1).lerp(A.GC, s2).lerp(A.LGCly, s3);
+    if (aeth.focus && aeth.fk > 0) T.lerp(aeth.focus.pos, easeIO(aeth.fk));
+    const q = new THREE.Quaternion().slerp(A.qGal, sstep(lD, 3.4, 4.6));
+    const cp = Math.cos(aeth.pitch), dir = new THREE.Vector3(cp * Math.cos(aeth.yaw), Math.sin(aeth.pitch), cp * Math.sin(aeth.yaw)).applyQuaternion(q);
+    const P = T.clone().addScaledVector(dir, d);
+    A.camL.position.copy(P); A.camL.up.set(0, 1, 0).applyQuaternion(q); A.camL.lookAt(T);
+    A.camL.near = d * 1e-3; A.camL.far = d * 1e4 + 5e6; A.camL.updateProjectionMatrix(); A.camL.updateMatrixWorld();
+    A.camM.position.copy(P).multiplyScalar(1e-6); A.camM.quaternion.copy(A.camL.quaternion);
+    A.camM.near = d * 1e-9; A.camM.far = d * 1e-2 + 1e5; A.camM.updateProjectionMatrix(); A.camM.updateMatrixWorld();
+    SP.cam.position.copy(P).multiplyScalar(LY_AU); SP.cam.quaternion.copy(A.camL.quaternion); SP.cam.updateMatrixWorld();
+    A.T = T; A.P = P; A.d = d;
+  }
+  function setVis(o, v) { o.material.uniforms.uVis.value = v; o.visible = v > 0.001; }
+  function aetherRender(now) {
+    const A = AET, lD = aeth.lD;
+    AET_K.value = (H * dpr / 2) / Math.tan(55 / 2 * DEG); AET_MAXPX.value = 30 * dpr;
+    aetherCams();
+    const voidF = 1 - sstep(lD, 9.4, 10.1), inside = 0.35 + 0.65 * sstep(lD, 4.5, 5.5);
+    setVis(A.stars, 1 - sstep(lD, 3.8, 4.6));
+    setVis(A.sunPt, sstep(lD, -2.6, -1.4) * (1 - sstep(lD, 4.2, 5.0)));
+    setVis(A.oort, 0.8 * sstep(lD, -2.4, -1.5) * (1 - sstep(lD, 0.6, 1.6)));
+    setVis(A.band, (S.sp.mw ? 1.35 : 0) * (1 - sstep(lD, 3.2, 4.1))); A.band.position.copy(A.camL.position);
+    setVis(A.mw, sstep(lD, 3.2, 4.1) * (1 - sstep(lD, 6.2, 7.0)));
+    setVis(A.mwDisc, 0.6 * sstep(lD, 3.3, 4.3) * (1 - sstep(lD, 6.2, 7.0)));
+    setVis(A.mwFar, sstep(lD, 5.8, 6.4) * voidF);
+    for (const m of A.lg) setVis(m, inside * voidF);
+    for (const m of A.far) setVis(m, sstep(lD, 4.5, 5.8) * voidF);
+    for (const h of A.halos) { const g = h.userData.group, v = (g === 'lg' ? inside : g === 'mw' ? sstep(lD, 5.8, 6.4) : sstep(lD, 4.5, 5.8)) * voidF; h.material.opacity = 0.5 * v; h.visible = v > 0.001; }
+    setVis(A.galPts, inside * voidF); setVis(A.dwarfs, sstep(lD, 4.8, 5.6) * voidF);
+    setVis(A.volume, sstep(lD, 5.2, 6.2) * voidF);
+    setVis(A.web, sstep(lD, 7.3, 8.3) * voidF);
+    const of = 1 - sstep(lD, -3.0, -1.6);   // orbits fade as the planets shrink away
+    for (const l of SP.orbits.children) l.material.opacity = 0.5 * of;
+    for (const l of SP.moonOrbit.children) l.material.opacity = 0.45 * of;
+    const ren = SP.ren; ren.autoClear = false; ren.clear();
+    ren.render(A.mly, A.camM); ren.render(A.ly, A.camL);
+    if (lD < -1.4) { A.sunAnim = spaceFrame(now); ren.clearDepth(); ren.render(SP.scn, SP.cam); } else A.sunAnim = false;
+  }
+
+  function aetherStep(now) {
+    const dt = Math.min(0.25, Math.max(0, (now - (aeth.lastT || now)) / 1000)); aeth.lastT = now;
+    let moving = false;
+    if (aeth.playing) {
+      moving = true;
+      if (aeth.hold > 0) { aeth.hold -= dt; if (aeth.hold <= 0) aeth.dir = -1; }
+      else {
+        const lD = aeth.lD;
+        // linger a little at each stage, and ease in and out at both ends
+        const dwell = [-4.4, -0.2, 1.6, 4.7, 6.4, 7.8, 9.0].reduce((s, c) => s + Math.exp(-Math.pow((lD - c) / 0.42, 2)), 0);
+        const ends = Math.min(1, 0.4 + (lD - aeth.lD0) * 1.2, 0.3 + (AETH_MAX - lD) * 1.0);
+        const v = AETH_SPEED[aeth.rush ? 'home' : aeth.speed] * (1 - 0.45 * Math.min(1, dwell)) * Math.max(0.3, ends);
+        aeth.lD += aeth.dir * v * dt;
+        if (aeth.dir > 0 && aeth.lD >= AETH_MAX) { aeth.lD = AETH_MAX; aeth.hold = 3.5; }
+        if (aeth.dir < 0 && aeth.lD <= aeth.lD0) { aeth.lD = aeth.lD0; aeth.playing = false; aeth.rush = false; aeth.dir = 1; syncJourney(); }
+      }
+      if (now - aeth.userAt > 2500) {   // a slow turn on the way, leaning to a good angle for each stage
+        if (aeth.lD > 5.4) {   // among the galaxies: turn side-on to the line from us to Andromeda, so both are in view
+          const u = AET.LGCly.clone().normalize().applyQuaternion(AET.qGal.clone().invert());
+          const want = Math.atan2(u.z, u.x) + Math.PI / 2, dy = ((want - aeth.yaw) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+          aeth.yaw += dy * Math.min(1, dt * 0.8) * sstep(aeth.lD, 5.4, 6.0);
+        } else aeth.yaw += dt * 0.045;
+        aeth.pitch += (aetherPitch(aeth.lD) - aeth.pitch) * Math.min(1, dt * 0.6);
+      }
+    } else if (aeth.lDT != null) {
+      aeth.lD += (aeth.lDT - aeth.lD) * Math.min(1, dt * aeth.rate);
+      if (Math.abs(aeth.lDT - aeth.lD) < 0.002) { aeth.lD = aeth.lDT; aeth.lDT = null; }
+      moving = true;
+    }
+    const fkT = aeth.focusOn ? 1 : 0;
+    if (aeth.focus && Math.abs(aeth.fk - fkT) > 0.002) { aeth.fk = clampV(aeth.fk + Math.sign(fkT - aeth.fk) * dt / 2.2, 0, 1); moving = true; }
+    else { aeth.fk = fkT; if (!fkT) aeth.focus = null; }
+    return moving || !!(AET && AET.sunAnim) || now - aeth.capT < 700;
+  }
+
+  const AETH_STAGES = [[0.02, 'earth'], [0.8, 'earthMoon'], [6, 'inner'], [100, 'solar'], [3000, 'edge'], [3 * LY_AU, 'oort'], [60 * LY_AU, 'near'], [3000 * LY_AU, 'hood'],
+    [2.5e5 * LY_AU, 'milky'], [1.2e7 * LY_AU, 'local'], [3e8 * LY_AU, 'virgo'], [3.5e9 * LY_AU, 'web']];
+  function fmtLy(ly) {
+    const u = L.ui, au = ly * LY_AU, n = (x, dg) => x.toLocaleString('en-IN', { maximumFractionDigits: dg });
+    if (au < 0.05) return n(Math.round(au * AU_KM), 0) + ' km';
+    if (au < 1) return n(au * AU_KM / 1e6, 1) + ' ' + u.mkm;
+    if (au < 3000) return n(au, au < 10 ? 2 : 0) + ' AU';
+    if (ly < 1e6) return n(ly, ly < 10 ? 2 : ly < 100 ? 1 : 0) + ' ' + u.ly;
+    if (ly < 1e9) return n(ly / 1e6, ly < 1e7 ? 2 : ly < 1e8 ? 1 : 0) + ' ' + u.mly;
+    return n(ly / 1e9, 2) + ' ' + u.gly;
+  }
+  function drawAetherOverlay(now) {
+    const g = octx, A = AET, lD = aeth.lD; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    posAether = [];
+    const proj = (cam, p) => {
+      _av.copy(p).applyMatrix4(cam.matrixWorldInverse); if (_av.z >= 0) return null;
+      _av.applyMatrix4(cam.projectionMatrix); const x = (_av.x + 1) / 2 * W, y = (1 - _av.y) / 2 * H;
+      return x < -80 || x > W + 80 || y < -40 || y > H + 40 ? null : { x, y };
+    };
+    const k = (H / 2) / Math.tan(55 / 2 * DEG), placed = [];
+    const label = (text, x, y, color, alpha, font, align) => {
+      if (alpha < 0.02) return;
+      g.font = font; const w = g.measureText(text).width, x0 = align === 'center' ? x - w / 2 : x;
+      if (placed.some(q => x0 < q.x + q.w && q.x < x0 + w && Math.abs(q.y - y) < 14)) return;
+      placed.push({ x: x0, y, w }); g.globalAlpha = alpha; g.fillStyle = color; g.textAlign = align || 'left'; g.fillText(text, x, y);
+    };
+    g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,0.85)'; g.shadowBlur = 6;
+    const names = S.sp.names;
+    // planets, while the solar system is close
+    const pa = 1 - sstep(lD, -3.4, -2.8);
+    if (pa > 0.01) for (const { b, mesh } of Object.values(SP.bodies)) {
+      const p = proj(SP.cam, mesh.position); if (!p) continue;
+      const rp = radiusAU(b) / Math.max(SP.cam.position.distanceTo(mesh.position), 1e-12) * k;
+      maybeHD(b.id, rp);
+      posAether.push({ kind: 'planet', id: b.id, x: p.x, y: p.y, r: Math.max(22, rp + 6) });
+      const c = spColor(b.id);
+      if (rp < 9) { g.globalAlpha = 0.9 * pa; g.strokeStyle = c; g.lineWidth = 1.3; g.beginPath(); g.arc(p.x, p.y, 7, 0, 2 * Math.PI); g.stroke(); }
+      if (names) label(bodyName(b.id), p.x + Math.min(Math.max(rp, 7), W / 3) + 7, p.y, c, pa, `600 12.5px ${FONT}`);
+    }
+    // the brightest nearby stars by name
+    const sa = sstep(lD, -1.4, -0.6) * (1 - sstep(lD, 2.9, 3.5));
+    if (names && sa > 0.01) for (const s of A.named) {
+      const p = proj(A.camL, s.p); if (!p) continue;
+      const m = s.absMag + 5 * Math.log10(Math.max(A.camL.position.distanceTo(s.p), 1e-9) / 32.6156);
+      if (m > 3.2) continue;
+      label(starName(s.i), p.x + 8, p.y, '#ece4d0', sa * Math.min(1, (3.2 - m) / 1.5) * 0.85, `500 11.5px ${FONT}`);
+    }
+    // you are here
+    const ya = sstep(lD, 0.5, 1.1) * (1 - sstep(lD, 6.3, 6.9));
+    if (ya > 0.01) {
+      const p = proj(A.camL, new THREE.Vector3());
+      if (p) {
+        g.globalAlpha = ya; g.strokeStyle = '#e2bf5a'; g.lineWidth = 1.5; g.beginPath(); g.arc(p.x, p.y, 8, 0, 2 * Math.PI); g.stroke();
+        label(`${L.ui.youHere} · ${bodyName('Sun')}`, p.x + 14, p.y, '#e2bf5a', ya, `600 12.5px ${FONT}`);
+        posAether.push({ kind: 'home', x: p.x, y: p.y, r: 20 });
+      }
+    }
+    const voidF = 1 - sstep(lD, 9.3, 9.9);
+    // our galaxy
+    const ma = sstep(lD, 4.5, 5.0) * (1 - sstep(lD, 8.4, 9.0));
+    if (ma > 0.01) {
+      const p = proj(A.camL, A.GC);
+      if (p) {
+        const rp = 50000 / Math.max(A.camL.position.distanceTo(A.GC), 1) * k;
+        if (names) label(L.ui.milkyWay, p.x, p.y + Math.min(rp * 0.4, H / 4) + 16, '#e2bf5a', ma, `600 13px ${FONT}`, 'center');
+        posAether.push({ kind: 'gal', lab: { key: 'milkyWay', posLy: A.GC, diamLy: 1e5 }, x: p.x, y: p.y, r: Math.max(26, rp * 0.5) });
+      }
+    }
+    // other galaxies
+    for (const lab of A.labels) {
+      let a = lab.vis(lD) * voidF;
+      if (aeth.focusOn && aeth.focus && aeth.focus.key === lab.key) a = 1;
+      const p = proj(A.camM, lab.pos); if (!p) continue;
+      const rp = lab.diamLy / 2 / Math.max(A.camL.position.distanceTo(lab.posLy), 1) * k;
+      if (a > 0.05 || rp > 12) posAether.push({ kind: 'gal', lab, x: p.x, y: p.y, r: Math.max(20, rp * 0.8) });
+      if (names) label(galName(lab.key), p.x + Math.max(rp * 0.55, 6) + 6, p.y, '#ece4d0', a * 0.9, `500 12px ${FONT}`);
+    }
+    const va = sstep(lD, 7.1, 7.6) * (1 - sstep(lD, 9.1, 9.6));
+    if (names && va > 0.01) { const p = proj(A.camM, A.virgo); if (p) label(L.ui.virgoCl, p.x, p.y - 18, '#ece4d0', va * 0.85, `600 12.5px ${FONT}`, 'center'); }
+    // the stage you are in, and how far from Earth
+    const dAU = A.d * LY_AU;
+    let st = 'aether'; for (const [lim, key] of AETH_STAGES) if (dAU < lim) { st = key; break; }
+    const focusName = aeth.focusOn && aeth.focus ? (aeth.focus.key === 'milkyWay' ? L.ui.milkyWay : galName(aeth.focus.key)) : null;
+    const cap = focusName || L.ui.stage[st];
+    if (cap !== aeth.cap) { aeth.cap = cap; aeth.capT = now; }
+    const fade = Math.min(1, (now - aeth.capT) / 600);
+    const tb = $('timebar'), sr = $('stage').getBoundingClientRect(), tr = tb && tb.offsetParent ? tb.getBoundingClientRect() : null;
+    const cy = tr ? tr.top - sr.top - 44 : H - 70;
+    g.textAlign = 'center'; g.globalAlpha = fade; g.shadowBlur = 10;
+    g.font = `600 ${isPhone() ? 20 : 24}px "Source Serif 4", ${FONT}`; g.fillStyle = '#e2bf5a'; g.fillText(cap, W / 2, cy);
+    const sub = st === 'aether' && !focusName ? L.ui.aetherLine : F(L.ui.distFrom, { d: fmtLy(A.P.distanceTo(SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU))) });
+    g.font = `500 12.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.8)'; g.fillText(sub, W / 2, cy + 24);
+    g.shadowBlur = 0; g.globalAlpha = 1; g.textAlign = 'left';
+    g.font = `500 11.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.7)';
+    const zr = $('zoombar').getBoundingClientRect();
+    if (!isPhone()) g.fillText(L.ui.aetherHint, 16, 78);
+    else {   // wrap to the screen width on phones
+      let line = '', y = zr.bottom - sr.top + 16;
+      for (const w of L.ui.aetherHint.split(' ')) {
+        if (line && g.measureText(line + ' ' + w).width > W - 32) { g.fillText(line, 16, y); y += 15; line = w; } else line = line ? line + ' ' + w : w;
+      }
+      if (line) g.fillText(line, 16, y);
+    }
+  }
+  function pickAether(x, y) {
+    let best = null, bd = 1e9;
+    for (const p of posAether) { const d = Math.hypot(p.x - x, p.y - y); if (d < p.r && d < bd) { bd = d; best = p; } }
+    return best;
+  }
+
+  function syncJourney() {
+    const b = $('aJourney'); if (b) b.setAttribute('aria-pressed', String(aeth.playing && !aeth.rush));
+    document.querySelectorAll('#speedSeg button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.speed === aeth.speed)));
+    needsRender = true;
+  }
+  function stopJourney() { if (aeth.playing) { aeth.playing = false; aeth.rush = false; syncJourney(); } }
+  function focusGalaxy(lab) {
+    stopJourney();
+    aeth.focus = { key: lab.key, pos: lab.posLy.clone(), minLD: Math.log10(lab.diamLy * 0.7) };
+    if (!aeth.focusOn) aeth.fk = 0;
+    aeth.focusOn = true; aeth.rate = 1.6; aeth.lDT = Math.log10(lab.diamLy * 2.2); needsRender = true;
+  }
+  function enterAether() {
+    if (!AET) AET = buildAether();
+    const e = SP.bodies.Earth.mesh.position;
+    aeth.lD0 = Math.log10(fitDist('Earth') * 2.4 / LY_AU);
+    Object.assign(aeth, { lD: aeth.lD0, lDT: null, yaw: Math.atan2(e.z, e.x) + 0.95, pitch: 0.32, playing: false, rush: false, dir: 1, hold: 0, focus: null, focusOn: false, fk: 0, lastT: performance.now(), cap: '' });
+    SP.back.visible = false; SP.scn.getObjectByName('spokes').visible = false; SP.ren.setClearColor(0x000000, 1);
+    syncJourney();
+  }
+  function leaveAether() {
+    if (!SP) return;
+    aeth.playing = false; SP.ren.autoClear = true; SP.ren.setClearColor(0x030305, 1); SP.back.visible = true;
+    for (const l of SP.orbits.children) l.material.opacity = 0.5;
+    for (const l of SP.moonOrbit.children) l.material.opacity = 0.45;
+    placeCam();
+  }
+  $('aJourney').addEventListener('click', () => {
+    if (aeth.playing && !aeth.rush) { stopJourney(); return; }
+    if (aeth.lD >= AETH_MAX - 0.01) aeth.dir = -1; else if (aeth.lD <= aeth.lD0 + 0.01 || aeth.rush) aeth.dir = aeth.rush ? -1 : 1;
+    aeth.focusOn = false; aeth.lDT = null; aeth.rush = false; aeth.hold = 0; aeth.playing = true; aeth.userAt = 0; aeth.lastT = performance.now();
+    syncJourney();
+  });
+  document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { aeth.speed = b.dataset.speed; syncJourney(); }));
+  $('aetherHome').addEventListener('click', () => {
+    if (aeth.lD <= aeth.lD0 + 0.01 && !aeth.focusOn) return;
+    aeth.focusOn = false; aeth.lDT = null; aeth.hold = 0; aeth.dir = -1; aeth.rush = true; aeth.playing = true; aeth.lastT = performance.now(); syncJourney();
+  });
+  // looking around: drag = turn, wheel / pinch / ± = travel in or out, tap a galaxy to visit it
+  {
+    const ptr = new Map(); let moved = 0, pinch = 0, lastWheel = 0, streak = 0;
+    const lxy = e => { const r = spaceCanvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const minLD = () => aeth.focusOn && aeth.focus ? aeth.focus.minLD : aeth.lD0 - 0.35;
+    const setLD = (v, glide) => { v = clampV(v, minLD(), AETH_MAX); aeth.rate = 9; if (glide) aeth.lDT = v; else { aeth.lD = v; aeth.lDT = null; } needsRender = true; };
+    aetherZoom = dec => { stopJourney(); setLD((aeth.lDT != null ? aeth.lDT : aeth.lD) + dec, true); };
+    spaceCanvas.addEventListener('pointerdown', e => {
+      if (S.view !== 'aether') return;
+      closeSheet();
+      try { spaceCanvas.setPointerCapture(e.pointerId); } catch (err) { }
+      ptr.set(e.pointerId, lxy(e)); moved = 0;
+      if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); }
+    });
+    spaceCanvas.addEventListener('pointermove', e => {
+      if (S.view !== 'aether' || !AET) return;
+      const prev = ptr.get(e.pointerId), cur = lxy(e);
+      if (!prev) { if (e.pointerType === 'mouse') spaceCanvas.style.cursor = pickAether(...cur) ? 'pointer' : ''; return; }
+      ptr.set(e.pointerId, cur);
+      if (ptr.size === 1) {
+        const dx = cur[0] - prev[0], dy = cur[1] - prev[1]; moved += Math.abs(dx) + Math.abs(dy);
+        aeth.yaw += dx * 0.005; aeth.pitch = clampV(aeth.pitch + dy * 0.005, -1.5, 1.5); aeth.userAt = performance.now();
+      } else if (ptr.size === 2) {
+        const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        if (pinch && d) { stopJourney(); setLD(aeth.lD + Math.log10(pinch / d) * 2.4, false); }
+        pinch = d; moved += 10;
+      }
+      needsRender = true;
+    });
+    const up = e => {
+      if (!ptr.has(e.pointerId)) return;
+      ptr.delete(e.pointerId); if (ptr.size < 2) pinch = 0;
+      if (moved < 6 && ptr.size === 0) {
+        const hit = pickAether(...lxy(e)); if (!hit) return;
+        if (hit.kind === 'planet') { setView('space'); S.sel = hit.id; renderPanel(); focusSpace(hit.id); showTipFor(hit.id, true); }
+        else if (hit.kind === 'gal') focusGalaxy(hit.lab);
+      }
+    };
+    spaceCanvas.addEventListener('pointerup', up); spaceCanvas.addEventListener('pointercancel', up);
+    spaceCanvas.addEventListener('wheel', e => {
+      if (S.view !== 'aether') return;
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY, now = performance.now();
+      streak = now - lastWheel < 220 ? Math.min(streak + 1, 8) : 0; lastWheel = now;
+      aetherZoom(clampV(dy, -300, 300) * 0.0028 * (Math.abs(dy) >= 50 ? 1 + streak * 0.25 : 1));
+    }, { passive: false });
+    window.addEventListener('keydown', e => {
+      if (S.view !== 'aether' || !AET || (e.target && e.target.closest && e.target.closest('input,select,textarea,button'))) return;
+      const turn = { ArrowLeft: [-0.08, 0], a: [-0.08, 0], ArrowRight: [0.08, 0], d: [0.08, 0], ArrowUp: [0, 0.08], w: [0, 0.08], ArrowDown: [0, -0.08], s: [0, -0.08] }[e.key];
+      if (turn) { aeth.yaw += turn[0]; aeth.pitch = clampV(aeth.pitch + turn[1], -1.5, 1.5); aeth.userAt = performance.now(); needsRender = true; }
+      if (e.key === '+' || e.key === '=') aetherZoom(-0.5);
+      if (e.key === '-' || e.key === '_') aetherZoom(0.5);
+    });
+  }
 
 
   // ---------- phone sheets ----------
@@ -1774,6 +2292,7 @@
     renderer.setSize(W, H, false);
     ov.width = Math.round(W * dpr); ov.height = Math.round(H * dpr);
     if (SP) { SP.ren.setSize(W, H, false); SP.cam.aspect = W / H; SP.cam.updateProjectionMatrix(); }
+    if (AET) for (const c of [AET.camL, AET.camM]) { c.aspect = W / H; c.updateProjectionMatrix(); }
     camera.aspect = W / H; applyCamera(); needsRender = true;
   }
   window.addEventListener('resize', resize);
@@ -1795,7 +2314,10 @@
       applyCamera(); needsRender = true; if (t >= 1) fly = null;
     }
     stepZoom();
-    if (S.view === 'space' && SP) {
+    if (S.view === 'aether' && SP && AET) {
+      if (aetherStep(now)) needsRender = true;
+      if (needsRender) { aetherRender(now); drawAetherOverlay(now); needsRender = false; }
+    } else if (S.view === 'space' && SP) {
       if (stepSpaceAnim(now)) needsRender = true;
       if (spaceFrame(now)) needsRender = true;
       if (needsRender) { SP.ren.render(SP.scn, SP.cam); drawSpaceOverlay(); needsRender = false; }
