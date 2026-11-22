@@ -18,6 +18,11 @@ Full birth charts: [astrogod.io](https://astrogod.io)
 
 Add a language code to the link: `#en`, `#ta`, `#ta-en`, `#hi`, `#hi-en`, `#te`, `#te-en`, `#ml`, `#ml-en`, `#kn`, `#kn-en`.
 
+## Hosting and development
+
+See **[DEVELOPERS.md](DEVELOPERS.md)** for hosting on your own domain, what the page loads from
+outside, the project layout and how to make changes.
+
 ## Building
 
 `index.html` is a single self-contained page built from `src/`:
