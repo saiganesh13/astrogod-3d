@@ -631,8 +631,8 @@
     if (f === zoomAnim.target) zoomAnim = null;
   }
   const zoomTarget = () => zoomAnim ? zoomAnim.target : S.fov;
-  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.4) : zoomTo(zoomTarget() / 2.5));
-  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(2.5) : zoomTo(zoomTarget() * 2.5));
+  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.3) : zoomTo(zoomTarget() / 2.5));
+  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(3.3) : zoomTo(zoomTarget() * 2.5));
   $('zFit').addEventListener('click', () => zoomTo(isPhone() ? 95 : 78));
   let fly = null;
   function worldOf(id) {
@@ -1156,6 +1156,7 @@
   // True positions (Astronomy Engine) in the J2000 ecliptic frame, 1 unit = 1 AU. Planets can be
   // real size or enlarged; distances are always true. The sky view is called "Earth".
   S.view = 'sky'; S.bigSize = true;
+  S.sp = { orbits: true, names: true, rasi: true, zodiac: true, stars: true, mw: true };   // Open-view display settings
   const AU_KM = 149597870.7, EARTH_DOT = '#7fc8e8';
   const fmtDist = (id, au) => id === 'Moon' ? Math.round(au * AU_KM).toLocaleString('en-IN') + ' km' : au.toFixed(au < 10 ? 2 : 1) + ' AU';
   function lightTime(au) {
@@ -1199,7 +1200,7 @@
   const spColor = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
   const RASI0_J2000 = 23.853;   // Lahiri ayanamsa at J2000 = the sidereal 0° Mesham direction in this frame
   let SP = null, posSpace = {}, spaceZoom = () => { };
-  const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null };
+  const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null, zoomT: null, zoomP: null };
 
   function buildSpace() {
     const ren = new THREE.WebGLRenderer({ canvas: spaceCanvas, antialias: true, logarithmicDepthBuffer: true });
@@ -1209,6 +1210,14 @@
     scn.add(new THREE.PointLight(0xfff4e0, 1.7, 0, 0));
     // backdrop that travels with the camera: stars and the gold zodiac figures (for orientation)
     const back = new THREE.Group(); scn.add(back);
+    {   // the Milky Way: the Earth view's galactic band, turned into this frame
+      const m = new THREE.ShaderMaterial({
+        uniforms: { uGnp: { value: toScene(gnp).normalize() }, uGc: { value: toScene(gc).normalize() }, uVis: { value: 1.35 } },
+        vertexShader: mwMat.vertexShader, fragmentShader: mwMat.fragmentShader,
+        side: THREE.BackSide, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, transparent: true,
+      });
+      const mwS = new THREE.Mesh(new THREE.SphereGeometry(4800, 96, 48), m); mwS.renderOrder = -11; mwS.name = 'milkyway'; back.add(mwS);
+    }
     {
       const pos = new Float32Array(NS * 3), col = new Float32Array(NS * 3), size = new Float32Array(NS);
       for (let i = 0; i < NS; i++) {
@@ -1225,7 +1234,7 @@
         fragmentShader: `varying vec3 vC; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; float a=exp(-r*r*6.0)+0.7*exp(-r*r*40.0); gl_FragColor=vec4(vC*a,1.0); }`,
         transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
       });
-      const pts = new THREE.Points(g, m); pts.renderOrder = -10; back.add(pts);
+      const pts = new THREE.Points(g, m); pts.renderOrder = -10; pts.name = 'stars'; back.add(pts);
       const seg = [];
       for (const [id, lines] of Object.entries(D.lines)) {
         if (!ZODIAC[id.slice(0, 3)]) continue;
@@ -1234,7 +1243,7 @@
         }
       }
       const zl = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0xe2bf5a, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false }));
-      zl.renderOrder = -9; back.add(zl);
+      zl.renderOrder = -9; zl.name = 'zodiac'; back.add(zl);
     }
     // the 12 rasi directions on the ecliptic plane (sidereal 30° boundaries), to steer by
     {
@@ -1244,7 +1253,7 @@
         pts.push(new THREE.Vector3(Math.cos(lon) * 0.05, 0, -Math.sin(lon) * 0.05), new THREE.Vector3(Math.cos(lon) * 45, 0, -Math.sin(lon) * 45));
       }
       const sp = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xece4d0, dashSize: 0.25, gapSize: 0.35, transparent: true, opacity: 0.22, depthWrite: false }));
-      sp.computeLineDistances(); scn.add(sp);
+      sp.computeLineDistances(); sp.name = 'spokes'; scn.add(sp);
     }
     // bodies
     const geo = new THREE.SphereGeometry(1, 96, 64), bodies = {};
@@ -1337,6 +1346,14 @@
     needsRender = true;
   }
   function stepSpaceAnim(now) {
+    if (ctl.zoomT && !ctl.anim) {   // gliding zoom
+      const d0 = ctl.dist;
+      let d1 = Math.exp(Math.log(d0) + (Math.log(ctl.zoomT) - Math.log(d0)) * 0.24);
+      if (Math.abs(Math.log(d1 / ctl.zoomT)) < 0.003) { d1 = ctl.zoomT; ctl.zoomT = null; }
+      if (ctl.zoomP) ctl.target.addScaledVector(new THREE.Vector3().subVectors(ctl.zoomP, ctl.target), 1 - d1 / d0);
+      ctl.dist = d1; placeCam();
+      return true;
+    }
     const an = ctl.anim; if (!an) return false;
     const t = Math.min(1, (now - an.t0) / an.dur), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     ctl.target.copy(an.from).lerp(SP.bodies[an.id].mesh.position, e);
@@ -1361,7 +1378,7 @@
     const camD = SP.cam.position.length();
     // rasi names along their directions, at a few distances so some are always in view
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `500 11px ${FONT}`;
-    for (const R of [1.25, 6, 32]) {
+    for (const R of S.sp.rasi ? [1.25, 6, 32] : []) {
       if (R < camD * 0.12 || R > camD * 40) continue;   // skip a ring that would be too small (crowded) or too far
       for (let k = 0; k < 12; k++) {
         const lon = (k * 30 + 15 + RASI0_J2000) * DEG, p = proj(new THREE.Vector3(Math.cos(lon) * R, 0, -Math.sin(lon) * R));
@@ -1385,7 +1402,7 @@
       let ly = p.y;
       for (let n = 0; n < 6 && placed.some(q => Math.abs(q.y - ly) < 15 && lx < q.x + q.w && q.x < lx + 80); n++) ly += 15;
       placed.push({ x: lx, y: ly, w: 80 });
-      g.globalAlpha = 1; g.textAlign = 'left'; g.font = `600 12.5px ${FONT}`; g.fillStyle = c; g.fillText(bodyName(b.id), lx, ly);
+      if (S.sp.names) { g.globalAlpha = 1; g.textAlign = 'left'; g.font = `600 12.5px ${FONT}`; g.fillStyle = c; g.fillText(bodyName(b.id), lx, ly); }
     }
     g.globalAlpha = 1; g.lineWidth = 1;
     g.font = `500 11.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.7)'; g.textAlign = 'left';
@@ -1408,7 +1425,21 @@
       ctl.target.addScaledVector(right, -dx * s).addScaledVector(up, dy * s);
       ctl.follow = null; ctl.anim = null; placeCam();
     };
-    const zoomBy = f => { if (!SP) return; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
+    // Zoom glides to a target distance. When not locked onto a body it heads for the point under the
+    // cursor (that point stays put on screen), so a few scrolls carry you across the solar system.
+    const zoomBy = (f, x, y) => {
+      if (!SP) return;
+      const from = ctl.zoomT || ctl.dist;
+      ctl.zoomT = clampV(from * f, minDist(), 120);
+      ctl.zoomP = null;
+      if (!ctl.follow && x != null) {
+        const ray = new THREE.Vector3((x / W) * 2 - 1, -(y / H) * 2 + 1, 0.5).unproject(SP.cam).sub(SP.cam.position).normalize();
+        const view = new THREE.Vector3().subVectors(ctl.target, SP.cam.position).normalize();
+        ctl.zoomP = SP.cam.position.clone().addScaledVector(ray, ctl.dist / Math.max(0.2, ray.dot(view)));
+      }
+      needsRender = true;
+    };
+    const zoomDirect = f => { if (!SP) return; ctl.zoomT = null; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
     spaceCanvas.addEventListener('contextmenu', e => e.preventDefault());
     spaceCanvas.addEventListener('pointerdown', e => {
       closeSheet();
@@ -1430,7 +1461,7 @@
         else { ctl.yaw += dx * 0.006; ctl.pitch = clampV(ctl.pitch + dy * 0.006, -1.5, 1.5); placeCam(); }
       } else if (ptr.size === 2) {
         const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-        if (pinch && d) zoomBy(pinch / d);
+        if (pinch && d) zoomDirect(Math.pow(pinch / d, 1.7));   // a small pinch goes a long way
         if (mid) panBy(m[0] - mid[0], m[1] - mid[1]);
         pinch = d; mid = m; moved += 10;
       }
@@ -1445,21 +1476,37 @@
       }
     };
     spaceCanvas.addEventListener('pointerup', up); spaceCanvas.addEventListener('pointercancel', up);
+    // wheel: one notch ≈ ×1.6, and it speeds up (to ≈ ×4 a notch) while you keep scrolling
+    let lastWheel = 0, streak = 0;
     spaceCanvas.addEventListener('wheel', e => {
       e.preventDefault(); ctl.anim = null;
       const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      zoomBy(Math.exp(clampV(dy, -300, 300) * 0.0022));
+      const now = performance.now();
+      streak = now - lastWheel < 220 ? Math.min(streak + 1, 8) : 0; lastWheel = now;
+      const boost = Math.abs(dy) >= 50 ? 1 + streak * 0.25 : 1;
+      zoomBy(Math.exp(clampV(dy, -300, 300) * 0.0047 * boost), ...lxy(e));
     }, { passive: false });
     window.addEventListener('keydown', e => {
       if (S.view !== 'space' || !SP || (e.target && e.target.closest && e.target.closest('input,select,textarea'))) return;
       const step = 40, keys = { ArrowLeft: [step, 0], a: [step, 0], ArrowRight: [-step, 0], d: [-step, 0], ArrowUp: [0, step], w: [0, step], ArrowDown: [0, -step], s: [0, -step] };
       const mv = keys[e.key]; if (mv) { panBy(mv[0], mv[1]); needsRender = true; }
-      if (e.key === '+' || e.key === '=') zoomBy(0.6);
-      if (e.key === '-' || e.key === '_') zoomBy(1.65);
+      if (e.key === '+' || e.key === '=') zoomBy(0.45, W / 2, H / 2);
+      if (e.key === '-' || e.key === '_') zoomBy(2.2, W / 2, H / 2);
     });
-    spaceZoom = zoomBy;
+    spaceZoom = f => zoomBy(f, W / 2, H / 2);
   }
 
+  function applySpaceOpts() {
+    document.querySelectorAll('[data-sopt]').forEach(b => b.setAttribute('aria-pressed', String(!!S.sp[b.dataset.sopt])));
+    if (!SP) return;
+    SP.scn.getObjectByName('stars').visible = S.sp.stars;
+    SP.scn.getObjectByName('milkyway').visible = S.sp.mw;
+    SP.scn.getObjectByName('zodiac').visible = S.sp.zodiac;
+    SP.scn.getObjectByName('spokes').visible = S.sp.rasi;
+    SP.orbits.visible = SP.moonOrbit.visible = S.sp.orbits;
+    needsRender = true;
+  }
+  document.querySelectorAll('[data-sopt]').forEach(b => b.addEventListener('click', () => { S.sp[b.dataset.sopt] = !S.sp[b.dataset.sopt]; applySpaceOpts(); }));
   function setView(view) {
     S.view = view;
     appEl.classList.toggle('mode-space', view === 'space');
@@ -1468,7 +1515,7 @@
     if (view === 'space') {
       const first = !SP;
       if (first) SP = buildSpace();
-      resize(); updateSpace(); if (first) startView();
+      resize(); updateSpace(); if (first) startView(); applySpaceOpts();
     }
     needsRender = true;
   }

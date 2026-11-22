@@ -187,6 +187,8 @@ svg{flex:none}
 .pr-logo{background:var(--ask-bg)}
 .pr-logo img{height:28px;width:auto}
 #timebar .promo{display:none}
+@media (min-width:1024px){ #birth .promo{display:none} }   /* desktop: Display settings come right after the birth form */
+#app.mode-space .togs.only-space{display:flex!important}
 .ag-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:8px 16px;border-radius:12px;background:var(--cta-bg);color:var(--cta-ink);font-size:13.5px;font-weight:600;text-decoration:none;text-align:center}
 .ag-btn:hover{filter:brightness(1.07)}
 
@@ -428,7 +430,7 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
       <div class="sheet-head"><h2 data-i18n="tabs.2">Display</h2>
         <button class="xclose sheet-x" type="button" data-close="view" data-i18n-aria="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <div class="field"><label for="langSel" data-i18n="lang">Language</label><select id="langSel"></select></div>
-      <div class="togs">
+      <div class="togs only-sky">
         <button class="tog" type="button" data-opt="lines" aria-pressed="true" data-i18n="tog.lines">Constellations</button>
         <button class="tog" type="button" data-opt="labels" aria-pressed="true" data-i18n="tog.labels">Labels</button>
         <button class="tog" type="button" data-opt="ecliptic" aria-pressed="true" data-i18n="tog.ecliptic">Rasi belt</button>
@@ -436,6 +438,14 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
         <button class="tog" type="button" data-opt="atmos" aria-pressed="true" data-i18n="tog.atmos">Daylight</button>
         <button class="tog" type="button" data-opt="see" aria-pressed="true" data-i18n="tog.see">See through ground</button>
         <button class="tog" type="button" data-opt="noground" aria-pressed="false" data-i18n="tog.noground">No ground</button>
+      </div>
+      <div class="togs only-space">
+        <button class="tog" type="button" data-sopt="orbits" aria-pressed="true" data-i18n="sopt.orbits">Orbits</button>
+        <button class="tog" type="button" data-sopt="names" aria-pressed="true" data-i18n="sopt.names">Planet names</button>
+        <button class="tog" type="button" data-sopt="rasi" aria-pressed="true" data-i18n="sopt.rasi">Rasi directions</button>
+        <button class="tog" type="button" data-sopt="zodiac" aria-pressed="true" data-i18n="sopt.zodiac">Zodiac stars</button>
+        <button class="tog" type="button" data-sopt="stars" aria-pressed="true" data-i18n="sopt.stars">Stars</button>
+        <button class="tog" type="button" data-sopt="mw" aria-pressed="true" data-i18n="tog.mw">Milky Way</button>
       </div>
       <aside class="promo" data-i18n-aria="joinTitle" aria-label="AstroGod">
         <span class="pr-coin pr-logo" aria-hidden="true"><img src="data:image/png;base64,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" alt="" width="21" height="28"></span>
@@ -985,6 +995,7 @@ window.I18N = (function () {
   // ---------- interface text ----------
   const EN = {
     tagline: 'your birth sky in 3D', lang: 'Language',
+      sopt: { orbits: "Orbits", names: "Planet names", rasi: "Rasi directions", zodiac: "Zodiac stars", stars: "Stars" },
       open: "Open", bigSize: "Enlarged", realSize: "Real size", home: "Back to Earth", spaceHint: "Drag to turn · right-drag or two fingers to move · scroll or pinch to zoom · tap a planet to fly there",
       fromEarth: "From Earth", fromSun: "From Sun", logNote: "Distances on a log scale · directions are true", distEarth: "From Earth", distSun: "From Sun", lightTime: "light takes {t}", elong: "{d}° from the Sun in our sky", helioPos: "Seen from the Sun", mkm: "million km", nearEarth: "near Earth", earth: "Earth",
       prKicker: "ASTROLOGERS", pr1Title: "Talk to an Astrologer", pr1Text: "Go through your birth sky with an expert and get clear, personal answers.", pr2Title: "Questions about your planets?", pr2Text: "Our astrologers can walk you through what it means, one to one.", pr3Title: "Planning something important?", pr3Text: "An astrologer can help you pick a good time for it.", joinKicker: "ASTROGOD", joinTitle: "Your chart on AstroGod", joinText: "Sign up to save your birth details and explore your full chart.", learnMore: "Learn more", book: "Call", signup: "Sign up", close: 'Close', tabTime: 'Time', theme: 'Light or dark', sky: 'Sky', agTitle: 'Your full birth chart', agSub: 'Open AstroGod', agShort: 'My chart', agLink: 'See the full chart on AstroGod',
@@ -1049,6 +1060,7 @@ window.I18N = (function () {
     en: EN,
     hi: {
       tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा',
+      sopt: { orbits: "कक्षाएँ", names: "ग्रहों के नाम", rasi: "राशि दिशाएँ", zodiac: "राशि तारे", stars: "तारे" },
       open: "ओपन", bigSize: "बड़ा करके", realSize: "असली आकार", home: "पृथ्वी पर लौटें", spaceHint: "घुमाने के लिए खींचें · खिसकाने के लिए राइट-ड्रैग या दो उँगलियाँ · ज़ूम के लिए स्क्रॉल या पिंच · ग्रह पर टैप करके वहाँ जाएँ",
       fromEarth: "पृथ्वी से", fromSun: "सूर्य से", logNote: "दूरियाँ लघुगणकीय पैमाने पर · दिशाएँ सटीक", distEarth: "पृथ्वी से दूरी", distSun: "सूर्य से दूरी", lightTime: "प्रकाश को {t} लगते हैं", elong: "हमारे आकाश में सूर्य से {d}°", helioPos: "सूर्य से देखने पर", mkm: "मिलियन किमी", nearEarth: "पृथ्वी के पास", earth: "पृथ्वी",
       prKicker: "ज्योतिषी", pr1Title: "ज्योतिषी से बात करें", pr1Text: "किसी विशेषज्ञ के साथ अपना जन्म आकाश समझें और स्पष्ट, व्यक्तिगत उत्तर पाएँ।", pr2Title: "अपने ग्रहों के बारे में प्रश्न?", pr2Text: "हमारे ज्योतिषी आमने-सामने इसका अर्थ समझाएँगे।", pr3Title: "कुछ महत्वपूर्ण योजना बना रहे हैं?", pr3Text: "ज्योतिषी इसके लिए शुभ समय चुनने में मदद कर सकते हैं।", joinKicker: "ASTROGOD", joinTitle: "AstroGod पर आपकी कुंडली", joinText: "अपना जन्म विवरण सहेजने और पूरी कुंडली देखने के लिए साइन अप करें।", learnMore: "और जानें", book: "कॉल करें", signup: "साइन अप करें", close: 'बंद करें', tabTime: 'समय', theme: 'हल्का या गहरा रंग', sky: 'आकाश', agTitle: 'आपकी पूरी जन्म कुंडली', agSub: 'AstroGod खोलें', agShort: 'कुंडली', agLink: 'पूरी कुंडली AstroGod पर देखें',
@@ -1092,6 +1104,7 @@ window.I18N = (function () {
     },
     ta: {
       tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி',
+      sopt: { orbits: "சுற்றுப்பாதைகள்", names: "கிரகப் பெயர்கள்", rasi: "ராசி திசைகள்", zodiac: "ராசி நட்சத்திரங்கள்", stars: "நட்சத்திரங்கள்" },
       open: "ஓப்பன்", bigSize: "பெரிதாக்கி", realSize: "உண்மை அளவு", home: "பூமிக்குத் திரும்பு", spaceHint: "சுழற்ற இழுக்கவும் · நகர்த்த வலது இழுப்பு அல்லது இரு விரல்கள் · பெரிதாக்க உருட்டவும் · கிரகத்தைத் தொட்டு அங்கு பறக்கவும்",
       fromEarth: "பூமியிலிருந்து", fromSun: "சூரியனிலிருந்து", logNote: "தூரங்கள் மடக்கை அளவில் · திசைகள் சரியானவை", distEarth: "பூமியிலிருந்து தூரம்", distSun: "சூரியனிலிருந்து தூரம்", lightTime: "ஒளி வர {t} ஆகும்", elong: "நம் வானில் சூரியனிடமிருந்து {d}°", helioPos: "சூரியனிலிருந்து பார்க்கும்போது", mkm: "மில்லியன் கி.மீ", nearEarth: "பூமிக்கு அருகில்", earth: "பூமி",
       prKicker: "ஜோதிடர்கள்", pr1Title: "ஜோதிடரிடம் பேசுங்கள்", pr1Text: "உங்கள் பிறப்பு வானத்தை ஒரு நிபுணருடன் பார்த்து, தெளிவான தனிப்பட்ட பதில்களைப் பெறுங்கள்.", pr2Title: "உங்கள் கிரகங்கள் பற்றி கேள்விகளா?", pr2Text: "எங்கள் ஜோதிடர்கள் இதன் பொருளை நேரடியாக விளக்குவார்கள்.", pr3Title: "முக்கியமான ஒன்றைத் திட்டமிடுகிறீர்களா?", pr3Text: "அதற்கு நல்ல நேரத்தைத் தேர்ந்தெடுக்க ஜோதிடர் உதவுவார்.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-இல் உங்கள் ஜாதகம்", joinText: "உங்கள் பிறப்பு விவரங்களைச் சேமித்து முழு ஜாதகத்தைப் பார்க்க பதிவு செய்யுங்கள்.", learnMore: "மேலும் அறிக", book: "அழைக்க", signup: "பதிவு செய்", close: 'மூடு', tabTime: 'நேரம்', theme: 'வெளிர் அல்லது இருள் நிறம்', sky: 'வானம்', agTitle: 'உங்கள் முழு ஜாதகம்', agSub: 'AstroGod-ஐத் திறக்கவும்', agShort: 'ஜாதகம்', agLink: 'முழு ஜாதகத்தை AstroGod-இல் பார்க்கவும்',
@@ -1135,6 +1148,7 @@ window.I18N = (function () {
     },
     te: {
       tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష',
+      sopt: { orbits: "కక్ష్యలు", names: "గ్రహాల పేర్లు", rasi: "రాశి దిశలు", zodiac: "రాశి నక్షత్రాలు", stars: "నక్షత్రాలు" },
       open: "ఓపెన్", bigSize: "పెద్దదిగా", realSize: "అసలు పరిమాణం", home: "భూమికి తిరిగి", spaceHint: "తిప్పడానికి లాగండి · కదపడానికి కుడి-లాగు లేదా రెండు వేళ్లు · జూమ్‌కు స్క్రోల్ · గ్రహాన్ని తాకి అక్కడికి వెళ్ళండి",
       fromEarth: "భూమి నుండి", fromSun: "సూర్యుని నుండి", logNote: "దూరాలు లాగరిథమిక్ స్కేల్‌లో · దిశలు సరైనవి", distEarth: "భూమి నుండి దూరం", distSun: "సూర్యుని నుండి దూరం", lightTime: "కాంతికి {t} పడుతుంది", elong: "మన ఆకాశంలో సూర్యుని నుండి {d}°", helioPos: "సూర్యుని నుండి చూస్తే", mkm: "మిలియన్ కి.మీ", nearEarth: "భూమికి దగ్గరగా", earth: "భూమి",
       prKicker: "జ్యోతిష్యులు", pr1Title: "జ్యోతిష్యునితో మాట్లాడండి", pr1Text: "మీ జన్మ ఆకాశాన్ని నిపుణునితో చూసి, స్పష్టమైన వ్యక్తిగత సమాధానాలు పొందండి.", pr2Title: "మీ గ్రహాల గురించి ప్రశ్నలా?", pr2Text: "మా జ్యోతిష్యులు దీని అర్థాన్ని నేరుగా వివరిస్తారు.", pr3Title: "ముఖ్యమైనది ప్లాన్ చేస్తున్నారా?", pr3Text: "దానికి మంచి సమయాన్ని ఎంచుకోవడంలో జ్యోతిష్యుడు సహాయపడతారు.", joinKicker: "ASTROGOD", joinTitle: "AstroGod లో మీ జాతకం", joinText: "మీ జన్మ వివరాలను సేవ్ చేసి పూర్తి జాతకం చూడటానికి సైన్ అప్ చేయండి.", learnMore: "మరింత తెలుసుకోండి", book: "కాల్ చేయండి", signup: "సైన్ అప్", close: 'మూసివేయి', tabTime: 'సమయం', theme: 'లేత లేదా ముదురు రంగు', sky: 'ఆకాశం', agTitle: 'మీ పూర్తి జాతకం', agSub: 'AstroGod తెరవండి', agShort: 'జాతకం', agLink: 'పూర్తి జాతకాన్ని AstroGod లో చూడండి',
@@ -1178,6 +1192,7 @@ window.I18N = (function () {
     },
     ml: {
       tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ',
+      sopt: { orbits: "ഭ്രമണപഥങ്ങൾ", names: "ഗ്രഹനാമങ്ങൾ", rasi: "രാശി ദിശകൾ", zodiac: "രാശി നക്ഷത്രങ്ങൾ", stars: "നക്ഷത്രങ്ങൾ" },
       open: "ഓപ്പൺ", bigSize: "വലുതാക്കി", realSize: "യഥാർത്ഥ വലിപ്പം", home: "ഭൂമിയിലേക്ക് മടങ്ങുക", spaceHint: "തിരിക്കാൻ വലിക്കുക · നീക്കാൻ റൈറ്റ്-ഡ്രാഗ് അല്ലെങ്കിൽ രണ്ട് വിരൽ · സൂമിന് സ്ക്രോൾ · ഗ്രഹത്തിൽ തൊട്ട് അവിടേക്ക് പറക്കുക",
       fromEarth: "ഭൂമിയിൽ നിന്ന്", fromSun: "സൂര്യനിൽ നിന്ന്", logNote: "ദൂരങ്ങൾ ലോഗരിതമിക് സ്കെയിലിൽ · ദിശകൾ കൃത്യം", distEarth: "ഭൂമിയിൽ നിന്നുള്ള ദൂരം", distSun: "സൂര്യനിൽ നിന്നുള്ള ദൂരം", lightTime: "പ്രകാശത്തിന് {t} എടുക്കും", elong: "നമ്മുടെ ആകാശത്ത് സൂര്യനിൽ നിന്ന് {d}°", helioPos: "സൂര്യനിൽ നിന്ന് നോക്കുമ്പോൾ", mkm: "ദശലക്ഷം കി.മീ", nearEarth: "ഭൂമിക്കരികെ", earth: "ഭൂമി",
       prKicker: "ജ്യോതിഷികൾ", pr1Title: "ജ്യോതിഷിയോട് സംസാരിക്കൂ", pr1Text: "നിങ്ങളുടെ ജന്മ ആകാശം ഒരു വിദഗ്ധനൊപ്പം നോക്കി വ്യക്തമായ വ്യക്തിഗത ഉത്തരങ്ങൾ നേടൂ.", pr2Title: "നിങ്ങളുടെ ഗ്രഹങ്ങളെക്കുറിച്ച് ചോദ്യങ്ങളുണ്ടോ?", pr2Text: "ഞങ്ങളുടെ ജ്യോതിഷികൾ ഇതിന്റെ അർത്ഥം നേരിട്ട് വിശദീകരിക്കും.", pr3Title: "പ്രധാനപ്പെട്ട എന്തെങ്കിലും പ്ലാൻ ചെയ്യുകയാണോ?", pr3Text: "അതിന് നല്ല സമയം തിരഞ്ഞെടുക്കാൻ ജ്യോതിഷി സഹായിക്കും.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-ൽ നിങ്ങളുടെ ജാതകം", joinText: "ജനന വിവരങ്ങൾ സേവ് ചെയ്യാനും പൂർണ്ണ ജാതകം കാണാനും സൈൻ അപ്പ് ചെയ്യൂ.", learnMore: "കൂടുതൽ അറിയൂ", book: "വിളിക്കൂ", signup: "സൈൻ അപ്പ്", close: 'അടയ്ക്കുക', tabTime: 'സമയം', theme: 'ഇളം അല്ലെങ്കിൽ ഇരുണ്ട നിറം', sky: 'ആകാശം', agTitle: 'നിങ്ങളുടെ പൂർണ്ണ ജാതകം', agSub: 'AstroGod തുറക്കുക', agShort: 'ജാതകം', agLink: 'പൂർണ്ണ ജാതകം AstroGod-ൽ കാണുക',
@@ -1221,6 +1236,7 @@ window.I18N = (function () {
     },
     kn: {
       tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ',
+      sopt: { orbits: "ಕಕ್ಷೆಗಳು", names: "ಗ್ರಹಗಳ ಹೆಸರು", rasi: "ರಾಶಿ ದಿಕ್ಕುಗಳು", zodiac: "ರಾಶಿ ನಕ್ಷತ್ರಗಳು", stars: "ನಕ್ಷತ್ರಗಳು" },
       open: "ಓಪನ್", bigSize: "ದೊಡ್ಡದಾಗಿ", realSize: "ನಿಜ ಗಾತ್ರ", home: "ಭೂಮಿಗೆ ಹಿಂತಿರುಗಿ", spaceHint: "ತಿರುಗಿಸಲು ಎಳೆಯಿರಿ · ಸರಿಸಲು ರೈಟ್-ಡ್ರ್ಯಾಗ್ ಅಥವಾ ಎರಡು ಬೆರಳು · ಜೂಮ್‌ಗೆ ಸ್ಕ್ರೋಲ್ · ಗ್ರಹವನ್ನು ತಟ್ಟಿ ಅಲ್ಲಿಗೆ ಹಾರಿ",
       fromEarth: "ಭೂಮಿಯಿಂದ", fromSun: "ಸೂರ್ಯನಿಂದ", logNote: "ದೂರಗಳು ಲಾಗರಿದಮಿಕ್ ಪ್ರಮಾಣದಲ್ಲಿ · ದಿಕ್ಕುಗಳು ನಿಖರ", distEarth: "ಭೂಮಿಯಿಂದ ದೂರ", distSun: "ಸೂರ್ಯನಿಂದ ದೂರ", lightTime: "ಬೆಳಕಿಗೆ {t} ಬೇಕು", elong: "ನಮ್ಮ ಆಕಾಶದಲ್ಲಿ ಸೂರ್ಯನಿಂದ {d}°", helioPos: "ಸೂರ್ಯನಿಂದ ನೋಡಿದಾಗ", mkm: "ಮಿಲಿಯನ್ ಕಿ.ಮೀ", nearEarth: "ಭೂಮಿಯ ಹತ್ತಿರ", earth: "ಭೂಮಿ",
       prKicker: "ಜ್ಯೋತಿಷಿಗಳು", pr1Title: "ಜ್ಯೋತಿಷಿಯೊಂದಿಗೆ ಮಾತನಾಡಿ", pr1Text: "ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶವನ್ನು ತಜ್ಞರೊಂದಿಗೆ ನೋಡಿ, ಸ್ಪಷ್ಟ ವೈಯಕ್ತಿಕ ಉತ್ತರಗಳನ್ನು ಪಡೆಯಿರಿ.", pr2Title: "ನಿಮ್ಮ ಗ್ರಹಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿವೆಯೇ?", pr2Text: "ನಮ್ಮ ಜ್ಯೋತಿಷಿಗಳು ಇದರ ಅರ್ಥವನ್ನು ನೇರವಾಗಿ ವಿವರಿಸುತ್ತಾರೆ.", pr3Title: "ಮುಖ್ಯವಾದದ್ದನ್ನು ಯೋಜಿಸುತ್ತಿದ್ದೀರಾ?", pr3Text: "ಅದಕ್ಕೆ ಒಳ್ಳೆಯ ಸಮಯ ಆರಿಸಲು ಜ್ಯೋತಿಷಿ ಸಹಾಯ ಮಾಡುತ್ತಾರೆ.", joinKicker: "ASTROGOD", joinTitle: "AstroGod ನಲ್ಲಿ ನಿಮ್ಮ ಜಾತಕ", joinText: "ನಿಮ್ಮ ಜನ್ಮ ವಿವರಗಳನ್ನು ಉಳಿಸಲು ಮತ್ತು ಪೂರ್ಣ ಜಾತಕ ನೋಡಲು ಸೈನ್ ಅಪ್ ಮಾಡಿ.", learnMore: "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ", book: "ಕರೆ ಮಾಡಿ", signup: "ಸೈನ್ ಅಪ್", close: 'ಮುಚ್ಚು', tabTime: 'ಸಮಯ', theme: 'ತಿಳಿ ಅಥವಾ ಗಾಢ ಬಣ್ಣ', sky: 'ಆಕಾಶ', agTitle: 'ನಿಮ್ಮ ಪೂರ್ಣ ಜಾತಕ', agSub: 'AstroGod ತೆರೆಯಿರಿ', agShort: 'ಜಾತಕ', agLink: 'ಪೂರ್ಣ ಜಾತಕವನ್ನು AstroGod ನಲ್ಲಿ ನೋಡಿ',
@@ -1910,8 +1926,8 @@ window.I18N = (function () {
     if (f === zoomAnim.target) zoomAnim = null;
   }
   const zoomTarget = () => zoomAnim ? zoomAnim.target : S.fov;
-  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.4) : zoomTo(zoomTarget() / 2.5));
-  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(2.5) : zoomTo(zoomTarget() * 2.5));
+  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.3) : zoomTo(zoomTarget() / 2.5));
+  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(3.3) : zoomTo(zoomTarget() * 2.5));
   $('zFit').addEventListener('click', () => zoomTo(isPhone() ? 95 : 78));
   let fly = null;
   function worldOf(id) {
@@ -2435,6 +2451,7 @@ window.I18N = (function () {
   // True positions (Astronomy Engine) in the J2000 ecliptic frame, 1 unit = 1 AU. Planets can be
   // real size or enlarged; distances are always true. The sky view is called "Earth".
   S.view = 'sky'; S.bigSize = true;
+  S.sp = { orbits: true, names: true, rasi: true, zodiac: true, stars: true, mw: true };   // Open-view display settings
   const AU_KM = 149597870.7, EARTH_DOT = '#7fc8e8';
   const fmtDist = (id, au) => id === 'Moon' ? Math.round(au * AU_KM).toLocaleString('en-IN') + ' km' : au.toFixed(au < 10 ? 2 : 1) + ' AU';
   function lightTime(au) {
@@ -2478,7 +2495,7 @@ window.I18N = (function () {
   const spColor = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
   const RASI0_J2000 = 23.853;   // Lahiri ayanamsa at J2000 = the sidereal 0° Mesham direction in this frame
   let SP = null, posSpace = {}, spaceZoom = () => { };
-  const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null };
+  const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null, zoomT: null, zoomP: null };
 
   function buildSpace() {
     const ren = new THREE.WebGLRenderer({ canvas: spaceCanvas, antialias: true, logarithmicDepthBuffer: true });
@@ -2488,6 +2505,14 @@ window.I18N = (function () {
     scn.add(new THREE.PointLight(0xfff4e0, 1.7, 0, 0));
     // backdrop that travels with the camera: stars and the gold zodiac figures (for orientation)
     const back = new THREE.Group(); scn.add(back);
+    {   // the Milky Way: the Earth view's galactic band, turned into this frame
+      const m = new THREE.ShaderMaterial({
+        uniforms: { uGnp: { value: toScene(gnp).normalize() }, uGc: { value: toScene(gc).normalize() }, uVis: { value: 1.35 } },
+        vertexShader: mwMat.vertexShader, fragmentShader: mwMat.fragmentShader,
+        side: THREE.BackSide, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, transparent: true,
+      });
+      const mwS = new THREE.Mesh(new THREE.SphereGeometry(4800, 96, 48), m); mwS.renderOrder = -11; mwS.name = 'milkyway'; back.add(mwS);
+    }
     {
       const pos = new Float32Array(NS * 3), col = new Float32Array(NS * 3), size = new Float32Array(NS);
       for (let i = 0; i < NS; i++) {
@@ -2504,7 +2529,7 @@ window.I18N = (function () {
         fragmentShader: `varying vec3 vC; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; float a=exp(-r*r*6.0)+0.7*exp(-r*r*40.0); gl_FragColor=vec4(vC*a,1.0); }`,
         transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
       });
-      const pts = new THREE.Points(g, m); pts.renderOrder = -10; back.add(pts);
+      const pts = new THREE.Points(g, m); pts.renderOrder = -10; pts.name = 'stars'; back.add(pts);
       const seg = [];
       for (const [id, lines] of Object.entries(D.lines)) {
         if (!ZODIAC[id.slice(0, 3)]) continue;
@@ -2513,7 +2538,7 @@ window.I18N = (function () {
         }
       }
       const zl = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0xe2bf5a, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false }));
-      zl.renderOrder = -9; back.add(zl);
+      zl.renderOrder = -9; zl.name = 'zodiac'; back.add(zl);
     }
     // the 12 rasi directions on the ecliptic plane (sidereal 30° boundaries), to steer by
     {
@@ -2523,7 +2548,7 @@ window.I18N = (function () {
         pts.push(new THREE.Vector3(Math.cos(lon) * 0.05, 0, -Math.sin(lon) * 0.05), new THREE.Vector3(Math.cos(lon) * 45, 0, -Math.sin(lon) * 45));
       }
       const sp = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xece4d0, dashSize: 0.25, gapSize: 0.35, transparent: true, opacity: 0.22, depthWrite: false }));
-      sp.computeLineDistances(); scn.add(sp);
+      sp.computeLineDistances(); sp.name = 'spokes'; scn.add(sp);
     }
     // bodies
     const geo = new THREE.SphereGeometry(1, 96, 64), bodies = {};
@@ -2616,6 +2641,14 @@ window.I18N = (function () {
     needsRender = true;
   }
   function stepSpaceAnim(now) {
+    if (ctl.zoomT && !ctl.anim) {   // gliding zoom
+      const d0 = ctl.dist;
+      let d1 = Math.exp(Math.log(d0) + (Math.log(ctl.zoomT) - Math.log(d0)) * 0.24);
+      if (Math.abs(Math.log(d1 / ctl.zoomT)) < 0.003) { d1 = ctl.zoomT; ctl.zoomT = null; }
+      if (ctl.zoomP) ctl.target.addScaledVector(new THREE.Vector3().subVectors(ctl.zoomP, ctl.target), 1 - d1 / d0);
+      ctl.dist = d1; placeCam();
+      return true;
+    }
     const an = ctl.anim; if (!an) return false;
     const t = Math.min(1, (now - an.t0) / an.dur), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     ctl.target.copy(an.from).lerp(SP.bodies[an.id].mesh.position, e);
@@ -2640,7 +2673,7 @@ window.I18N = (function () {
     const camD = SP.cam.position.length();
     // rasi names along their directions, at a few distances so some are always in view
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `500 11px ${FONT}`;
-    for (const R of [1.25, 6, 32]) {
+    for (const R of S.sp.rasi ? [1.25, 6, 32] : []) {
       if (R < camD * 0.12 || R > camD * 40) continue;   // skip a ring that would be too small (crowded) or too far
       for (let k = 0; k < 12; k++) {
         const lon = (k * 30 + 15 + RASI0_J2000) * DEG, p = proj(new THREE.Vector3(Math.cos(lon) * R, 0, -Math.sin(lon) * R));
@@ -2664,7 +2697,7 @@ window.I18N = (function () {
       let ly = p.y;
       for (let n = 0; n < 6 && placed.some(q => Math.abs(q.y - ly) < 15 && lx < q.x + q.w && q.x < lx + 80); n++) ly += 15;
       placed.push({ x: lx, y: ly, w: 80 });
-      g.globalAlpha = 1; g.textAlign = 'left'; g.font = `600 12.5px ${FONT}`; g.fillStyle = c; g.fillText(bodyName(b.id), lx, ly);
+      if (S.sp.names) { g.globalAlpha = 1; g.textAlign = 'left'; g.font = `600 12.5px ${FONT}`; g.fillStyle = c; g.fillText(bodyName(b.id), lx, ly); }
     }
     g.globalAlpha = 1; g.lineWidth = 1;
     g.font = `500 11.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.7)'; g.textAlign = 'left';
@@ -2687,7 +2720,21 @@ window.I18N = (function () {
       ctl.target.addScaledVector(right, -dx * s).addScaledVector(up, dy * s);
       ctl.follow = null; ctl.anim = null; placeCam();
     };
-    const zoomBy = f => { if (!SP) return; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
+    // Zoom glides to a target distance. When not locked onto a body it heads for the point under the
+    // cursor (that point stays put on screen), so a few scrolls carry you across the solar system.
+    const zoomBy = (f, x, y) => {
+      if (!SP) return;
+      const from = ctl.zoomT || ctl.dist;
+      ctl.zoomT = clampV(from * f, minDist(), 120);
+      ctl.zoomP = null;
+      if (!ctl.follow && x != null) {
+        const ray = new THREE.Vector3((x / W) * 2 - 1, -(y / H) * 2 + 1, 0.5).unproject(SP.cam).sub(SP.cam.position).normalize();
+        const view = new THREE.Vector3().subVectors(ctl.target, SP.cam.position).normalize();
+        ctl.zoomP = SP.cam.position.clone().addScaledVector(ray, ctl.dist / Math.max(0.2, ray.dot(view)));
+      }
+      needsRender = true;
+    };
+    const zoomDirect = f => { if (!SP) return; ctl.zoomT = null; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
     spaceCanvas.addEventListener('contextmenu', e => e.preventDefault());
     spaceCanvas.addEventListener('pointerdown', e => {
       closeSheet();
@@ -2709,7 +2756,7 @@ window.I18N = (function () {
         else { ctl.yaw += dx * 0.006; ctl.pitch = clampV(ctl.pitch + dy * 0.006, -1.5, 1.5); placeCam(); }
       } else if (ptr.size === 2) {
         const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-        if (pinch && d) zoomBy(pinch / d);
+        if (pinch && d) zoomDirect(Math.pow(pinch / d, 1.7));   // a small pinch goes a long way
         if (mid) panBy(m[0] - mid[0], m[1] - mid[1]);
         pinch = d; mid = m; moved += 10;
       }
@@ -2724,21 +2771,37 @@ window.I18N = (function () {
       }
     };
     spaceCanvas.addEventListener('pointerup', up); spaceCanvas.addEventListener('pointercancel', up);
+    // wheel: one notch ≈ ×1.6, and it speeds up (to ≈ ×4 a notch) while you keep scrolling
+    let lastWheel = 0, streak = 0;
     spaceCanvas.addEventListener('wheel', e => {
       e.preventDefault(); ctl.anim = null;
       const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      zoomBy(Math.exp(clampV(dy, -300, 300) * 0.0022));
+      const now = performance.now();
+      streak = now - lastWheel < 220 ? Math.min(streak + 1, 8) : 0; lastWheel = now;
+      const boost = Math.abs(dy) >= 50 ? 1 + streak * 0.25 : 1;
+      zoomBy(Math.exp(clampV(dy, -300, 300) * 0.0047 * boost), ...lxy(e));
     }, { passive: false });
     window.addEventListener('keydown', e => {
       if (S.view !== 'space' || !SP || (e.target && e.target.closest && e.target.closest('input,select,textarea'))) return;
       const step = 40, keys = { ArrowLeft: [step, 0], a: [step, 0], ArrowRight: [-step, 0], d: [-step, 0], ArrowUp: [0, step], w: [0, step], ArrowDown: [0, -step], s: [0, -step] };
       const mv = keys[e.key]; if (mv) { panBy(mv[0], mv[1]); needsRender = true; }
-      if (e.key === '+' || e.key === '=') zoomBy(0.6);
-      if (e.key === '-' || e.key === '_') zoomBy(1.65);
+      if (e.key === '+' || e.key === '=') zoomBy(0.45, W / 2, H / 2);
+      if (e.key === '-' || e.key === '_') zoomBy(2.2, W / 2, H / 2);
     });
-    spaceZoom = zoomBy;
+    spaceZoom = f => zoomBy(f, W / 2, H / 2);
   }
 
+  function applySpaceOpts() {
+    document.querySelectorAll('[data-sopt]').forEach(b => b.setAttribute('aria-pressed', String(!!S.sp[b.dataset.sopt])));
+    if (!SP) return;
+    SP.scn.getObjectByName('stars').visible = S.sp.stars;
+    SP.scn.getObjectByName('milkyway').visible = S.sp.mw;
+    SP.scn.getObjectByName('zodiac').visible = S.sp.zodiac;
+    SP.scn.getObjectByName('spokes').visible = S.sp.rasi;
+    SP.orbits.visible = SP.moonOrbit.visible = S.sp.orbits;
+    needsRender = true;
+  }
+  document.querySelectorAll('[data-sopt]').forEach(b => b.addEventListener('click', () => { S.sp[b.dataset.sopt] = !S.sp[b.dataset.sopt]; applySpaceOpts(); }));
   function setView(view) {
     S.view = view;
     appEl.classList.toggle('mode-space', view === 'space');
@@ -2747,7 +2810,7 @@ window.I18N = (function () {
     if (view === 'space') {
       const first = !SP;
       if (first) SP = buildSpace();
-      resize(); updateSpace(); if (first) startView();
+      resize(); updateSpace(); if (first) startView(); applySpaceOpts();
     }
     needsRender = true;
   }
