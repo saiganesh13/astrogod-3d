@@ -2298,7 +2298,7 @@
         aeth.yaw += angWrap(b.yaw - aeth.yaw) * Math.min(1, dt * 2.5) * w; aeth.pitch += (b.pitch - aeth.pitch) * Math.min(1, dt * 2.5) * w;
       }
     }
-    if (done) t.hold = t.rush ? 0.05 : b.hold * (b.key === 'aether' ? Math.pow(0.95 / AETH_SPEED[aeth.speed], 0.5) : 1);
+    if (done) t.hold = t.rush ? 0.05 : b.key === 'aether' ? b.hold * Math.pow(0.95 / AETH_SPEED[aeth.speed], 0.5) + 5 : b.hold;   // linger 5 s more in the void before turning home
   }
   function aetherStep(now) {
     const dt = Math.min(0.25, Math.max(0, (now - (aeth.lastT || now)) / 1000)); aeth.lastT = now;
