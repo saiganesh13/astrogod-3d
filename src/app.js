@@ -465,6 +465,7 @@
     fadeGlows();
     applyOptions(false);
     renderPanel();
+    if (S.view === 'space') updateSpace();
     needsRender = true;
   }
 
@@ -559,7 +560,7 @@
   $('ptable').addEventListener('click', e => {
     const tr = e.target.closest('tr'); if (!tr) return;
     if (isPhone()) setSheet('');   // phones: put the Planets sheet away so the fly-to is visible
-    if (S.view === '2d') { S.sel = tr.dataset.id; renderPanel(); draw2D(); if (pos2D[S.sel]) showTipFor(S.sel, true); return; }
+    if (S.view === 'space') { const id = tr.dataset.id; if (SP && SP.bodies[id]) { S.sel = id; renderPanel(); focusSpace(id); showTipFor(id, true); } return; }
     flyTo(tr.dataset.id);
   });
 
@@ -630,8 +631,8 @@
     if (f === zoomAnim.target) zoomAnim = null;
   }
   const zoomTarget = () => zoomAnim ? zoomAnim.target : S.fov;
-  $('zIn').addEventListener('click', () => zoomTo(zoomTarget() / 2.5));
-  $('zOut').addEventListener('click', () => zoomTo(zoomTarget() * 2.5));
+  $('zIn').addEventListener('click', () => S.view === 'space' ? spaceZoom(0.4) : zoomTo(zoomTarget() / 2.5));
+  $('zOut').addEventListener('click', () => S.view === 'space' ? spaceZoom(2.5) : zoomTo(zoomTarget() * 2.5));
   $('zFit').addEventListener('click', () => zoomTo(isPhone() ? 95 : 78));
   let fly = null;
   function worldOf(id) {
@@ -825,7 +826,7 @@
   }
   function infoFor(id) {
     const a = S.astro; if (!a) return '';
-    if (S.view === '2d' && id !== 'Lagna') return info2D(id);
+    if (S.view === 'space' && id !== 'Lagna') return infoSpace(id);
     if (id.startsWith('star:')) return starInfo(+id.slice(5));
     if (id.startsWith('con:')) return conInfo(id.slice(4));
     if (id === 'Lagna') {
@@ -857,11 +858,11 @@
     return project(W3);
   }
   function positionTip() {
-    const p = S.view === '2d' ? pos2D[tipFor] : screenOf(tipFor);
+    const p = S.view === 'space' ? posSpace[tipFor] : screenOf(tipFor);
     if (!p) { tip.style.left = '-9999px'; return; }
     const tw = tip.offsetWidth, th = tip.offsetHeight;
-    const o = S.view === '2d' ? null : planets[tipFor];
-    const rp = S.view === '2d' ? (p.r || 6) : o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
+    const o = S.view === 'space' ? null : planets[tipFor];
+    const rp = S.view === 'space' ? Math.min(W / 3, p.r || 6) : o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
     let x = p.x + rp + 22, y = p.y + Math.min(rp, 40) + 18;
     if (x + tw > W - 10) x = p.x - rp - tw - 22;
     if (y + th > H - 10) y = p.y - th - 18;
@@ -1151,13 +1152,11 @@
     flyTo(f.id);
   }
 
-  // ---------- 2D view: the solar system seen from above, centred on Earth or on the Sun ----------
-  // Directions (angles) are true; distances use a logarithmic scale so the Moon and Neptune both fit.
-  const v2 = $('view2d'), g2 = v2.getContext('2d');
-  let pos2D = {};
-  S.view = '3d'; S.center = 'earth';
+  // ---------- "Open" view: a free-flying 3D solar system at the chosen moment ----------
+  // True positions (Astronomy Engine) in the J2000 ecliptic frame, 1 unit = 1 AU. Planets can be
+  // real size or enlarged; distances are always true. The sky view is called "Earth".
+  S.view = 'sky'; S.bigSize = true;
   const AU_KM = 149597870.7, EARTH_DOT = '#7fc8e8';
-  const LOG_RANGE = { earth: [Math.log10(0.0015), Math.log10(34)], sun: [Math.log10(0.28), Math.log10(34)] };
   const fmtDist = (id, au) => id === 'Moon' ? Math.round(au * AU_KM).toLocaleString('en-IN') + ' km' : au.toFixed(au < 10 ? 2 : 1) + ' AU';
   function lightTime(au) {
     const s = au * 499.005;
@@ -1166,9 +1165,9 @@
     return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
   }
   const lonText = sid => `${rName(Math.floor(sid / 30))} ${fmtDeg(sid % 30)}`;
-  const name2D = id => id === 'Earth' ? L.ui.earth : gName(id);
+  const bodyName = id => id === 'Earth' ? L.ui.earth : gName(id);
 
-  function info2D(id) {
+  function infoSpace(id) {
     const a = S.astro, u = L.ui;
     if (id === 'Earth') return `<h3>${esc(u.earth)}</h3><p>${u.distSun}: <b>${fmtDist('', a.earth.helioDist)}</b> · ${F(u.lightTime, { t: lightTime(a.earth.helioDist) })}</p><p>${u.helioPos}: <b>${esc(lonText(a.earth.helioSid))}</b></p>`;
     const b = [...a.bodies, ...a.nodes].find(x => x.id === id); if (!b) return '';
@@ -1184,190 +1183,307 @@
     return h;
   }
 
-  function sideLabel(g, x1, y1, x2, y2, text) {
-    const mx = x1 + (x2 - x1) * 0.62, my = y1 + (y2 - y1) * 0.62, len = Math.hypot(x2 - x1, y2 - y1) || 1;
-    let nx = -(y2 - y1) / len, ny = (x2 - x1) / len; if (ny > 0) { nx = -nx; ny = -ny; }
-    const tx = mx + nx * 13, ty = my + ny * 13, w = g.measureText(text).width + 12;
-    g.fillStyle = 'rgba(10,9,7,0.78)'; g.beginPath();
-    if (g.roundRect) g.roundRect(tx - w / 2, ty - 10, w, 20, 10); else g.rect(tx - w / 2, ty - 10, w, 20);
-    g.fill();
-    return [tx, ty];
-  }
-  function draw2D() {
-    if (S.view !== '2d' || !S.astro) return;
-    const a = S.astro, g = g2, u = L.ui, phone = isPhone();
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const bg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
-    bg.addColorStop(0, '#0f0d0a'); bg.addColorStop(1, '#050507');
-    g.fillStyle = bg; g.fillRect(0, 0, W, H);
-    // layout: keep clear of the search bar, the Planets card (desktop) and the time bar
-    const right = (!phone && !appEl.classList.contains('hide-grahas')) ? 424 : 0;
-    const top = phone ? 64 : 70, bottom = phone ? 34 : 74;
-    const cx = (W - right) / 2, cy = top + (H - top - bottom) / 2;
-    const Rout = Math.max(90, Math.min((W - right) / 2 - 14, (H - top - bottom) / 2 - 4));
-    const band = Math.max(22, Math.min(32, Rout * 0.11));
-    const Rring = Rout - band, Rmax = Rring - 18, Rin = Math.max(20, Rout * 0.075);
-    const [L0, L1] = LOG_RANGE[S.center];
-    const rOf = d => Rin + (Math.log10(Math.max(d, Math.pow(10, L0))) - L0) / (L1 - L0) * (Rmax - Rin);
-    const ang = lon => (180 + lon) * DEG;   // 0° Mesham on the left, longitude increasing anticlockwise
-    const P = (lon, r) => [cx + r * Math.cos(ang(lon)), cy - r * Math.sin(ang(lon))];
-    g.textBaseline = 'middle';
+  const spaceCanvas = $('space3d');
+  const AE = window.Astronomy, ROT_ECL = AE.Rotation_EQJ_ECL();
+  const r3 = (r, v) => [r.rot[0][0] * v[0] + r.rot[1][0] * v[1] + r.rot[2][0] * v[2], r.rot[0][1] * v[0] + r.rot[1][1] * v[1] + r.rot[2][1] * v[2], r.rot[0][2] * v[0] + r.rot[1][2] * v[1] + r.rot[2][2] * v[2]];
+  const toScene = v => { const e = r3(ROT_ECL, v); return new THREE.Vector3(e[0], e[2], -e[1]); };   // ecliptic plane = x–z, ecliptic north = +y
+  const V3 = v => [v.x, v.y, v.z];
+  const SPACE_BODIES = [
+    { id: 'Sun', km: 696000, big: 20 }, { id: 'Mercury', km: 2439.7, period: 87.969 }, { id: 'Venus', km: 6051.8, period: 224.70 },
+    { id: 'Earth', km: 6371, period: 365.256 }, { id: 'Moon', km: 1737.4 }, { id: 'Mars', km: 3389.5, period: 686.98 },
+    { id: 'Jupiter', km: 69911, period: 4332.6 }, { id: 'Saturn', km: 58232, period: 10759.2, ring: true },
+    { id: 'Uranus', km: 25362, period: 30688.5 }, { id: 'Neptune', km: 24622, period: 60195 },
+  ];
+  const BIG = 600, MOON_STRETCH = 60;   // Enlarged: planets ×600, Sun ×20, Moon's distance ×60 (so it sits outside Earth)
+  const radiusAU = b => b.km / AU_KM * (S.bigSize ? (b.big || BIG) : 1);
+  const spColor = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
+  const RASI0_J2000 = 23.853;   // Lahiri ayanamsa at J2000 = the sidereal 0° Mesham direction in this frame
+  let SP = null, posSpace = {}, spaceZoom = () => { };
+  const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null };
 
-    // zodiac wheel: the 12 rasis, equal 30° each
-    for (let k = 0; k < 12; k++) {
-      g.beginPath();
-      g.arc(cx, cy, Rout, -ang(k * 30), -ang(k * 30 + 30), true);
-      g.arc(cx, cy, Rring, -ang(k * 30 + 30), -ang(k * 30), false);
-      g.closePath();
-      g.fillStyle = k % 2 ? 'rgba(233,201,127,0.07)' : 'rgba(233,201,127,0.13)'; g.fill();
-      const [x1, y1] = P(k * 30, Rring), [x2, y2] = P(k * 30, Rout);
-      g.strokeStyle = 'rgba(236,228,208,0.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
-      const [lx, ly] = P(k * 30 + 15, (Rout + Rring) / 2);
-      g.font = `600 ${Math.round(Math.min(13, band * 0.42))}px ${FONT}`; g.fillStyle = '#f1d797'; g.textAlign = 'center';
-      g.fillText(rName(k), lx, ly);
+  function buildSpace() {
+    const ren = new THREE.WebGLRenderer({ canvas: spaceCanvas, antialias: true, logarithmicDepthBuffer: true });
+    ren.setPixelRatio(dpr); ren.setClearColor(0x030305, 1); ren.outputEncoding = THREE.sRGBEncoding;
+    const scn = new THREE.Scene(), cam = new THREE.PerspectiveCamera(55, 1, 1e-7, 1e7);
+    scn.add(new THREE.AmbientLight(0xffffff, 0.06));
+    scn.add(new THREE.PointLight(0xfff4e0, 1.7, 0, 0));
+    // backdrop that travels with the camera: stars and the gold zodiac figures (for orientation)
+    const back = new THREE.Group(); scn.add(back);
+    {
+      const pos = new Float32Array(NS * 3), col = new Float32Array(NS * 3), size = new Float32Array(NS);
+      for (let i = 0; i < NS; i++) {
+        const p = toScene([starDir[i * 3], starDir[i * 3 + 1], starDir[i * 3 + 2]]).multiplyScalar(5000);
+        pos.set([p.x, p.y, p.z], i * 3);
+        const mag = D.stars[i * 4 + 2], c = bvColor(D.stars[i * 4 + 3]), k = Math.min(1, Math.max(0.28, 0.32 + (6 - mag) * 0.14));
+        col.set([c[0] * k, c[1] * k, c[2] * k], i * 3); size[i] = Math.max(1.5, (6.9 - mag) * 1.4);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setAttribute('size', new THREE.BufferAttribute(size, 1));
+      const m = new THREE.ShaderMaterial({
+        uniforms: { uScale: { value: dpr } },
+        vertexShader: `attribute float size; attribute vec3 color; uniform float uScale; varying vec3 vC; void main(){ vC=color; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_PointSize=size*uScale; }`,
+        fragmentShader: `varying vec3 vC; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; float a=exp(-r*r*6.0)+0.7*exp(-r*r*40.0); gl_FragColor=vec4(vC*a,1.0); }`,
+        transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+      });
+      const pts = new THREE.Points(g, m); pts.renderOrder = -10; back.add(pts);
+      const seg = [];
+      for (const [id, lines] of Object.entries(D.lines)) {
+        if (!ZODIAC[id.slice(0, 3)]) continue;
+        for (const fl of lines) for (let i = 0; i + 3 < fl.length; i += 2) {
+          seg.push(toScene(C.radecVec(fl[i], fl[i + 1])).multiplyScalar(4990), toScene(C.radecVec(fl[i + 2], fl[i + 3])).multiplyScalar(4990));
+        }
+      }
+      const zl = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: 0xe2bf5a, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false }));
+      zl.renderOrder = -9; back.add(zl);
     }
-    g.strokeStyle = 'rgba(236,228,208,0.35)';
-    g.beginPath(); g.arc(cx, cy, Rout, 0, 2 * Math.PI); g.stroke();
-    g.beginPath(); g.arc(cx, cy, Rring, 0, 2 * Math.PI); g.stroke();
-    for (let d = 0; d < 360; d += 5) {   // degree ticks
-      const len = d % 30 === 0 ? 9 : d % 10 === 0 ? 6 : 3;
-      const [x1, y1] = P(d, Rring), [x2, y2] = P(d, Rring - len);
-      g.strokeStyle = 'rgba(236,228,208,0.3)'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    // the 12 rasi directions on the ecliptic plane (sidereal 30° boundaries), to steer by
+    {
+      const pts = [];
+      for (let k = 0; k < 12; k++) {
+        const lon = (k * 30 + RASI0_J2000) * DEG;
+        pts.push(new THREE.Vector3(Math.cos(lon) * 0.05, 0, -Math.sin(lon) * 0.05), new THREE.Vector3(Math.cos(lon) * 45, 0, -Math.sin(lon) * 45));
+      }
+      const sp = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xece4d0, dashSize: 0.25, gapSize: 0.35, transparent: true, opacity: 0.22, depthWrite: false }));
+      sp.computeLineDistances(); scn.add(sp);
     }
-    // distance rings (logarithmic)
-    g.font = `500 10.5px ${FONT}`; g.textAlign = 'left';
-    for (const d of [0.01, 0.1, 1, 10, 30]) {
-      if (Math.log10(d) <= L0 || Math.log10(d) > L1) continue;
-      const r = rOf(d);
-      g.setLineDash([2, 5]); g.strokeStyle = 'rgba(236,228,208,0.14)'; g.beginPath(); g.arc(cx, cy, r, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
-      g.fillStyle = 'rgba(236,228,208,0.45)'; g.fillText(d + ' AU', cx + 4, cy - r - 6);
-    }
-
     // bodies
-    pos2D = {};
-    const items = [];
-    if (S.center === 'earth') {
-      for (const b of a.bodies) items.push({ id: b.id, lon: b.sidereal, d: b.geoDist, b });
-    } else {
-      items.push({ id: 'Earth', lon: a.earth.helioSid, d: a.earth.helioDist });
-      for (const b of a.bodies) if (b.id !== 'Sun' && b.id !== 'Moon') items.push({ id: b.id, lon: b.helioSid, d: b.helioDist, b });
-    }
-    const colorOf = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
-    const sizeOf = id => ({ Sun: 9, Jupiter: 7.5, Saturn: 7, Earth: 6.5, Moon: 5 }[id] || 5.5);
-    for (const it of items) {   // direction lines to the wheel
-      [it.x, it.y] = P(it.lon, rOf(it.d));
-      const [ex, ey] = P(it.lon, Rring);
-      const sel = S.sel === it.id;
-      g.globalAlpha = sel ? 0.95 : 0.3; g.strokeStyle = colorOf(it.id); g.lineWidth = sel ? 2 : 1;
-      g.beginPath(); g.moveTo(cx, cy); g.lineTo(ex, ey); g.stroke();
-      g.beginPath(); g.arc(ex, ey, sel ? 4 : 2.5, 0, 2 * Math.PI); g.fillStyle = colorOf(it.id); g.fill();
-    }
-    g.globalAlpha = 1; g.lineWidth = 1;
-    // Rahu, Ketu and Lagna are points on the wheel (seen from Earth)
-    if (S.center === 'earth') {
-      const marks = [...a.nodes.map(n => ({ id: n.id, lon: n.sidereal, label: (n.id === 'Rahu' ? '☊ ' : '☋ ') + gName(n.id) })), { id: 'Lagna', lon: a.lagna.sidereal, label: '↑ ' + u.kLagna }];
-      for (const m of marks) {
-        const [x, y] = P(m.lon, Rring - 14);
-        g.fillStyle = LOOK[m.id].dot; g.strokeStyle = LOOK[m.id].dot;
-        g.beginPath(); g.moveTo(x, y - 5); g.lineTo(x + 5, y); g.lineTo(x, y + 5); g.lineTo(x - 5, y); g.closePath();
-        if (m.id === 'Lagna') g.fill(); else g.stroke();
-        g.font = `600 11px ${FONT}`; g.textAlign = 'center'; g.fillText(m.label, x, y - 12);
-        pos2D[m.id] = { x, y, r: 6 };
+    const geo = new THREE.SphereGeometry(1, 96, 64), bodies = {};
+    const ldTex = key => { if (!TEX[key]) return null; const t = texLoader.load(TEX[key], () => { needsRender = true; }); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t; };
+    for (const b of SPACE_BODIES) {
+      const map = ldTex(b.id.toLowerCase());
+      const mat = b.id === 'Sun' ? new THREE.MeshBasicMaterial({ map, color: 0xffffff }) : new THREE.MeshStandardMaterial({ map, roughness: 1, metalness: 0, color: map ? 0xffffff : spColor(b.id) });
+      const mesh = new THREE.Mesh(geo, mat); scn.add(mesh);
+      const o = { b, mesh };
+      if (b.ring) {
+        const rg = new THREE.RingGeometry(1.24, 2.27, 160, 1), uv = rg.attributes.uv, p = rg.attributes.position;
+        for (let i = 0; i < uv.count; i++) { const r = Math.hypot(p.getX(i), p.getY(i)); uv.setXY(i, (r - 1.24) / 1.03, 0.5); }
+        const rm = new THREE.MeshStandardMaterial({ map: ldTex('saturn_ring'), transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 1, metalness: 0 });
+        const ring = new THREE.Mesh(rg, rm); ring.rotation.x = -Math.PI / 2; mesh.add(ring);
       }
+      bodies[b.id] = o;
     }
-    // the selected body: show its distance from the other centre, and its angle from the Sun
-    const selIt = items.find(it => it.id === S.sel);
-    if (selIt && selIt.b) {
-      const b = selIt.b;
-      if (S.center === 'earth' && b.id !== 'Sun') {
-        const sun = items.find(it => it.id === 'Sun');
-        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(255,210,122,0.75)'; g.beginPath(); g.moveTo(sun.x, sun.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
-        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
-        { const txt = `${u.distSun}: ${fmtDist('', b.helioDist)}`, [tx, ty] = sideLabel(g, sun.x, sun.y, selIt.x, selIt.y, txt); g.fillStyle = '#ffd27a'; g.fillText(txt, tx, ty); }
-        // elongation arc at Earth
-        const rA = Rin + 16, s0 = ang(sun.lon), s1 = ang(selIt.lon);
-        let d = ((s1 - s0) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
-        g.strokeStyle = 'rgba(241,215,151,0.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, rA, -s0, -(s0 + d), d > 0); g.stroke(); g.lineWidth = 1;
-        const mid = s0 + d / 2;
-        g.fillStyle = '#f1d797'; g.font = `700 11.5px ${FONT}`;
-        g.fillText(`${Math.abs(d / DEG).toFixed(1)}°`, cx + (rA + 14) * Math.cos(mid), cy - (rA + 14) * Math.sin(mid));
-      }
-      if (S.center === 'sun') {
-        const earth = items.find(it => it.id === 'Earth');
-        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(127,200,232,0.8)'; g.beginPath(); g.moveTo(earth.x, earth.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
-        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
-        { const txt = `${u.distEarth}: ${fmtDist(b.id, b.geoDist)}`, [tx, ty] = sideLabel(g, earth.x, earth.y, selIt.x, selIt.y, txt); g.fillStyle = EARTH_DOT; g.fillText(txt, tx, ty); }
-      }
-    }
-    // centre body
-    if (S.center === 'earth') {
-      g.beginPath(); g.arc(cx, cy, 8, 0, 2 * Math.PI); g.fillStyle = EARTH_DOT; g.fill();
-      g.font = `600 11.5px ${FONT}`; g.fillStyle = EARTH_DOT; g.textAlign = 'center'; g.fillText(u.earth, cx, cy + 18);
-    } else {
-      const sg = g.createRadialGradient(cx, cy, 0, cx, cy, 26); sg.addColorStop(0, 'rgba(255,226,150,0.9)'); sg.addColorStop(1, 'rgba(255,200,90,0)');
-      g.fillStyle = sg; g.beginPath(); g.arc(cx, cy, 26, 0, 2 * Math.PI); g.fill();
-      g.beginPath(); g.arc(cx, cy, 10, 0, 2 * Math.PI); g.fillStyle = '#ffd27a'; g.fill();
-      g.font = `600 11.5px ${FONT}`; g.fillStyle = '#ffd27a'; g.textAlign = 'center'; g.fillText(gName('Sun'), cx, cy + 22);
-      pos2D.Sun = { x: cx, y: cy, r: 10 };
-    }
-    // dots and labels
-    const placed = [];
-    const drawDot = (id, x, y, sub) => {
-      const r = sizeOf(id), c = colorOf(id), sel = S.sel === id;
-      const gl = g.createRadialGradient(x, y, 0, x, y, r * 2.6); gl.addColorStop(0, c); gl.addColorStop(1, 'rgba(0,0,0,0)');
-      g.globalAlpha = 0.45; g.fillStyle = gl; g.beginPath(); g.arc(x, y, r * 2.6, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1;
-      g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fillStyle = c; g.fill();
-      if (sel) { g.strokeStyle = '#f1d797'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 5, 0, 2 * Math.PI); g.stroke(); g.lineWidth = 1; }
-      let ly = y - 2; const lx = x + r + 7;
-      g.font = `600 12px ${FONT}`; const lw = Math.max(g.measureText(name2D(id)).width, 60);
-      for (let n = 0; n < 8 && placed.some(p => Math.abs(p.y - ly) < 26 && lx < p.x + p.w && p.x < lx + lw); n++) ly += 26;
-      placed.push({ x: lx, y: ly, w: lw });
-      g.textAlign = 'left'; g.fillStyle = c; g.fillText(name2D(id), lx, ly - 6);
-      g.font = `500 10.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.75)'; g.fillText(sub, lx, ly + 7);
-      pos2D[id] = { x, y, r };
-    };
-    for (const it of items) drawDot(it.id, it.x, it.y, fmtDist(it.id, it.d));
-    if (S.center === 'sun') {   // the Moon sits right next to Earth at this scale
-      const e = items.find(it => it.id === 'Earth'), mb = a.bodies.find(b => b.id === 'Moon');
-      const [mx, my] = [e.x + 18 * Math.cos(ang(mb.sidereal)), e.y - 18 * Math.sin(ang(mb.sidereal))];
-      drawDot('Moon', mx, my, u.nearEarth);
-    }
-    // note
-    g.font = `500 11px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.6)'; g.textAlign = 'left';
-    g.fillText(u.logNote, 16, top + 6);
-    if (tipFor) positionTip();
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffd27a, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    scn.add(glow);
+    const orbits = new THREE.Group(), moonOrbit = new THREE.Group(); scn.add(orbits, moonOrbit);
+    return { ren, scn, cam, back, bodies, glow, orbits, moonOrbit, orbitsAt: null, moonAt: null, bigAt: null };
   }
-  function pick2D(x, y) {
-    let best = null, bd = 22;
-    for (const [id, p] of Object.entries(pos2D)) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = id; } }
-    return best;
+
+  function dashedLoop(pts, color, opacity) {
+    const r = pts.reduce((s, p) => s + p.length(), 0) / pts.length || 1;
+    const m = new THREE.LineDashedMaterial({ color, dashSize: 2 * Math.PI * r / 200, gapSize: 2 * Math.PI * r / 260, transparent: true, opacity, depthWrite: false });
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), m); line.computeLineDistances(); return line;
   }
-  const loc2 = e => { const r = v2.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  v2.addEventListener('pointerdown', () => closeSheet());
-  v2.addEventListener('pointermove', e => {
-    if (e.pointerType !== 'mouse' || tipPinned) return;
-    const id = pick2D(...loc2(e)); v2.style.cursor = id ? 'pointer' : '';
-    if (id !== tipFor) showTipFor(id, false);
-  });
-  v2.addEventListener('click', e => {
-    const id = pick2D(...loc2(e));
-    S.sel = id; renderPanel();
-    if (id) showTipFor(id, true); else { showTipFor(null); needsRender = true; }
-  });
-  function setView(view) {
-    S.view = view;
-    appEl.classList.toggle('mode-2d', view === '2d');
-    document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
-    showTipFor(null); S.sel = null; renderPanel();
+  function clearGroup(g) { for (const c of g.children.slice()) { g.remove(c); c.geometry.dispose(); c.material.dispose(); } }
+
+  function updateSpace() {
+    if (!SP || !S.astro) return;
+    const t = AE.MakeTime(new Date(S.utc));
+    const earthP = toScene(V3(AE.HelioVector('Earth', t)));
+    for (const { b, mesh } of Object.values(SP.bodies)) {
+      let p;
+      if (b.id === 'Sun') p = new THREE.Vector3();
+      else if (b.id === 'Earth') p = earthP.clone();
+      else if (b.id === 'Moon') p = earthP.clone().add(toScene(V3(AE.GeoMoon(t))).multiplyScalar(S.bigSize ? MOON_STRETCH : 1));
+      else p = toScene(V3(AE.HelioVector(b.id, t)));
+      mesh.position.copy(p); mesh.scale.setScalar(radiusAU(b));
+      try {   // face the right way: IAU north pole + prime meridian (texture longitude 0 sits on local +x)
+        const ax = AE.RotationAxis(b.id, t), pole = [ax.north.x, ax.north.y, ax.north.z];
+        const a0 = ax.ra * 15 * DEG, nn = [-Math.sin(a0), Math.cos(a0), 0];
+        const pxn = [pole[1] * nn[2] - pole[2] * nn[1], pole[2] * nn[0] - pole[0] * nn[2], pole[0] * nn[1] - pole[1] * nn[0]];
+        const w = ax.spin * DEG, m = [0, 1, 2].map(i => nn[i] * Math.cos(w) + pxn[i] * Math.sin(w));
+        const P = toScene(pole).normalize(), M = toScene(m).normalize(), Z = new THREE.Vector3().crossVectors(M, P);
+        mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(M, P, Z));
+      } catch (e) { }
+    }
+    SP.glow.scale.setScalar(radiusAU(SP.bodies.Sun.b) * 9);
+    // orbits: one full lap from this moment (rebuilt only when the date moves a lot)
+    if (SP.orbitsAt === null || Math.abs(S.utc - SP.orbitsAt) > 2 * 365.25 * 864e5) {
+      SP.orbitsAt = S.utc; clearGroup(SP.orbits);
+      for (const b of SPACE_BODIES) {
+        if (!b.period) continue;
+        const pts = [];
+        for (let i = 0; i <= 360; i++) pts.push(toScene(V3(AE.HelioVector(b.id, AE.MakeTime(new Date(S.utc + i / 360 * b.period * 864e5))))));
+        SP.orbits.add(dashedLoop(pts, spColor(b.id), 0.5));
+      }
+    }
+    if (SP.moonAt === null || SP.bigAt !== S.bigSize || Math.abs(S.utc - SP.moonAt) > 5 * 864e5) {
+      SP.moonAt = S.utc; SP.bigAt = S.bigSize; clearGroup(SP.moonOrbit);
+      const pts = [];
+      for (let i = 0; i <= 180; i++) pts.push(toScene(V3(AE.GeoMoon(AE.MakeTime(new Date(S.utc + i / 180 * 27.3217 * 864e5))))).multiplyScalar(S.bigSize ? MOON_STRETCH : 1));
+      SP.moonOrbit.add(dashedLoop(pts, 0xe6e6ea, 0.45));
+    }
+    SP.moonOrbit.position.copy(earthP);
+    if (ctl.follow && !ctl.anim) ctl.target.copy(SP.bodies[ctl.follow].mesh.position);
+    placeCam(); needsRender = true;
+  }
+
+  function placeCam() {
+    if (!SP) return;
+    const c = Math.cos(ctl.pitch);
+    SP.cam.position.set(ctl.target.x + ctl.dist * c * Math.cos(ctl.yaw), ctl.target.y + ctl.dist * Math.sin(ctl.pitch), ctl.target.z + ctl.dist * c * Math.sin(ctl.yaw));
+    SP.cam.up.set(0, 1, 0); SP.cam.lookAt(ctl.target); SP.cam.updateMatrixWorld();
+    SP.back.position.copy(SP.cam.position);
+  }
+  const fitDist = id => { const b = SP.bodies[id].b; return radiusAU(b) * (b.ring ? 7 : 4.5); };
+  const minDist = () => ctl.follow ? radiusAU(SP.bodies[ctl.follow].b) * 1.25 : 2e-6;
+  function focusSpace(id) {
+    if (!SP || !SP.bodies[id]) return;
+    ctl.follow = id;
+    // arrive on the sunlit side, a little off the Sun line, so the planet shows as a bright gibbous
+    const p = SP.bodies[id].mesh.position;
+    const toYaw = id === 'Sun' ? ctl.yaw : Math.atan2(-p.z, -p.x) + 0.6;
+    const dYaw = ((toYaw - ctl.yaw) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+    ctl.anim = { t0: performance.now(), dur: 1700, from: ctl.target.clone(), id, fromD: ctl.dist, toD: fitDist(id), fromYaw: ctl.yaw, dYaw, fromPitch: ctl.pitch, toPitch: id === 'Sun' ? ctl.pitch : 0.28 };
     needsRender = true;
   }
-  function setCenter(c) {
-    S.center = c;
-    document.querySelectorAll('#centerSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.center === c)));
-    showTipFor(null); needsRender = true;
+  function stepSpaceAnim(now) {
+    const an = ctl.anim; if (!an) return false;
+    const t = Math.min(1, (now - an.t0) / an.dur), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    ctl.target.copy(an.from).lerp(SP.bodies[an.id].mesh.position, e);
+    ctl.dist = Math.exp(Math.log(an.fromD) + (Math.log(an.toD) - Math.log(an.fromD)) * e);
+    ctl.yaw = an.fromYaw + an.dYaw * e; ctl.pitch = an.fromPitch + (an.toPitch - an.fromPitch) * e;
+    if (t >= 1) ctl.anim = null;
+    placeCam(); return true;
+  }
+  function startView() {   // beside Earth: its sunlit side half in view, the Sun and inner planets beyond
+    const e = SP.bodies.Earth.mesh.position;
+    ctl.follow = 'Earth'; ctl.anim = null; ctl.target.copy(e);
+    ctl.yaw = Math.atan2(e.z, e.x) + 0.95; ctl.pitch = 0.32; ctl.dist = fitDist('Earth') * 2.4;
+    placeCam();
+  }
+
+  // labels, rasi directions and the hint, drawn over the 3D scene
+  function drawSpaceOverlay() {
+    const g = octx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    posSpace = {};
+    const v = new THREE.Vector3();
+    const proj = p => { v.copy(p).project(SP.cam); if (v.z > 1 || v.z < -1) return null; return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * H }; };
+    const camD = SP.cam.position.length();
+    // rasi names along their directions, at a few distances so some are always in view
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `500 11px ${FONT}`;
+    for (const R of [1.25, 6, 32]) {
+      if (R < camD * 0.12 || R > camD * 40) continue;   // skip a ring that would be too small (crowded) or too far
+      for (let k = 0; k < 12; k++) {
+        const lon = (k * 30 + 15 + RASI0_J2000) * DEG, p = proj(new THREE.Vector3(Math.cos(lon) * R, 0, -Math.sin(lon) * R));
+        if (!p || p.x < -40 || p.x > W + 40 || p.y < -20 || p.y > H + 20) continue;
+        g.globalAlpha = 0.5; g.fillStyle = '#ece4d0'; g.fillText(rName(k), p.x, p.y);
+      }
+    }
+    g.globalAlpha = 1;
+    // bodies: a marker ring while small, always a name
+    const k = (H / 2) / Math.tan(SP.cam.fov / 2 * DEG);
+    const placed = [];
+    for (const { b, mesh } of Object.values(SP.bodies)) {
+      const p = proj(mesh.position); if (!p) continue;
+      const dCam = SP.cam.position.distanceTo(mesh.position);
+      const rp = radiusAU(b) / Math.max(dCam, 1e-9) * k;
+      posSpace[b.id] = { x: p.x, y: p.y, r: Math.max(rp, 6) };
+      if (p.x < -60 || p.x > W + 60 || p.y < -30 || p.y > H + 30) continue;
+      const c = spColor(b.id), sel = S.sel === b.id;
+      if (rp < 9) { g.strokeStyle = c; g.globalAlpha = 0.9; g.lineWidth = sel ? 2 : 1.3; g.beginPath(); g.arc(p.x, p.y, sel ? 9 : 7, 0, 2 * Math.PI); g.stroke(); }
+      const lx = p.x + Math.min(Math.max(rp, 7), W / 3) + 7;
+      let ly = p.y;
+      for (let n = 0; n < 6 && placed.some(q => Math.abs(q.y - ly) < 15 && lx < q.x + q.w && q.x < lx + 80); n++) ly += 15;
+      placed.push({ x: lx, y: ly, w: 80 });
+      g.globalAlpha = 1; g.textAlign = 'left'; g.font = `600 12.5px ${FONT}`; g.fillStyle = c; g.fillText(bodyName(b.id), lx, ly);
+    }
+    g.globalAlpha = 1; g.lineWidth = 1;
+    g.font = `500 11.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.7)'; g.textAlign = 'left';
+    g.fillText(L.ui.spaceHint, 16, isPhone() ? 124 : 78);
+    if (tipFor) positionTip();
+  }
+  function pickSpace(x, y) {
+    let best = null, bd = 1e9;
+    for (const [id, p] of Object.entries(posSpace)) { const d = Math.hypot(p.x - x, p.y - y); if (d < Math.max(22, p.r + 6) && d < bd) { bd = d; best = id; } }
+    return best;
+  }
+
+  // free camera: drag = orbit, right-drag / Shift-drag / two fingers = move, wheel / pinch = zoom
+  {
+    const ptr = new Map(); let moved = 0, pan = false, pinch = 0, mid = null;
+    const lxy = e => { const r = spaceCanvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const panBy = (dx, dy) => {
+      const right = new THREE.Vector3().setFromMatrixColumn(SP.cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(SP.cam.matrixWorld, 1);
+      const s = ctl.dist * 2 * Math.tan(SP.cam.fov / 2 * DEG) / H;
+      ctl.target.addScaledVector(right, -dx * s).addScaledVector(up, dy * s);
+      ctl.follow = null; ctl.anim = null; placeCam();
+    };
+    const zoomBy = f => { if (!SP) return; ctl.dist = clampV(ctl.dist * f, minDist(), 120); placeCam(); needsRender = true; };
+    spaceCanvas.addEventListener('contextmenu', e => e.preventDefault());
+    spaceCanvas.addEventListener('pointerdown', e => {
+      closeSheet();
+      try { spaceCanvas.setPointerCapture(e.pointerId); } catch (err) { }
+      ptr.set(e.pointerId, lxy(e)); moved = 0; pan = e.button === 2 || e.shiftKey; ctl.anim = null;
+      if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; }
+    });
+    spaceCanvas.addEventListener('pointermove', e => {
+      if (!SP) return;
+      const prev = ptr.get(e.pointerId), cur = lxy(e);
+      if (!prev) {
+        if (e.pointerType === 'mouse' && !tipPinned) { const id = pickSpace(...cur); spaceCanvas.style.cursor = id ? 'pointer' : ''; if (id !== tipFor) showTipFor(id, false); }
+        return;
+      }
+      ptr.set(e.pointerId, cur);
+      if (ptr.size === 1) {
+        const dx = cur[0] - prev[0], dy = cur[1] - prev[1]; moved += Math.abs(dx) + Math.abs(dy);
+        if (pan) panBy(dx, dy);
+        else { ctl.yaw += dx * 0.006; ctl.pitch = clampV(ctl.pitch + dy * 0.006, -1.5, 1.5); placeCam(); }
+      } else if (ptr.size === 2) {
+        const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+        if (pinch && d) zoomBy(pinch / d);
+        if (mid) panBy(m[0] - mid[0], m[1] - mid[1]);
+        pinch = d; mid = m; moved += 10;
+      }
+      needsRender = true;
+    });
+    const up = e => {
+      if (!ptr.has(e.pointerId)) return;
+      ptr.delete(e.pointerId); if (ptr.size < 2) { pinch = 0; mid = null; }
+      if (moved < 6 && ptr.size === 0) {
+        const id = pickSpace(...lxy(e));
+        if (id) { S.sel = id; renderPanel(); focusSpace(id); showTipFor(id, true); }
+      }
+    };
+    spaceCanvas.addEventListener('pointerup', up); spaceCanvas.addEventListener('pointercancel', up);
+    spaceCanvas.addEventListener('wheel', e => {
+      e.preventDefault(); ctl.anim = null;
+      const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+      zoomBy(Math.exp(clampV(dy, -300, 300) * 0.0022));
+    }, { passive: false });
+    window.addEventListener('keydown', e => {
+      if (S.view !== 'space' || !SP || (e.target && e.target.closest && e.target.closest('input,select,textarea'))) return;
+      const step = 40, keys = { ArrowLeft: [step, 0], a: [step, 0], ArrowRight: [-step, 0], d: [-step, 0], ArrowUp: [0, step], w: [0, step], ArrowDown: [0, -step], s: [0, -step] };
+      const mv = keys[e.key]; if (mv) { panBy(mv[0], mv[1]); needsRender = true; }
+      if (e.key === '+' || e.key === '=') zoomBy(0.6);
+      if (e.key === '-' || e.key === '_') zoomBy(1.65);
+    });
+    spaceZoom = zoomBy;
+  }
+
+  function setView(view) {
+    S.view = view;
+    appEl.classList.toggle('mode-space', view === 'space');
+    document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    showTipFor(null); S.sel = null; renderPanel();
+    if (view === 'space') {
+      const first = !SP;
+      if (first) SP = buildSpace();
+      resize(); updateSpace(); if (first) startView();
+    }
+    needsRender = true;
+  }
+  function setBig(big) {
+    S.bigSize = big;
+    document.querySelectorAll('#sizeSeg button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.size === 'big') === big)));
+    if (!SP) return;
+    updateSpace();
+    if (ctl.follow) { const f = fitDist(ctl.follow); if (ctl.dist > f * 20 || ctl.dist < f) ctl.dist = f; ctl.dist = clampV(ctl.dist, minDist(), 120); placeCam(); }
+    needsRender = true;
   }
   document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
-  document.querySelectorAll('#centerSeg button').forEach(b => b.addEventListener('click', () => setCenter(b.dataset.center)));
+  document.querySelectorAll('#sizeSeg button').forEach(b => b.addEventListener('click', () => setBig(b.dataset.size === 'big')));
+  $('spaceHome').addEventListener('click', () => { if (SP) focusSpace('Earth'); });
+
 
   // ---------- phone sheets ----------
   const isPhone = () => window.matchMedia('(max-width: 1023px)').matches;
@@ -1499,7 +1615,7 @@
     cRect = glCanvas.getBoundingClientRect();
     renderer.setSize(W, H, false);
     ov.width = Math.round(W * dpr); ov.height = Math.round(H * dpr);
-    v2.width = Math.round(W * dpr); v2.height = Math.round(H * dpr);
+    if (SP) { SP.ren.setSize(W, H, false); SP.cam.aspect = W / H; SP.cam.updateProjectionMatrix(); }
     camera.aspect = W / H; applyCamera(); needsRender = true;
   }
   window.addEventListener('resize', resize);
@@ -1521,7 +1637,10 @@
       applyCamera(); needsRender = true; if (t >= 1) fly = null;
     }
     stepZoom();
-    if (needsRender) { if (S.view === '2d') draw2D(); else { renderer.render(scene, camera); drawOverlay(); } needsRender = false; }
+    if (S.view === 'space' && SP) {
+      if (stepSpaceAnim(now)) needsRender = true;
+      if (needsRender) { SP.ren.render(SP.scn, SP.cam); drawSpaceOverlay(); needsRender = false; }
+    } else if (needsRender) { renderer.render(scene, camera); drawOverlay(); needsRender = false; }
   }
 
   // ---------- boot ----------

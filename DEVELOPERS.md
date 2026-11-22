@@ -137,9 +137,11 @@ node build.js
 - **Sky features:** 5,044 stars to magnitude 6, all 88 constellations (the 12 zodiac figures in gold),
   the 12 rasi signs as dashed 30° boxes, Milky Way, daylight/twilight sky, see-through or no ground,
   and the sky turning to night when zoomed in.
-- **2D view:** the 3D/2D switch shows a top-down map of the ecliptic centred on Earth or the Sun
-  (`draw2D()` in `app.js`). Directions are true; distances use a log scale. Heliocentric positions,
-  distances and elongation come from `astro-core.js` (`helioDist`, `helioSid`, `geoDist`, `elong`).
+- **Earth / Open views:** "Earth" is the sky seen from the birth place. "Open" (`buildSpace()` /
+  `updateSpace()` in `app.js`) is a free-flying 3D solar system at the same moment: true heliocentric
+  positions in the J2000 ecliptic frame (1 unit = 1 AU), dashed orbits, IAU rotation axes, Earth/planet
+  surface maps, a second WebGL renderer with a logarithmic depth buffer, and an "Enlarged / Real size"
+  switch (enlarged = planets ×600, Sun ×20, Moon distance ×60; distances otherwise true).
 - **Layouts:** desktop (1024 px and wider) has a sidebar; phones and tablets get a top bar, bottom tabs and
   bottom sheets (swipe down or tap the sky to close).
 
