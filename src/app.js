@@ -960,6 +960,27 @@
   function refreshTip() { if (tipFor) tip.innerHTML = infoFor(tipFor); }
 
   // ---------- form ----------
+  // Date of birth is typed as DD/MM/YYYY (slashes added automatically); the app works with YYYY-MM-DD.
+  const fDate = $('fDate');
+  function isoDate() {
+    const m = fDate.value.trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
+    if (!m) return '';
+    const d = +m[1], mo = +m[2], y = +m[3];
+    const t = new Date(Date.UTC(y, mo - 1, d));
+    if (y < 1000 || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return '';
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  function setIsoDate(iso) { const [y, m, d] = iso.split('-'); fDate.value = `${d}/${m}/${y}`; }
+  fDate.addEventListener('input', e => {
+    if (e.inputType && e.inputType.startsWith('delete')) return;   // let backspace work naturally
+    const digits = fDate.value.replace(/\D/g, '').slice(0, 8);
+    let out = digits.slice(0, 2);
+    if (digits.length > 2) out += '/' + digits.slice(2, 4);
+    if (digits.length > 4) out += '/' + digits.slice(4);
+    if (digits.length === 2 || digits.length === 4) out += '/';
+    fDate.value = out;
+  });
+  fDate.addEventListener('blur', () => { const iso = isoDate(); if (iso) setIsoDate(iso); placeHint(); });
   const fTz = $('fTz');
   (function fillTz() {
     let zones = [];
@@ -977,7 +998,7 @@
     const lat = +$('fLat').value, lon = +$('fLon').value, tz = fTz.value;
     if (!$('fLat').value) { $('placeInfo').textContent = ''; return; }
     let off = '';
-    const d = $('fDate').value, t = $('fTime').value;
+    const d = isoDate(), t = $('fTime').value;
     if (d && t) { const [y, m, dd] = d.split('-').map(Number), [hh, mi] = t.split(':').map(Number); off = ' · ' + offStr(C.tzOffsetMinutes(tz, C.localToUtc(y, m, dd, hh, mi, 0, tz))) + ' ' + L.ui.onDate; }
     $('placeInfo').innerHTML = `<b>${Math.abs(lat).toFixed(3)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(3)}°${lon >= 0 ? 'E' : 'W'}</b> · ${tz.replace(/_/g, ' ')}${off}`;
   }
@@ -1028,9 +1049,9 @@
 
   $('birth').addEventListener('submit', e => {
     e.preventDefault();
-    const d = $('fDate').value, t = $('fTime').value;
+    const d = isoDate(), t = $('fTime').value;
     const lat = parseFloat($('fLat').value), lon = parseFloat($('fLon').value);
-    if (!d || !t) { toast(L.ui.toastDate); return; }
+    if (!d || !t) { toast(L.ui.toastDate + ' (DD/MM/YYYY)'); return; }
     if (!isFinite(lat) || !isFinite(lon)) { toast(L.ui.toastPlace); $('advanced').open = true; return; }
     const [y, m, dd] = d.split('-').map(Number), [hh, mi] = t.split(':').map(Number);
     Object.assign(S, { lat, lon, tz: fTz.value, place: fPlace.value || `${lat.toFixed(2)}, ${lon.toFixed(2)}`, name: $('fName').value.trim(), isExample: false });
@@ -1224,14 +1245,14 @@
   }
   let saved = null; try { saved = JSON.parse(localStorage.getItem('janmaVaanam') || 'null'); } catch (e) { }
   if (saved && saved.d && saved.t && isFinite(saved.lat)) {
-    $('fName').value = saved.name || ''; $('fDate').value = saved.d; $('fTime').value = saved.t;
+    $('fName').value = saved.name || ''; setIsoDate(saved.d); $('fTime').value = saved.t;
     setPlace(saved.place, saved.lat, saved.lon, saved.tz);
     const [y, m, dd] = saved.d.split('-').map(Number), [hh, mi] = saved.t.split(':').map(Number);
     Object.assign(S, { lat: saved.lat, lon: saved.lon, tz: saved.tz, place: saved.place, name: saved.name || '', isExample: false });
     S.baseUtc = S.utc = C.localToUtc(y, m, dd, hh, mi, 0, S.tz);
   } else {
     const n = todayIn('Asia/Kolkata');
-    $('fDate').value = n.d; $('fTime').value = n.t; setPlace('Chennai, Tamil Nadu', 13.0827, 80.2707, 'Asia/Kolkata');
+    setIsoDate(n.d); $('fTime').value = n.t; setPlace('Chennai, Tamil Nadu', 13.0827, 80.2707, 'Asia/Kolkata');
     showExample = true;
     if (isPhone()) setTimeout(() => toast(L.ui.toastPhone), 600);
   }

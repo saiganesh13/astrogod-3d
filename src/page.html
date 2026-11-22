@@ -371,7 +371,7 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
         <button class="xclose sheet-x" type="button" data-close="birth" data-i18n-aria="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <div class="field"><label for="fName" data-i18n="name">Name (optional)</label><input id="fName" placeholder="e.g. Karthik" data-i18n-ph="namePh"></div>
       <div class="row2">
-        <div class="field"><label for="fDate" data-i18n="dob">Date of birth</label><input id="fDate" type="date" required></div>
+        <div class="field"><label for="fDate" data-i18n="dob">Date of birth</label><input id="fDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="bday" required></div>
         <div class="field"><label for="fTime" data-i18n="tob">Time of birth</label><input id="fTime" type="time" step="60" required></div>
       </div>
       <div class="field place-wrap">
