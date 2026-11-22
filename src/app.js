@@ -552,6 +552,7 @@
   }
   $('ptable').addEventListener('click', e => {
     const tr = e.target.closest('tr'); if (!tr) return;
+    if (isPhone()) setSheet('');   // phones: put the Planets sheet away so the fly-to is visible
     flyTo(tr.dataset.id);
   });
 
