@@ -468,6 +468,7 @@
     needsRender = true;
   }
 
+
   // ---------- atmosphere ----------
   // Daylight belongs to Earth's air. Zooming in deep is like leaving Earth: the blue sky and
   // twilight fade out and the ground thins, leaving the night sky (fully night from a 22° view, ~3.5× zoom).
@@ -558,6 +559,7 @@
   $('ptable').addEventListener('click', e => {
     const tr = e.target.closest('tr'); if (!tr) return;
     if (isPhone()) setSheet('');   // phones: put the Planets sheet away so the fly-to is visible
+    if (S.view === '2d') { S.sel = tr.dataset.id; renderPanel(); draw2D(); if (pos2D[S.sel]) showTipFor(S.sel, true); return; }
     flyTo(tr.dataset.id);
   });
 
@@ -823,6 +825,7 @@
   }
   function infoFor(id) {
     const a = S.astro; if (!a) return '';
+    if (S.view === '2d' && id !== 'Lagna') return info2D(id);
     if (id.startsWith('star:')) return starInfo(+id.slice(5));
     if (id.startsWith('con:')) return conInfo(id.slice(4));
     if (id === 'Lagna') {
@@ -833,10 +836,10 @@
     let h = `<h3>${esc(planetLabel(b.id))}</h3>${signLine(b.sign, b.deg, b.nak, b.pada)}`;
     if (b.id === 'Rahu' || b.id === 'Ketu') return h + `<p>${L.ui.node}</p>` + altAzLine(worldOf(b.id));
     if (b.retro) {
-      h += `<p>${F(L.ui.retroLine, { w: `<b style="color:var(--vakri)">${L.ui.vakri}</b>`, s: Math.abs(b.speed).toFixed(3) })}</p>`;
+      h += `<p>${F(L.ui.retroLine, { w: `<b style="color:var(--retro)">${L.ui.vakri}</b>`, s: Math.abs(b.speed).toFixed(3) })}</p>`;
       if (b.phaseFraction > 0.985 && ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'].includes(b.id)) h += `<p>${L.ui.opposite}</p>`;
     } else if (b.id !== 'Sun' && b.id !== 'Moon') h += `<p>${F(L.ui.direct, { s: b.speed.toFixed(3) })}</p>`;
-    if (b.combust) h += `<p>${F(L.ui.combustLine, { w: `<b style="color:var(--combust)">${L.ui.combust}</b>`, d: b.sunSep.toFixed(1) })}</p>`;
+    if (b.combust) h += `<p>${F(L.ui.combustLine, { w: `<b style="color:var(--text)">${L.ui.combust}</b>`, d: b.sunSep.toFixed(1) })}</p>`;
     if (b.id === 'Moon') { const mp = a.moonPhase; h += `<p>${F(L.ui.moonLit, { ph: L.ui.phases[phaseIdx(mp.angle)], p: Math.round(mp.fraction * 100) })}</p><p>${esc(tithiText(mp.tithiNum, true))}</p>`; }
     else if (b.id !== 'Sun') h += `<p>${F(L.ui.litLine, { p: Math.round(b.phaseFraction * 100), m: b.mag.toFixed(1) })}</p>`;
     const dist = b.id === 'Moon' ? `${Math.round(b.dist * 149597870.7).toLocaleString('en-IN')} km` : `${b.dist.toFixed(2)} AU`;
@@ -854,11 +857,11 @@
     return project(W3);
   }
   function positionTip() {
-    const p = screenOf(tipFor);
+    const p = S.view === '2d' ? pos2D[tipFor] : screenOf(tipFor);
     if (!p) { tip.style.left = '-9999px'; return; }
     const tw = tip.offsetWidth, th = tip.offsetHeight;
-    const o = planets[tipFor];
-    const rp = o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
+    const o = S.view === '2d' ? null : planets[tipFor];
+    const rp = S.view === '2d' ? (p.r || 6) : o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
     let x = p.x + rp + 22, y = p.y + Math.min(rp, 40) + 18;
     if (x + tw > W - 10) x = p.x - rp - tw - 22;
     if (y + th > H - 10) y = p.y - th - 18;
@@ -1148,6 +1151,224 @@
     flyTo(f.id);
   }
 
+  // ---------- 2D view: the solar system seen from above, centred on Earth or on the Sun ----------
+  // Directions (angles) are true; distances use a logarithmic scale so the Moon and Neptune both fit.
+  const v2 = $('view2d'), g2 = v2.getContext('2d');
+  let pos2D = {};
+  S.view = '3d'; S.center = 'earth';
+  const AU_KM = 149597870.7, EARTH_DOT = '#7fc8e8';
+  const LOG_RANGE = { earth: [Math.log10(0.0015), Math.log10(34)], sun: [Math.log10(0.28), Math.log10(34)] };
+  const fmtDist = (id, au) => id === 'Moon' ? Math.round(au * AU_KM).toLocaleString('en-IN') + ' km' : au.toFixed(au < 10 ? 2 : 1) + ' AU';
+  function lightTime(au) {
+    const s = au * 499.005;
+    if (s < 90) return s.toFixed(1) + ' s';
+    const m = Math.round(s / 60);
+    return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+  }
+  const lonText = sid => `${rName(Math.floor(sid / 30))} ${fmtDeg(sid % 30)}`;
+  const name2D = id => id === 'Earth' ? L.ui.earth : gName(id);
+
+  function info2D(id) {
+    const a = S.astro, u = L.ui;
+    if (id === 'Earth') return `<h3>${esc(u.earth)}</h3><p>${u.distSun}: <b>${fmtDist('', a.earth.helioDist)}</b> · ${F(u.lightTime, { t: lightTime(a.earth.helioDist) })}</p><p>${u.helioPos}: <b>${esc(lonText(a.earth.helioSid))}</b></p>`;
+    const b = [...a.bodies, ...a.nodes].find(x => x.id === id); if (!b) return '';
+    let h = `<h3>${esc(planetLabel(id))}</h3>${signLine(b.sign, b.deg, b.nak, b.pada)}`;
+    if (id === 'Rahu' || id === 'Ketu') return h + `<p>${u.node}</p>`;
+    h += `<p>${u.distEarth}: <b>${fmtDist(id, b.geoDist)}</b>${id === 'Moon' ? '' : ` (${Math.round(b.geoDist * AU_KM / 1e6).toLocaleString('en-IN')} ${u.mkm})`} · ${F(u.lightTime, { t: lightTime(b.geoDist) })}</p>`;
+    if (id !== 'Sun') {
+      h += `<p>${u.distSun}: <b>${fmtDist('', b.helioDist)}</b></p>`;
+      h += `<p>${F(u.elong, { d: b.elong.toFixed(1) })}</p>`;
+      if (id !== 'Moon') h += `<p>${u.helioPos}: <b>${esc(lonText(b.helioSid))}</b></p>`;
+    }
+    if (b.retro) h += `<p><b style="color:var(--retro)">${u.vakri}</b></p>`;
+    return h;
+  }
+
+  function sideLabel(g, x1, y1, x2, y2, text) {
+    const mx = x1 + (x2 - x1) * 0.62, my = y1 + (y2 - y1) * 0.62, len = Math.hypot(x2 - x1, y2 - y1) || 1;
+    let nx = -(y2 - y1) / len, ny = (x2 - x1) / len; if (ny > 0) { nx = -nx; ny = -ny; }
+    const tx = mx + nx * 13, ty = my + ny * 13, w = g.measureText(text).width + 12;
+    g.fillStyle = 'rgba(10,9,7,0.78)'; g.beginPath();
+    if (g.roundRect) g.roundRect(tx - w / 2, ty - 10, w, 20, 10); else g.rect(tx - w / 2, ty - 10, w, 20);
+    g.fill();
+    return [tx, ty];
+  }
+  function draw2D() {
+    if (S.view !== '2d' || !S.astro) return;
+    const a = S.astro, g = g2, u = L.ui, phone = isPhone();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const bg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+    bg.addColorStop(0, '#0f0d0a'); bg.addColorStop(1, '#050507');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // layout: keep clear of the search bar, the Planets card (desktop) and the time bar
+    const right = (!phone && !appEl.classList.contains('hide-grahas')) ? 424 : 0;
+    const top = phone ? 64 : 70, bottom = phone ? 34 : 74;
+    const cx = (W - right) / 2, cy = top + (H - top - bottom) / 2;
+    const Rout = Math.max(90, Math.min((W - right) / 2 - 14, (H - top - bottom) / 2 - 4));
+    const band = Math.max(22, Math.min(32, Rout * 0.11));
+    const Rring = Rout - band, Rmax = Rring - 18, Rin = Math.max(20, Rout * 0.075);
+    const [L0, L1] = LOG_RANGE[S.center];
+    const rOf = d => Rin + (Math.log10(Math.max(d, Math.pow(10, L0))) - L0) / (L1 - L0) * (Rmax - Rin);
+    const ang = lon => (180 + lon) * DEG;   // 0° Mesham on the left, longitude increasing anticlockwise
+    const P = (lon, r) => [cx + r * Math.cos(ang(lon)), cy - r * Math.sin(ang(lon))];
+    g.textBaseline = 'middle';
+
+    // zodiac wheel: the 12 rasis, equal 30° each
+    for (let k = 0; k < 12; k++) {
+      g.beginPath();
+      g.arc(cx, cy, Rout, -ang(k * 30), -ang(k * 30 + 30), true);
+      g.arc(cx, cy, Rring, -ang(k * 30 + 30), -ang(k * 30), false);
+      g.closePath();
+      g.fillStyle = k % 2 ? 'rgba(233,201,127,0.07)' : 'rgba(233,201,127,0.13)'; g.fill();
+      const [x1, y1] = P(k * 30, Rring), [x2, y2] = P(k * 30, Rout);
+      g.strokeStyle = 'rgba(236,228,208,0.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      const [lx, ly] = P(k * 30 + 15, (Rout + Rring) / 2);
+      g.font = `600 ${Math.round(Math.min(13, band * 0.42))}px ${FONT}`; g.fillStyle = '#f1d797'; g.textAlign = 'center';
+      g.fillText(rName(k), lx, ly);
+    }
+    g.strokeStyle = 'rgba(236,228,208,0.35)';
+    g.beginPath(); g.arc(cx, cy, Rout, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.arc(cx, cy, Rring, 0, 2 * Math.PI); g.stroke();
+    for (let d = 0; d < 360; d += 5) {   // degree ticks
+      const len = d % 30 === 0 ? 9 : d % 10 === 0 ? 6 : 3;
+      const [x1, y1] = P(d, Rring), [x2, y2] = P(d, Rring - len);
+      g.strokeStyle = 'rgba(236,228,208,0.3)'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    }
+    // distance rings (logarithmic)
+    g.font = `500 10.5px ${FONT}`; g.textAlign = 'left';
+    for (const d of [0.01, 0.1, 1, 10, 30]) {
+      if (Math.log10(d) <= L0 || Math.log10(d) > L1) continue;
+      const r = rOf(d);
+      g.setLineDash([2, 5]); g.strokeStyle = 'rgba(236,228,208,0.14)'; g.beginPath(); g.arc(cx, cy, r, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(236,228,208,0.45)'; g.fillText(d + ' AU', cx + 4, cy - r - 6);
+    }
+
+    // bodies
+    pos2D = {};
+    const items = [];
+    if (S.center === 'earth') {
+      for (const b of a.bodies) items.push({ id: b.id, lon: b.sidereal, d: b.geoDist, b });
+    } else {
+      items.push({ id: 'Earth', lon: a.earth.helioSid, d: a.earth.helioDist });
+      for (const b of a.bodies) if (b.id !== 'Sun' && b.id !== 'Moon') items.push({ id: b.id, lon: b.helioSid, d: b.helioDist, b });
+    }
+    const colorOf = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
+    const sizeOf = id => ({ Sun: 9, Jupiter: 7.5, Saturn: 7, Earth: 6.5, Moon: 5 }[id] || 5.5);
+    for (const it of items) {   // direction lines to the wheel
+      [it.x, it.y] = P(it.lon, rOf(it.d));
+      const [ex, ey] = P(it.lon, Rring);
+      const sel = S.sel === it.id;
+      g.globalAlpha = sel ? 0.95 : 0.3; g.strokeStyle = colorOf(it.id); g.lineWidth = sel ? 2 : 1;
+      g.beginPath(); g.moveTo(cx, cy); g.lineTo(ex, ey); g.stroke();
+      g.beginPath(); g.arc(ex, ey, sel ? 4 : 2.5, 0, 2 * Math.PI); g.fillStyle = colorOf(it.id); g.fill();
+    }
+    g.globalAlpha = 1; g.lineWidth = 1;
+    // Rahu, Ketu and Lagna are points on the wheel (seen from Earth)
+    if (S.center === 'earth') {
+      const marks = [...a.nodes.map(n => ({ id: n.id, lon: n.sidereal, label: (n.id === 'Rahu' ? '☊ ' : '☋ ') + gName(n.id) })), { id: 'Lagna', lon: a.lagna.sidereal, label: '↑ ' + u.kLagna }];
+      for (const m of marks) {
+        const [x, y] = P(m.lon, Rring - 14);
+        g.fillStyle = LOOK[m.id].dot; g.strokeStyle = LOOK[m.id].dot;
+        g.beginPath(); g.moveTo(x, y - 5); g.lineTo(x + 5, y); g.lineTo(x, y + 5); g.lineTo(x - 5, y); g.closePath();
+        if (m.id === 'Lagna') g.fill(); else g.stroke();
+        g.font = `600 11px ${FONT}`; g.textAlign = 'center'; g.fillText(m.label, x, y - 12);
+        pos2D[m.id] = { x, y, r: 6 };
+      }
+    }
+    // the selected body: show its distance from the other centre, and its angle from the Sun
+    const selIt = items.find(it => it.id === S.sel);
+    if (selIt && selIt.b) {
+      const b = selIt.b;
+      if (S.center === 'earth' && b.id !== 'Sun') {
+        const sun = items.find(it => it.id === 'Sun');
+        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(255,210,122,0.75)'; g.beginPath(); g.moveTo(sun.x, sun.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
+        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
+        { const txt = `${u.distSun}: ${fmtDist('', b.helioDist)}`, [tx, ty] = sideLabel(g, sun.x, sun.y, selIt.x, selIt.y, txt); g.fillStyle = '#ffd27a'; g.fillText(txt, tx, ty); }
+        // elongation arc at Earth
+        const rA = Rin + 16, s0 = ang(sun.lon), s1 = ang(selIt.lon);
+        let d = ((s1 - s0) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+        g.strokeStyle = 'rgba(241,215,151,0.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, rA, -s0, -(s0 + d), d > 0); g.stroke(); g.lineWidth = 1;
+        const mid = s0 + d / 2;
+        g.fillStyle = '#f1d797'; g.font = `700 11.5px ${FONT}`;
+        g.fillText(`${Math.abs(d / DEG).toFixed(1)}°`, cx + (rA + 14) * Math.cos(mid), cy - (rA + 14) * Math.sin(mid));
+      }
+      if (S.center === 'sun') {
+        const earth = items.find(it => it.id === 'Earth');
+        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(127,200,232,0.8)'; g.beginPath(); g.moveTo(earth.x, earth.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
+        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
+        { const txt = `${u.distEarth}: ${fmtDist(b.id, b.geoDist)}`, [tx, ty] = sideLabel(g, earth.x, earth.y, selIt.x, selIt.y, txt); g.fillStyle = EARTH_DOT; g.fillText(txt, tx, ty); }
+      }
+    }
+    // centre body
+    if (S.center === 'earth') {
+      g.beginPath(); g.arc(cx, cy, 8, 0, 2 * Math.PI); g.fillStyle = EARTH_DOT; g.fill();
+      g.font = `600 11.5px ${FONT}`; g.fillStyle = EARTH_DOT; g.textAlign = 'center'; g.fillText(u.earth, cx, cy + 18);
+    } else {
+      const sg = g.createRadialGradient(cx, cy, 0, cx, cy, 26); sg.addColorStop(0, 'rgba(255,226,150,0.9)'); sg.addColorStop(1, 'rgba(255,200,90,0)');
+      g.fillStyle = sg; g.beginPath(); g.arc(cx, cy, 26, 0, 2 * Math.PI); g.fill();
+      g.beginPath(); g.arc(cx, cy, 10, 0, 2 * Math.PI); g.fillStyle = '#ffd27a'; g.fill();
+      g.font = `600 11.5px ${FONT}`; g.fillStyle = '#ffd27a'; g.textAlign = 'center'; g.fillText(gName('Sun'), cx, cy + 22);
+      pos2D.Sun = { x: cx, y: cy, r: 10 };
+    }
+    // dots and labels
+    const placed = [];
+    const drawDot = (id, x, y, sub) => {
+      const r = sizeOf(id), c = colorOf(id), sel = S.sel === id;
+      const gl = g.createRadialGradient(x, y, 0, x, y, r * 2.6); gl.addColorStop(0, c); gl.addColorStop(1, 'rgba(0,0,0,0)');
+      g.globalAlpha = 0.45; g.fillStyle = gl; g.beginPath(); g.arc(x, y, r * 2.6, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1;
+      g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fillStyle = c; g.fill();
+      if (sel) { g.strokeStyle = '#f1d797'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 5, 0, 2 * Math.PI); g.stroke(); g.lineWidth = 1; }
+      let ly = y - 2; const lx = x + r + 7;
+      g.font = `600 12px ${FONT}`; const lw = Math.max(g.measureText(name2D(id)).width, 60);
+      for (let n = 0; n < 8 && placed.some(p => Math.abs(p.y - ly) < 26 && lx < p.x + p.w && p.x < lx + lw); n++) ly += 26;
+      placed.push({ x: lx, y: ly, w: lw });
+      g.textAlign = 'left'; g.fillStyle = c; g.fillText(name2D(id), lx, ly - 6);
+      g.font = `500 10.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.75)'; g.fillText(sub, lx, ly + 7);
+      pos2D[id] = { x, y, r };
+    };
+    for (const it of items) drawDot(it.id, it.x, it.y, fmtDist(it.id, it.d));
+    if (S.center === 'sun') {   // the Moon sits right next to Earth at this scale
+      const e = items.find(it => it.id === 'Earth'), mb = a.bodies.find(b => b.id === 'Moon');
+      const [mx, my] = [e.x + 18 * Math.cos(ang(mb.sidereal)), e.y - 18 * Math.sin(ang(mb.sidereal))];
+      drawDot('Moon', mx, my, u.nearEarth);
+    }
+    // note
+    g.font = `500 11px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.6)'; g.textAlign = 'left';
+    g.fillText(u.logNote, 16, top + 6);
+    if (tipFor) positionTip();
+  }
+  function pick2D(x, y) {
+    let best = null, bd = 22;
+    for (const [id, p] of Object.entries(pos2D)) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = id; } }
+    return best;
+  }
+  const loc2 = e => { const r = v2.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  v2.addEventListener('pointerdown', () => closeSheet());
+  v2.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || tipPinned) return;
+    const id = pick2D(...loc2(e)); v2.style.cursor = id ? 'pointer' : '';
+    if (id !== tipFor) showTipFor(id, false);
+  });
+  v2.addEventListener('click', e => {
+    const id = pick2D(...loc2(e));
+    S.sel = id; renderPanel();
+    if (id) showTipFor(id, true); else { showTipFor(null); needsRender = true; }
+  });
+  function setView(view) {
+    S.view = view;
+    appEl.classList.toggle('mode-2d', view === '2d');
+    document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    showTipFor(null); S.sel = null; renderPanel();
+    needsRender = true;
+  }
+  function setCenter(c) {
+    S.center = c;
+    document.querySelectorAll('#centerSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.center === c)));
+    showTipFor(null); needsRender = true;
+  }
+  document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  document.querySelectorAll('#centerSeg button').forEach(b => b.addEventListener('click', () => setCenter(b.dataset.center)));
+
   // ---------- phone sheets ----------
   const isPhone = () => window.matchMedia('(max-width: 1023px)').matches;
   function setSheet(name) {
@@ -1278,6 +1499,7 @@
     cRect = glCanvas.getBoundingClientRect();
     renderer.setSize(W, H, false);
     ov.width = Math.round(W * dpr); ov.height = Math.round(H * dpr);
+    v2.width = Math.round(W * dpr); v2.height = Math.round(H * dpr);
     camera.aspect = W / H; applyCamera(); needsRender = true;
   }
   window.addEventListener('resize', resize);
@@ -1299,7 +1521,7 @@
       applyCamera(); needsRender = true; if (t >= 1) fly = null;
     }
     stepZoom();
-    if (needsRender) { renderer.render(scene, camera); drawOverlay(); needsRender = false; }
+    if (needsRender) { if (S.view === '2d') draw2D(); else { renderer.render(scene, camera); drawOverlay(); } needsRender = false; }
   }
 
   // ---------- boot ----------

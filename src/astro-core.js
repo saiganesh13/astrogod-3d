@@ -114,6 +114,10 @@
     const ov = V(A.ObserverVector(t, obs, false));
     const sunG = V(A.GeoVector('Sun', t, true));
     const sunLon = eclLon(rEqjEct, sunG);
+    // Sun-centred positions for the 2D view
+    const earthH = V(A.HelioVector('Earth', t));
+    const helioOf = (id, g) => id === 'Sun' ? null : id === 'Moon' ? [earthH[0] + g[0], earthH[1] + g[1], earthH[2] + g[2]] : V(A.HelioVector(id, t));
+    const sunU = vnorm(sunG);
 
     const bodies = BODIES.map(b => {
       const g = V(A.GeoVector(b.id, t, true));
@@ -141,7 +145,14 @@
         prime = vnorm([nn[0] * cw + pxn[0] * sw, nn[1] * cw + pxn[1] * sw, nn[2] * cw + pxn[2] * sw]);
       } catch (e) { }
       if (!prime) { const a = Math.abs(pole[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0]; const c = [a[1] * pole[2] - a[2] * pole[1], a[2] * pole[0] - a[0] * pole[2], a[0] * pole[1] - a[1] * pole[0]]; prime = vnorm(c); }
+      const hv = helioOf(b.id, g), gu = vnorm(g);
+      const elong = b.id === 'Sun' ? 0 : Math.acos(Math.max(-1, Math.min(1, gu[0] * sunU[0] + gu[1] * sunU[1] + gu[2] * sunU[2]))) / DEG;
       return {
+        geoDist: vlen(g),                                    // AU from Earth's centre
+        helioDist: hv ? vlen(hv) : 0,                        // AU from the Sun
+        helioSid: hv ? norm360(eclLon(rEqjEct, hv) - ayan) : null,   // direction as seen from the Sun (sidereal)
+        elong,                                               // angle from the Sun in our sky
+
         id: b.id, graha: b.graha, pole, prime,
         dir: vnorm(topo), dist, angDiamArcsec, light,
         tropical: lonT, sidereal: sid, ...signInfo(sid),
@@ -173,6 +184,7 @@
     const ascDir = rot(rEctEqj, [Math.cos(ascT * DEG), Math.sin(ascT * DEG), 0]);
 
     return {
+      earth: { helioDist: vlen(earthH), helioSid: norm360(eclLon(rEqjEct, earthH) - ayan) },
       time: t, rEqjHor, rEqjEct, rEctEqj, ayan, bodies, nodes,
       lagna: { tropical: ascT, sidereal: ascSid, dir: ascDir, ...signInfo(ascSid) },
       moonPhase: { angle: phase, name: moonPhaseName(phase), fraction: moon.phaseFraction, tithiNum, tithiName, paksha },

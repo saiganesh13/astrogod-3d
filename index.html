@@ -122,6 +122,16 @@ svg{flex:none}
 #gl{cursor:grab;touch-action:none}
 #gl.dragging{cursor:grabbing}
 #ov{pointer-events:none}
+#view2d{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:manipulation}
+#app.mode-2d #view2d{display:block}
+#app.mode-2d #gl,#app.mode-2d #ov{visibility:hidden}
+/* 3D / 2D switch and the From Earth / From Sun choice (AstroGod segmented control) */
+.seg{display:inline-flex;flex:none;padding:3px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.seg button{display:inline-flex;align-items:center;justify-content:center;height:32px;min-width:42px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--gold-grad);color:var(--gold-ink)}
+.only2d{display:none!important}
+#app.mode-2d .only2d{display:inline-flex!important}
+#app.mode-2d .only3d{display:none!important}
 
 /* ---------- Sidebar (desktop) ---------- */
 .sidebar{display:flex;flex-direction:column;gap:20px;min-width:0;overflow-y:auto;overflow-x:hidden;
@@ -446,17 +456,20 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
   <main id="stage">
     <canvas id="gl" aria-label="3D sky map. Drag to look around, scroll or pinch to zoom."></canvas>
     <canvas id="ov" aria-hidden="true"></canvas>
+    <canvas id="view2d" aria-label="2D map of the planets seen from above"></canvas>
 
     <div id="zoombar" class="card" role="toolbar" aria-label="Find and zoom">
       <button class="zb reopen" type="button" id="openBirth" data-open="birth" data-i18n-aria="birthDetails" aria-label="Birth details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <div class="find">
+      <div class="seg" id="viewSeg" role="group" aria-label="3D or 2D"><button type="button" data-view="3d" aria-pressed="true">3D</button><button type="button" data-view="2d" aria-pressed="false">2D</button></div>
+      <div class="seg only2d" id="centerSeg" role="group" aria-label="Centre"><button type="button" data-center="earth" aria-pressed="true" data-i18n="fromEarth">From Earth</button><button type="button" data-center="sun" aria-pressed="false" data-i18n="fromSun">From Sun</button></div>
+      <div class="find only3d">
         <input id="fFind" type="search" placeholder="Find a star, planet or constellation" aria-label="Find a star, planet or constellation" data-i18n-ph="findPh" role="combobox" aria-expanded="false" aria-controls="findList" autocomplete="off" spellcheck="false">
         <div id="findList" role="listbox" hidden></div>
       </div>
-      <button class="zb" type="button" id="zOut" title="Zoom out (−)" aria-label="Zoom out">−</button>
-      <span id="zoomTxt" aria-live="polite">1×</span>
-      <button class="zb" type="button" id="zIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
-      <button class="zb" type="button" id="zFit" title="Back to the wide view" aria-label="Wide view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="zb only3d" type="button" id="zOut" title="Zoom out (−)" aria-label="Zoom out">−</button>
+      <span id="zoomTxt" class="only3d" aria-live="polite">1×</span>
+      <button class="zb only3d" type="button" id="zIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
+      <button class="zb only3d" type="button" id="zFit" title="Back to the wide view" aria-label="Wide view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
 
     <button class="reopen reopen-chip card" type="button" data-open="grahas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-20 12 12)"/></svg><span data-i18n="tabs.1">Planets</span></button>
@@ -729,6 +742,10 @@ window.CITIES = (function () {
     const ov = V(A.ObserverVector(t, obs, false));
     const sunG = V(A.GeoVector('Sun', t, true));
     const sunLon = eclLon(rEqjEct, sunG);
+    // Sun-centred positions for the 2D view
+    const earthH = V(A.HelioVector('Earth', t));
+    const helioOf = (id, g) => id === 'Sun' ? null : id === 'Moon' ? [earthH[0] + g[0], earthH[1] + g[1], earthH[2] + g[2]] : V(A.HelioVector(id, t));
+    const sunU = vnorm(sunG);
 
     const bodies = BODIES.map(b => {
       const g = V(A.GeoVector(b.id, t, true));
@@ -756,7 +773,14 @@ window.CITIES = (function () {
         prime = vnorm([nn[0] * cw + pxn[0] * sw, nn[1] * cw + pxn[1] * sw, nn[2] * cw + pxn[2] * sw]);
       } catch (e) { }
       if (!prime) { const a = Math.abs(pole[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0]; const c = [a[1] * pole[2] - a[2] * pole[1], a[2] * pole[0] - a[0] * pole[2], a[0] * pole[1] - a[1] * pole[0]]; prime = vnorm(c); }
+      const hv = helioOf(b.id, g), gu = vnorm(g);
+      const elong = b.id === 'Sun' ? 0 : Math.acos(Math.max(-1, Math.min(1, gu[0] * sunU[0] + gu[1] * sunU[1] + gu[2] * sunU[2]))) / DEG;
       return {
+        geoDist: vlen(g),                                    // AU from Earth's centre
+        helioDist: hv ? vlen(hv) : 0,                        // AU from the Sun
+        helioSid: hv ? norm360(eclLon(rEqjEct, hv) - ayan) : null,   // direction as seen from the Sun (sidereal)
+        elong,                                               // angle from the Sun in our sky
+
         id: b.id, graha: b.graha, pole, prime,
         dir: vnorm(topo), dist, angDiamArcsec, light,
         tropical: lonT, sidereal: sid, ...signInfo(sid),
@@ -788,6 +812,7 @@ window.CITIES = (function () {
     const ascDir = rot(rEctEqj, [Math.cos(ascT * DEG), Math.sin(ascT * DEG), 0]);
 
     return {
+      earth: { helioDist: vlen(earthH), helioSid: norm360(eclLon(rEqjEct, earthH) - ayan) },
       time: t, rEqjHor, rEqjEct, rEctEqj, ayan, bodies, nodes,
       lagna: { tropical: ascT, sidereal: ascSid, dir: ascDir, ...signInfo(ascSid) },
       moonPhase: { angle: phase, name: moonPhaseName(phase), fraction: moon.phaseFraction, tithiNum, tithiName, paksha },
@@ -955,6 +980,7 @@ window.I18N = (function () {
   // ---------- interface text ----------
   const EN = {
     tagline: 'your birth sky in 3D', lang: 'Language',
+      fromEarth: "From Earth", fromSun: "From Sun", logNote: "Distances on a log scale · directions are true", distEarth: "From Earth", distSun: "From Sun", lightTime: "light takes {t}", elong: "{d}° from the Sun in our sky", helioPos: "Seen from the Sun", mkm: "million km", nearEarth: "near Earth", earth: "Earth",
       prKicker: "ASTROLOGERS", pr1Title: "Talk to an Astrologer", pr1Text: "Go through your birth sky with an expert and get clear, personal answers.", pr2Title: "Questions about your planets?", pr2Text: "Our astrologers can walk you through what it means, one to one.", pr3Title: "Planning something important?", pr3Text: "An astrologer can help you pick a good time for it.", joinKicker: "ASTROGOD", joinTitle: "Your chart on AstroGod", joinText: "Sign up to save your birth details and explore your full chart.", learnMore: "Learn more", book: "Call", signup: "Sign up", close: 'Close', tabTime: 'Time', theme: 'Light or dark', sky: 'Sky', agTitle: 'Your full birth chart', agSub: 'Open AstroGod', agShort: 'My chart', agLink: 'See the full chart on AstroGod',
     birthDetails: 'Birth details', name: 'Name (optional)', namePh: 'e.g. Karthik', dob: 'Date of birth', tob: 'Time of birth', pob: 'Place of birth',
     placePh: 'Type a city, e.g. Madurai', coords: 'Coordinates & time zone', lat: 'Latitude (°N +)', lon: 'Longitude (°E +)', tz: 'Time zone',
@@ -1017,6 +1043,7 @@ window.I18N = (function () {
     en: EN,
     hi: {
       tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा',
+      fromEarth: "पृथ्वी से", fromSun: "सूर्य से", logNote: "दूरियाँ लघुगणकीय पैमाने पर · दिशाएँ सटीक", distEarth: "पृथ्वी से दूरी", distSun: "सूर्य से दूरी", lightTime: "प्रकाश को {t} लगते हैं", elong: "हमारे आकाश में सूर्य से {d}°", helioPos: "सूर्य से देखने पर", mkm: "मिलियन किमी", nearEarth: "पृथ्वी के पास", earth: "पृथ्वी",
       prKicker: "ज्योतिषी", pr1Title: "ज्योतिषी से बात करें", pr1Text: "किसी विशेषज्ञ के साथ अपना जन्म आकाश समझें और स्पष्ट, व्यक्तिगत उत्तर पाएँ।", pr2Title: "अपने ग्रहों के बारे में प्रश्न?", pr2Text: "हमारे ज्योतिषी आमने-सामने इसका अर्थ समझाएँगे।", pr3Title: "कुछ महत्वपूर्ण योजना बना रहे हैं?", pr3Text: "ज्योतिषी इसके लिए शुभ समय चुनने में मदद कर सकते हैं।", joinKicker: "ASTROGOD", joinTitle: "AstroGod पर आपकी कुंडली", joinText: "अपना जन्म विवरण सहेजने और पूरी कुंडली देखने के लिए साइन अप करें।", learnMore: "और जानें", book: "कॉल करें", signup: "साइन अप करें", close: 'बंद करें', tabTime: 'समय', theme: 'हल्का या गहरा रंग', sky: 'आकाश', agTitle: 'आपकी पूरी जन्म कुंडली', agSub: 'AstroGod खोलें', agShort: 'कुंडली', agLink: 'पूरी कुंडली AstroGod पर देखें',
       birthDetails: 'जन्म विवरण', name: 'नाम (वैकल्पिक)', namePh: 'जैसे राहुल', dob: 'जन्म तिथि', tob: 'जन्म समय', pob: 'जन्म स्थान',
       placePh: 'शहर लिखें, जैसे Varanasi', coords: 'अक्षांश, देशांतर और समय क्षेत्र', lat: 'अक्षांश (°N +)', lon: 'देशांतर (°E +)', tz: 'समय क्षेत्र',
@@ -1058,6 +1085,7 @@ window.I18N = (function () {
     },
     ta: {
       tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி',
+      fromEarth: "பூமியிலிருந்து", fromSun: "சூரியனிலிருந்து", logNote: "தூரங்கள் மடக்கை அளவில் · திசைகள் சரியானவை", distEarth: "பூமியிலிருந்து தூரம்", distSun: "சூரியனிலிருந்து தூரம்", lightTime: "ஒளி வர {t} ஆகும்", elong: "நம் வானில் சூரியனிடமிருந்து {d}°", helioPos: "சூரியனிலிருந்து பார்க்கும்போது", mkm: "மில்லியன் கி.மீ", nearEarth: "பூமிக்கு அருகில்", earth: "பூமி",
       prKicker: "ஜோதிடர்கள்", pr1Title: "ஜோதிடரிடம் பேசுங்கள்", pr1Text: "உங்கள் பிறப்பு வானத்தை ஒரு நிபுணருடன் பார்த்து, தெளிவான தனிப்பட்ட பதில்களைப் பெறுங்கள்.", pr2Title: "உங்கள் கிரகங்கள் பற்றி கேள்விகளா?", pr2Text: "எங்கள் ஜோதிடர்கள் இதன் பொருளை நேரடியாக விளக்குவார்கள்.", pr3Title: "முக்கியமான ஒன்றைத் திட்டமிடுகிறீர்களா?", pr3Text: "அதற்கு நல்ல நேரத்தைத் தேர்ந்தெடுக்க ஜோதிடர் உதவுவார்.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-இல் உங்கள் ஜாதகம்", joinText: "உங்கள் பிறப்பு விவரங்களைச் சேமித்து முழு ஜாதகத்தைப் பார்க்க பதிவு செய்யுங்கள்.", learnMore: "மேலும் அறிக", book: "அழைக்க", signup: "பதிவு செய்", close: 'மூடு', tabTime: 'நேரம்', theme: 'வெளிர் அல்லது இருள் நிறம்', sky: 'வானம்', agTitle: 'உங்கள் முழு ஜாதகம்', agSub: 'AstroGod-ஐத் திறக்கவும்', agShort: 'ஜாதகம்', agLink: 'முழு ஜாதகத்தை AstroGod-இல் பார்க்கவும்',
       birthDetails: 'பிறப்பு விவரங்கள்', name: 'பெயர் (விருப்பம்)', namePh: 'எ.கா. கார்த்திக்', dob: 'பிறந்த தேதி', tob: 'பிறந்த நேரம்', pob: 'பிறந்த ஊர்',
       placePh: 'ஊரின் பெயர், எ.கா. Madurai', coords: 'அட்சரேகை, தீர்க்கரேகை & நேர மண்டலம்', lat: 'அட்சரேகை (°N +)', lon: 'தீர்க்கரேகை (°E +)', tz: 'நேர மண்டலம்',
@@ -1099,6 +1127,7 @@ window.I18N = (function () {
     },
     te: {
       tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష',
+      fromEarth: "భూమి నుండి", fromSun: "సూర్యుని నుండి", logNote: "దూరాలు లాగరిథమిక్ స్కేల్‌లో · దిశలు సరైనవి", distEarth: "భూమి నుండి దూరం", distSun: "సూర్యుని నుండి దూరం", lightTime: "కాంతికి {t} పడుతుంది", elong: "మన ఆకాశంలో సూర్యుని నుండి {d}°", helioPos: "సూర్యుని నుండి చూస్తే", mkm: "మిలియన్ కి.మీ", nearEarth: "భూమికి దగ్గరగా", earth: "భూమి",
       prKicker: "జ్యోతిష్యులు", pr1Title: "జ్యోతిష్యునితో మాట్లాడండి", pr1Text: "మీ జన్మ ఆకాశాన్ని నిపుణునితో చూసి, స్పష్టమైన వ్యక్తిగత సమాధానాలు పొందండి.", pr2Title: "మీ గ్రహాల గురించి ప్రశ్నలా?", pr2Text: "మా జ్యోతిష్యులు దీని అర్థాన్ని నేరుగా వివరిస్తారు.", pr3Title: "ముఖ్యమైనది ప్లాన్ చేస్తున్నారా?", pr3Text: "దానికి మంచి సమయాన్ని ఎంచుకోవడంలో జ్యోతిష్యుడు సహాయపడతారు.", joinKicker: "ASTROGOD", joinTitle: "AstroGod లో మీ జాతకం", joinText: "మీ జన్మ వివరాలను సేవ్ చేసి పూర్తి జాతకం చూడటానికి సైన్ అప్ చేయండి.", learnMore: "మరింత తెలుసుకోండి", book: "కాల్ చేయండి", signup: "సైన్ అప్", close: 'మూసివేయి', tabTime: 'సమయం', theme: 'లేత లేదా ముదురు రంగు', sky: 'ఆకాశం', agTitle: 'మీ పూర్తి జాతకం', agSub: 'AstroGod తెరవండి', agShort: 'జాతకం', agLink: 'పూర్తి జాతకాన్ని AstroGod లో చూడండి',
       birthDetails: 'జన్మ వివరాలు', name: 'పేరు (ఐచ్ఛికం)', namePh: 'ఉదా. రవి', dob: 'పుట్టిన తేదీ', tob: 'పుట్టిన సమయం', pob: 'పుట్టిన ఊరు',
       placePh: 'ఊరి పేరు, ఉదా. Tirupati', coords: 'అక్షాంశం, రేఖాంశం & సమయ మండలం', lat: 'అక్షాంశం (°N +)', lon: 'రేఖాంశం (°E +)', tz: 'సమయ మండలం',
@@ -1140,6 +1169,7 @@ window.I18N = (function () {
     },
     ml: {
       tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ',
+      fromEarth: "ഭൂമിയിൽ നിന്ന്", fromSun: "സൂര്യനിൽ നിന്ന്", logNote: "ദൂരങ്ങൾ ലോഗരിതമിക് സ്കെയിലിൽ · ദിശകൾ കൃത്യം", distEarth: "ഭൂമിയിൽ നിന്നുള്ള ദൂരം", distSun: "സൂര്യനിൽ നിന്നുള്ള ദൂരം", lightTime: "പ്രകാശത്തിന് {t} എടുക്കും", elong: "നമ്മുടെ ആകാശത്ത് സൂര്യനിൽ നിന്ന് {d}°", helioPos: "സൂര്യനിൽ നിന്ന് നോക്കുമ്പോൾ", mkm: "ദശലക്ഷം കി.മീ", nearEarth: "ഭൂമിക്കരികെ", earth: "ഭൂമി",
       prKicker: "ജ്യോതിഷികൾ", pr1Title: "ജ്യോതിഷിയോട് സംസാരിക്കൂ", pr1Text: "നിങ്ങളുടെ ജന്മ ആകാശം ഒരു വിദഗ്ധനൊപ്പം നോക്കി വ്യക്തമായ വ്യക്തിഗത ഉത്തരങ്ങൾ നേടൂ.", pr2Title: "നിങ്ങളുടെ ഗ്രഹങ്ങളെക്കുറിച്ച് ചോദ്യങ്ങളുണ്ടോ?", pr2Text: "ഞങ്ങളുടെ ജ്യോതിഷികൾ ഇതിന്റെ അർത്ഥം നേരിട്ട് വിശദീകരിക്കും.", pr3Title: "പ്രധാനപ്പെട്ട എന്തെങ്കിലും പ്ലാൻ ചെയ്യുകയാണോ?", pr3Text: "അതിന് നല്ല സമയം തിരഞ്ഞെടുക്കാൻ ജ്യോതിഷി സഹായിക്കും.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-ൽ നിങ്ങളുടെ ജാതകം", joinText: "ജനന വിവരങ്ങൾ സേവ് ചെയ്യാനും പൂർണ്ണ ജാതകം കാണാനും സൈൻ അപ്പ് ചെയ്യൂ.", learnMore: "കൂടുതൽ അറിയൂ", book: "വിളിക്കൂ", signup: "സൈൻ അപ്പ്", close: 'അടയ്ക്കുക', tabTime: 'സമയം', theme: 'ഇളം അല്ലെങ്കിൽ ഇരുണ്ട നിറം', sky: 'ആകാശം', agTitle: 'നിങ്ങളുടെ പൂർണ്ണ ജാതകം', agSub: 'AstroGod തുറക്കുക', agShort: 'ജാതകം', agLink: 'പൂർണ്ണ ജാതകം AstroGod-ൽ കാണുക',
       birthDetails: 'ജനന വിവരങ്ങൾ', name: 'പേര് (ഐച്ഛികം)', namePh: 'ഉദാ. അനു', dob: 'ജനന തീയതി', tob: 'ജനന സമയം', pob: 'ജനന സ്ഥലം',
       placePh: 'സ്ഥലപ്പേര്, ഉദാ. Kochi', coords: 'അക്ഷാംശം, രേഖാംശം & സമയ മേഖല', lat: 'അക്ഷാംശം (°N +)', lon: 'രേഖാംശം (°E +)', tz: 'സമയ മേഖല',
@@ -1181,6 +1211,7 @@ window.I18N = (function () {
     },
     kn: {
       tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ',
+      fromEarth: "ಭೂಮಿಯಿಂದ", fromSun: "ಸೂರ್ಯನಿಂದ", logNote: "ದೂರಗಳು ಲಾಗರಿದಮಿಕ್ ಪ್ರಮಾಣದಲ್ಲಿ · ದಿಕ್ಕುಗಳು ನಿಖರ", distEarth: "ಭೂಮಿಯಿಂದ ದೂರ", distSun: "ಸೂರ್ಯನಿಂದ ದೂರ", lightTime: "ಬೆಳಕಿಗೆ {t} ಬೇಕು", elong: "ನಮ್ಮ ಆಕಾಶದಲ್ಲಿ ಸೂರ್ಯನಿಂದ {d}°", helioPos: "ಸೂರ್ಯನಿಂದ ನೋಡಿದಾಗ", mkm: "ಮಿಲಿಯನ್ ಕಿ.ಮೀ", nearEarth: "ಭೂಮಿಯ ಹತ್ತಿರ", earth: "ಭೂಮಿ",
       prKicker: "ಜ್ಯೋತಿಷಿಗಳು", pr1Title: "ಜ್ಯೋತಿಷಿಯೊಂದಿಗೆ ಮಾತನಾಡಿ", pr1Text: "ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶವನ್ನು ತಜ್ಞರೊಂದಿಗೆ ನೋಡಿ, ಸ್ಪಷ್ಟ ವೈಯಕ್ತಿಕ ಉತ್ತರಗಳನ್ನು ಪಡೆಯಿರಿ.", pr2Title: "ನಿಮ್ಮ ಗ್ರಹಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿವೆಯೇ?", pr2Text: "ನಮ್ಮ ಜ್ಯೋತಿಷಿಗಳು ಇದರ ಅರ್ಥವನ್ನು ನೇರವಾಗಿ ವಿವರಿಸುತ್ತಾರೆ.", pr3Title: "ಮುಖ್ಯವಾದದ್ದನ್ನು ಯೋಜಿಸುತ್ತಿದ್ದೀರಾ?", pr3Text: "ಅದಕ್ಕೆ ಒಳ್ಳೆಯ ಸಮಯ ಆರಿಸಲು ಜ್ಯೋತಿಷಿ ಸಹಾಯ ಮಾಡುತ್ತಾರೆ.", joinKicker: "ASTROGOD", joinTitle: "AstroGod ನಲ್ಲಿ ನಿಮ್ಮ ಜಾತಕ", joinText: "ನಿಮ್ಮ ಜನ್ಮ ವಿವರಗಳನ್ನು ಉಳಿಸಲು ಮತ್ತು ಪೂರ್ಣ ಜಾತಕ ನೋಡಲು ಸೈನ್ ಅಪ್ ಮಾಡಿ.", learnMore: "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ", book: "ಕರೆ ಮಾಡಿ", signup: "ಸೈನ್ ಅಪ್", close: 'ಮುಚ್ಚು', tabTime: 'ಸಮಯ', theme: 'ತಿಳಿ ಅಥವಾ ಗಾಢ ಬಣ್ಣ', sky: 'ಆಕಾಶ', agTitle: 'ನಿಮ್ಮ ಪೂರ್ಣ ಜಾತಕ', agSub: 'AstroGod ತೆರೆಯಿರಿ', agShort: 'ಜಾತಕ', agLink: 'ಪೂರ್ಣ ಜಾತಕವನ್ನು AstroGod ನಲ್ಲಿ ನೋಡಿ',
       birthDetails: 'ಜನ್ಮ ವಿವರಗಳು', name: 'ಹೆಸರು (ಐಚ್ಛಿಕ)', namePh: 'ಉದಾ. ಪ್ರಕಾಶ್', dob: 'ಹುಟ್ಟಿದ ದಿನಾಂಕ', tob: 'ಹುಟ್ಟಿದ ಸಮಯ', pob: 'ಹುಟ್ಟಿದ ಸ್ಥಳ',
       placePh: 'ಊರಿನ ಹೆಸರು, ಉದಾ. Mysuru', coords: 'ಅಕ್ಷಾಂಶ, ರೇಖಾಂಶ & ಸಮಯ ವಲಯ', lat: 'ಅಕ್ಷಾಂಶ (°N +)', lon: 'ರೇಖಾಂಶ (°E +)', tz: 'ಸಮಯ ವಲಯ',
@@ -1705,6 +1736,7 @@ window.I18N = (function () {
     needsRender = true;
   }
 
+
   // ---------- atmosphere ----------
   // Daylight belongs to Earth's air. Zooming in deep is like leaving Earth: the blue sky and
   // twilight fade out and the ground thins, leaving the night sky (fully night from a 22° view, ~3.5× zoom).
@@ -1795,6 +1827,7 @@ window.I18N = (function () {
   $('ptable').addEventListener('click', e => {
     const tr = e.target.closest('tr'); if (!tr) return;
     if (isPhone()) setSheet('');   // phones: put the Planets sheet away so the fly-to is visible
+    if (S.view === '2d') { S.sel = tr.dataset.id; renderPanel(); draw2D(); if (pos2D[S.sel]) showTipFor(S.sel, true); return; }
     flyTo(tr.dataset.id);
   });
 
@@ -2060,6 +2093,7 @@ window.I18N = (function () {
   }
   function infoFor(id) {
     const a = S.astro; if (!a) return '';
+    if (S.view === '2d' && id !== 'Lagna') return info2D(id);
     if (id.startsWith('star:')) return starInfo(+id.slice(5));
     if (id.startsWith('con:')) return conInfo(id.slice(4));
     if (id === 'Lagna') {
@@ -2070,10 +2104,10 @@ window.I18N = (function () {
     let h = `<h3>${esc(planetLabel(b.id))}</h3>${signLine(b.sign, b.deg, b.nak, b.pada)}`;
     if (b.id === 'Rahu' || b.id === 'Ketu') return h + `<p>${L.ui.node}</p>` + altAzLine(worldOf(b.id));
     if (b.retro) {
-      h += `<p>${F(L.ui.retroLine, { w: `<b style="color:var(--vakri)">${L.ui.vakri}</b>`, s: Math.abs(b.speed).toFixed(3) })}</p>`;
+      h += `<p>${F(L.ui.retroLine, { w: `<b style="color:var(--retro)">${L.ui.vakri}</b>`, s: Math.abs(b.speed).toFixed(3) })}</p>`;
       if (b.phaseFraction > 0.985 && ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'].includes(b.id)) h += `<p>${L.ui.opposite}</p>`;
     } else if (b.id !== 'Sun' && b.id !== 'Moon') h += `<p>${F(L.ui.direct, { s: b.speed.toFixed(3) })}</p>`;
-    if (b.combust) h += `<p>${F(L.ui.combustLine, { w: `<b style="color:var(--combust)">${L.ui.combust}</b>`, d: b.sunSep.toFixed(1) })}</p>`;
+    if (b.combust) h += `<p>${F(L.ui.combustLine, { w: `<b style="color:var(--text)">${L.ui.combust}</b>`, d: b.sunSep.toFixed(1) })}</p>`;
     if (b.id === 'Moon') { const mp = a.moonPhase; h += `<p>${F(L.ui.moonLit, { ph: L.ui.phases[phaseIdx(mp.angle)], p: Math.round(mp.fraction * 100) })}</p><p>${esc(tithiText(mp.tithiNum, true))}</p>`; }
     else if (b.id !== 'Sun') h += `<p>${F(L.ui.litLine, { p: Math.round(b.phaseFraction * 100), m: b.mag.toFixed(1) })}</p>`;
     const dist = b.id === 'Moon' ? `${Math.round(b.dist * 149597870.7).toLocaleString('en-IN')} km` : `${b.dist.toFixed(2)} AU`;
@@ -2091,11 +2125,11 @@ window.I18N = (function () {
     return project(W3);
   }
   function positionTip() {
-    const p = screenOf(tipFor);
+    const p = S.view === '2d' ? pos2D[tipFor] : screenOf(tipFor);
     if (!p) { tip.style.left = '-9999px'; return; }
     const tw = tip.offsetWidth, th = tip.offsetHeight;
-    const o = planets[tipFor];
-    const rp = o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
+    const o = S.view === '2d' ? null : planets[tipFor];
+    const rp = S.view === '2d' ? (p.r || 6) : o ? Math.min(W / 3, (o.rad / o.rPos) * pxPerRad() * (o.ring ? 2.2 : 1)) : 0;
     let x = p.x + rp + 22, y = p.y + Math.min(rp, 40) + 18;
     if (x + tw > W - 10) x = p.x - rp - tw - 22;
     if (y + th > H - 10) y = p.y - th - 18;
@@ -2385,6 +2419,224 @@ window.I18N = (function () {
     flyTo(f.id);
   }
 
+  // ---------- 2D view: the solar system seen from above, centred on Earth or on the Sun ----------
+  // Directions (angles) are true; distances use a logarithmic scale so the Moon and Neptune both fit.
+  const v2 = $('view2d'), g2 = v2.getContext('2d');
+  let pos2D = {};
+  S.view = '3d'; S.center = 'earth';
+  const AU_KM = 149597870.7, EARTH_DOT = '#7fc8e8';
+  const LOG_RANGE = { earth: [Math.log10(0.0015), Math.log10(34)], sun: [Math.log10(0.28), Math.log10(34)] };
+  const fmtDist = (id, au) => id === 'Moon' ? Math.round(au * AU_KM).toLocaleString('en-IN') + ' km' : au.toFixed(au < 10 ? 2 : 1) + ' AU';
+  function lightTime(au) {
+    const s = au * 499.005;
+    if (s < 90) return s.toFixed(1) + ' s';
+    const m = Math.round(s / 60);
+    return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+  }
+  const lonText = sid => `${rName(Math.floor(sid / 30))} ${fmtDeg(sid % 30)}`;
+  const name2D = id => id === 'Earth' ? L.ui.earth : gName(id);
+
+  function info2D(id) {
+    const a = S.astro, u = L.ui;
+    if (id === 'Earth') return `<h3>${esc(u.earth)}</h3><p>${u.distSun}: <b>${fmtDist('', a.earth.helioDist)}</b> · ${F(u.lightTime, { t: lightTime(a.earth.helioDist) })}</p><p>${u.helioPos}: <b>${esc(lonText(a.earth.helioSid))}</b></p>`;
+    const b = [...a.bodies, ...a.nodes].find(x => x.id === id); if (!b) return '';
+    let h = `<h3>${esc(planetLabel(id))}</h3>${signLine(b.sign, b.deg, b.nak, b.pada)}`;
+    if (id === 'Rahu' || id === 'Ketu') return h + `<p>${u.node}</p>`;
+    h += `<p>${u.distEarth}: <b>${fmtDist(id, b.geoDist)}</b>${id === 'Moon' ? '' : ` (${Math.round(b.geoDist * AU_KM / 1e6).toLocaleString('en-IN')} ${u.mkm})`} · ${F(u.lightTime, { t: lightTime(b.geoDist) })}</p>`;
+    if (id !== 'Sun') {
+      h += `<p>${u.distSun}: <b>${fmtDist('', b.helioDist)}</b></p>`;
+      h += `<p>${F(u.elong, { d: b.elong.toFixed(1) })}</p>`;
+      if (id !== 'Moon') h += `<p>${u.helioPos}: <b>${esc(lonText(b.helioSid))}</b></p>`;
+    }
+    if (b.retro) h += `<p><b style="color:var(--retro)">${u.vakri}</b></p>`;
+    return h;
+  }
+
+  function sideLabel(g, x1, y1, x2, y2, text) {
+    const mx = x1 + (x2 - x1) * 0.62, my = y1 + (y2 - y1) * 0.62, len = Math.hypot(x2 - x1, y2 - y1) || 1;
+    let nx = -(y2 - y1) / len, ny = (x2 - x1) / len; if (ny > 0) { nx = -nx; ny = -ny; }
+    const tx = mx + nx * 13, ty = my + ny * 13, w = g.measureText(text).width + 12;
+    g.fillStyle = 'rgba(10,9,7,0.78)'; g.beginPath();
+    if (g.roundRect) g.roundRect(tx - w / 2, ty - 10, w, 20, 10); else g.rect(tx - w / 2, ty - 10, w, 20);
+    g.fill();
+    return [tx, ty];
+  }
+  function draw2D() {
+    if (S.view !== '2d' || !S.astro) return;
+    const a = S.astro, g = g2, u = L.ui, phone = isPhone();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const bg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+    bg.addColorStop(0, '#0f0d0a'); bg.addColorStop(1, '#050507');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // layout: keep clear of the search bar, the Planets card (desktop) and the time bar
+    const right = (!phone && !appEl.classList.contains('hide-grahas')) ? 424 : 0;
+    const top = phone ? 64 : 70, bottom = phone ? 34 : 74;
+    const cx = (W - right) / 2, cy = top + (H - top - bottom) / 2;
+    const Rout = Math.max(90, Math.min((W - right) / 2 - 14, (H - top - bottom) / 2 - 4));
+    const band = Math.max(22, Math.min(32, Rout * 0.11));
+    const Rring = Rout - band, Rmax = Rring - 18, Rin = Math.max(20, Rout * 0.075);
+    const [L0, L1] = LOG_RANGE[S.center];
+    const rOf = d => Rin + (Math.log10(Math.max(d, Math.pow(10, L0))) - L0) / (L1 - L0) * (Rmax - Rin);
+    const ang = lon => (180 + lon) * DEG;   // 0° Mesham on the left, longitude increasing anticlockwise
+    const P = (lon, r) => [cx + r * Math.cos(ang(lon)), cy - r * Math.sin(ang(lon))];
+    g.textBaseline = 'middle';
+
+    // zodiac wheel: the 12 rasis, equal 30° each
+    for (let k = 0; k < 12; k++) {
+      g.beginPath();
+      g.arc(cx, cy, Rout, -ang(k * 30), -ang(k * 30 + 30), true);
+      g.arc(cx, cy, Rring, -ang(k * 30 + 30), -ang(k * 30), false);
+      g.closePath();
+      g.fillStyle = k % 2 ? 'rgba(233,201,127,0.07)' : 'rgba(233,201,127,0.13)'; g.fill();
+      const [x1, y1] = P(k * 30, Rring), [x2, y2] = P(k * 30, Rout);
+      g.strokeStyle = 'rgba(236,228,208,0.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      const [lx, ly] = P(k * 30 + 15, (Rout + Rring) / 2);
+      g.font = `600 ${Math.round(Math.min(13, band * 0.42))}px ${FONT}`; g.fillStyle = '#f1d797'; g.textAlign = 'center';
+      g.fillText(rName(k), lx, ly);
+    }
+    g.strokeStyle = 'rgba(236,228,208,0.35)';
+    g.beginPath(); g.arc(cx, cy, Rout, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.arc(cx, cy, Rring, 0, 2 * Math.PI); g.stroke();
+    for (let d = 0; d < 360; d += 5) {   // degree ticks
+      const len = d % 30 === 0 ? 9 : d % 10 === 0 ? 6 : 3;
+      const [x1, y1] = P(d, Rring), [x2, y2] = P(d, Rring - len);
+      g.strokeStyle = 'rgba(236,228,208,0.3)'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    }
+    // distance rings (logarithmic)
+    g.font = `500 10.5px ${FONT}`; g.textAlign = 'left';
+    for (const d of [0.01, 0.1, 1, 10, 30]) {
+      if (Math.log10(d) <= L0 || Math.log10(d) > L1) continue;
+      const r = rOf(d);
+      g.setLineDash([2, 5]); g.strokeStyle = 'rgba(236,228,208,0.14)'; g.beginPath(); g.arc(cx, cy, r, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(236,228,208,0.45)'; g.fillText(d + ' AU', cx + 4, cy - r - 6);
+    }
+
+    // bodies
+    pos2D = {};
+    const items = [];
+    if (S.center === 'earth') {
+      for (const b of a.bodies) items.push({ id: b.id, lon: b.sidereal, d: b.geoDist, b });
+    } else {
+      items.push({ id: 'Earth', lon: a.earth.helioSid, d: a.earth.helioDist });
+      for (const b of a.bodies) if (b.id !== 'Sun' && b.id !== 'Moon') items.push({ id: b.id, lon: b.helioSid, d: b.helioDist, b });
+    }
+    const colorOf = id => id === 'Earth' ? EARTH_DOT : LOOK[id].dot;
+    const sizeOf = id => ({ Sun: 9, Jupiter: 7.5, Saturn: 7, Earth: 6.5, Moon: 5 }[id] || 5.5);
+    for (const it of items) {   // direction lines to the wheel
+      [it.x, it.y] = P(it.lon, rOf(it.d));
+      const [ex, ey] = P(it.lon, Rring);
+      const sel = S.sel === it.id;
+      g.globalAlpha = sel ? 0.95 : 0.3; g.strokeStyle = colorOf(it.id); g.lineWidth = sel ? 2 : 1;
+      g.beginPath(); g.moveTo(cx, cy); g.lineTo(ex, ey); g.stroke();
+      g.beginPath(); g.arc(ex, ey, sel ? 4 : 2.5, 0, 2 * Math.PI); g.fillStyle = colorOf(it.id); g.fill();
+    }
+    g.globalAlpha = 1; g.lineWidth = 1;
+    // Rahu, Ketu and Lagna are points on the wheel (seen from Earth)
+    if (S.center === 'earth') {
+      const marks = [...a.nodes.map(n => ({ id: n.id, lon: n.sidereal, label: (n.id === 'Rahu' ? '☊ ' : '☋ ') + gName(n.id) })), { id: 'Lagna', lon: a.lagna.sidereal, label: '↑ ' + u.kLagna }];
+      for (const m of marks) {
+        const [x, y] = P(m.lon, Rring - 14);
+        g.fillStyle = LOOK[m.id].dot; g.strokeStyle = LOOK[m.id].dot;
+        g.beginPath(); g.moveTo(x, y - 5); g.lineTo(x + 5, y); g.lineTo(x, y + 5); g.lineTo(x - 5, y); g.closePath();
+        if (m.id === 'Lagna') g.fill(); else g.stroke();
+        g.font = `600 11px ${FONT}`; g.textAlign = 'center'; g.fillText(m.label, x, y - 12);
+        pos2D[m.id] = { x, y, r: 6 };
+      }
+    }
+    // the selected body: show its distance from the other centre, and its angle from the Sun
+    const selIt = items.find(it => it.id === S.sel);
+    if (selIt && selIt.b) {
+      const b = selIt.b;
+      if (S.center === 'earth' && b.id !== 'Sun') {
+        const sun = items.find(it => it.id === 'Sun');
+        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(255,210,122,0.75)'; g.beginPath(); g.moveTo(sun.x, sun.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
+        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
+        { const txt = `${u.distSun}: ${fmtDist('', b.helioDist)}`, [tx, ty] = sideLabel(g, sun.x, sun.y, selIt.x, selIt.y, txt); g.fillStyle = '#ffd27a'; g.fillText(txt, tx, ty); }
+        // elongation arc at Earth
+        const rA = Rin + 16, s0 = ang(sun.lon), s1 = ang(selIt.lon);
+        let d = ((s1 - s0) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+        g.strokeStyle = 'rgba(241,215,151,0.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, rA, -s0, -(s0 + d), d > 0); g.stroke(); g.lineWidth = 1;
+        const mid = s0 + d / 2;
+        g.fillStyle = '#f1d797'; g.font = `700 11.5px ${FONT}`;
+        g.fillText(`${Math.abs(d / DEG).toFixed(1)}°`, cx + (rA + 14) * Math.cos(mid), cy - (rA + 14) * Math.sin(mid));
+      }
+      if (S.center === 'sun') {
+        const earth = items.find(it => it.id === 'Earth');
+        g.setLineDash([5, 5]); g.strokeStyle = 'rgba(127,200,232,0.8)'; g.beginPath(); g.moveTo(earth.x, earth.y); g.lineTo(selIt.x, selIt.y); g.stroke(); g.setLineDash([]);
+        g.font = `600 11.5px ${FONT}`; g.textAlign = 'center';
+        { const txt = `${u.distEarth}: ${fmtDist(b.id, b.geoDist)}`, [tx, ty] = sideLabel(g, earth.x, earth.y, selIt.x, selIt.y, txt); g.fillStyle = EARTH_DOT; g.fillText(txt, tx, ty); }
+      }
+    }
+    // centre body
+    if (S.center === 'earth') {
+      g.beginPath(); g.arc(cx, cy, 8, 0, 2 * Math.PI); g.fillStyle = EARTH_DOT; g.fill();
+      g.font = `600 11.5px ${FONT}`; g.fillStyle = EARTH_DOT; g.textAlign = 'center'; g.fillText(u.earth, cx, cy + 18);
+    } else {
+      const sg = g.createRadialGradient(cx, cy, 0, cx, cy, 26); sg.addColorStop(0, 'rgba(255,226,150,0.9)'); sg.addColorStop(1, 'rgba(255,200,90,0)');
+      g.fillStyle = sg; g.beginPath(); g.arc(cx, cy, 26, 0, 2 * Math.PI); g.fill();
+      g.beginPath(); g.arc(cx, cy, 10, 0, 2 * Math.PI); g.fillStyle = '#ffd27a'; g.fill();
+      g.font = `600 11.5px ${FONT}`; g.fillStyle = '#ffd27a'; g.textAlign = 'center'; g.fillText(gName('Sun'), cx, cy + 22);
+      pos2D.Sun = { x: cx, y: cy, r: 10 };
+    }
+    // dots and labels
+    const placed = [];
+    const drawDot = (id, x, y, sub) => {
+      const r = sizeOf(id), c = colorOf(id), sel = S.sel === id;
+      const gl = g.createRadialGradient(x, y, 0, x, y, r * 2.6); gl.addColorStop(0, c); gl.addColorStop(1, 'rgba(0,0,0,0)');
+      g.globalAlpha = 0.45; g.fillStyle = gl; g.beginPath(); g.arc(x, y, r * 2.6, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1;
+      g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fillStyle = c; g.fill();
+      if (sel) { g.strokeStyle = '#f1d797'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 5, 0, 2 * Math.PI); g.stroke(); g.lineWidth = 1; }
+      let ly = y - 2; const lx = x + r + 7;
+      g.font = `600 12px ${FONT}`; const lw = Math.max(g.measureText(name2D(id)).width, 60);
+      for (let n = 0; n < 8 && placed.some(p => Math.abs(p.y - ly) < 26 && lx < p.x + p.w && p.x < lx + lw); n++) ly += 26;
+      placed.push({ x: lx, y: ly, w: lw });
+      g.textAlign = 'left'; g.fillStyle = c; g.fillText(name2D(id), lx, ly - 6);
+      g.font = `500 10.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.75)'; g.fillText(sub, lx, ly + 7);
+      pos2D[id] = { x, y, r };
+    };
+    for (const it of items) drawDot(it.id, it.x, it.y, fmtDist(it.id, it.d));
+    if (S.center === 'sun') {   // the Moon sits right next to Earth at this scale
+      const e = items.find(it => it.id === 'Earth'), mb = a.bodies.find(b => b.id === 'Moon');
+      const [mx, my] = [e.x + 18 * Math.cos(ang(mb.sidereal)), e.y - 18 * Math.sin(ang(mb.sidereal))];
+      drawDot('Moon', mx, my, u.nearEarth);
+    }
+    // note
+    g.font = `500 11px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.6)'; g.textAlign = 'left';
+    g.fillText(u.logNote, 16, top + 6);
+    if (tipFor) positionTip();
+  }
+  function pick2D(x, y) {
+    let best = null, bd = 22;
+    for (const [id, p] of Object.entries(pos2D)) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = id; } }
+    return best;
+  }
+  const loc2 = e => { const r = v2.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  v2.addEventListener('pointerdown', () => closeSheet());
+  v2.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || tipPinned) return;
+    const id = pick2D(...loc2(e)); v2.style.cursor = id ? 'pointer' : '';
+    if (id !== tipFor) showTipFor(id, false);
+  });
+  v2.addEventListener('click', e => {
+    const id = pick2D(...loc2(e));
+    S.sel = id; renderPanel();
+    if (id) showTipFor(id, true); else { showTipFor(null); needsRender = true; }
+  });
+  function setView(view) {
+    S.view = view;
+    appEl.classList.toggle('mode-2d', view === '2d');
+    document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    showTipFor(null); S.sel = null; renderPanel();
+    needsRender = true;
+  }
+  function setCenter(c) {
+    S.center = c;
+    document.querySelectorAll('#centerSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.center === c)));
+    showTipFor(null); needsRender = true;
+  }
+  document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  document.querySelectorAll('#centerSeg button').forEach(b => b.addEventListener('click', () => setCenter(b.dataset.center)));
+
   // ---------- phone sheets ----------
   const isPhone = () => window.matchMedia('(max-width: 1023px)').matches;
   function setSheet(name) {
@@ -2515,6 +2767,7 @@ window.I18N = (function () {
     cRect = glCanvas.getBoundingClientRect();
     renderer.setSize(W, H, false);
     ov.width = Math.round(W * dpr); ov.height = Math.round(H * dpr);
+    v2.width = Math.round(W * dpr); v2.height = Math.round(H * dpr);
     camera.aspect = W / H; applyCamera(); needsRender = true;
   }
   window.addEventListener('resize', resize);
@@ -2536,7 +2789,7 @@ window.I18N = (function () {
       applyCamera(); needsRender = true; if (t >= 1) fly = null;
     }
     stepZoom();
-    if (needsRender) { renderer.render(scene, camera); drawOverlay(); needsRender = false; }
+    if (needsRender) { if (S.view === '2d') draw2D(); else { renderer.render(scene, camera); drawOverlay(); } needsRender = false; }
   }
 
   // ---------- boot ----------

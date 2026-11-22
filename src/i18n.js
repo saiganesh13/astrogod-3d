@@ -125,6 +125,7 @@ window.I18N = (function () {
   // ---------- interface text ----------
   const EN = {
     tagline: 'your birth sky in 3D', lang: 'Language',
+      fromEarth: "From Earth", fromSun: "From Sun", logNote: "Distances on a log scale · directions are true", distEarth: "From Earth", distSun: "From Sun", lightTime: "light takes {t}", elong: "{d}° from the Sun in our sky", helioPos: "Seen from the Sun", mkm: "million km", nearEarth: "near Earth", earth: "Earth",
       prKicker: "ASTROLOGERS", pr1Title: "Talk to an Astrologer", pr1Text: "Go through your birth sky with an expert and get clear, personal answers.", pr2Title: "Questions about your planets?", pr2Text: "Our astrologers can walk you through what it means, one to one.", pr3Title: "Planning something important?", pr3Text: "An astrologer can help you pick a good time for it.", joinKicker: "ASTROGOD", joinTitle: "Your chart on AstroGod", joinText: "Sign up to save your birth details and explore your full chart.", learnMore: "Learn more", book: "Call", signup: "Sign up", close: 'Close', tabTime: 'Time', theme: 'Light or dark', sky: 'Sky', agTitle: 'Your full birth chart', agSub: 'Open AstroGod', agShort: 'My chart', agLink: 'See the full chart on AstroGod',
     birthDetails: 'Birth details', name: 'Name (optional)', namePh: 'e.g. Karthik', dob: 'Date of birth', tob: 'Time of birth', pob: 'Place of birth',
     placePh: 'Type a city, e.g. Madurai', coords: 'Coordinates & time zone', lat: 'Latitude (°N +)', lon: 'Longitude (°E +)', tz: 'Time zone',
@@ -187,6 +188,7 @@ window.I18N = (function () {
     en: EN,
     hi: {
       tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा',
+      fromEarth: "पृथ्वी से", fromSun: "सूर्य से", logNote: "दूरियाँ लघुगणकीय पैमाने पर · दिशाएँ सटीक", distEarth: "पृथ्वी से दूरी", distSun: "सूर्य से दूरी", lightTime: "प्रकाश को {t} लगते हैं", elong: "हमारे आकाश में सूर्य से {d}°", helioPos: "सूर्य से देखने पर", mkm: "मिलियन किमी", nearEarth: "पृथ्वी के पास", earth: "पृथ्वी",
       prKicker: "ज्योतिषी", pr1Title: "ज्योतिषी से बात करें", pr1Text: "किसी विशेषज्ञ के साथ अपना जन्म आकाश समझें और स्पष्ट, व्यक्तिगत उत्तर पाएँ।", pr2Title: "अपने ग्रहों के बारे में प्रश्न?", pr2Text: "हमारे ज्योतिषी आमने-सामने इसका अर्थ समझाएँगे।", pr3Title: "कुछ महत्वपूर्ण योजना बना रहे हैं?", pr3Text: "ज्योतिषी इसके लिए शुभ समय चुनने में मदद कर सकते हैं।", joinKicker: "ASTROGOD", joinTitle: "AstroGod पर आपकी कुंडली", joinText: "अपना जन्म विवरण सहेजने और पूरी कुंडली देखने के लिए साइन अप करें।", learnMore: "और जानें", book: "कॉल करें", signup: "साइन अप करें", close: 'बंद करें', tabTime: 'समय', theme: 'हल्का या गहरा रंग', sky: 'आकाश', agTitle: 'आपकी पूरी जन्म कुंडली', agSub: 'AstroGod खोलें', agShort: 'कुंडली', agLink: 'पूरी कुंडली AstroGod पर देखें',
       birthDetails: 'जन्म विवरण', name: 'नाम (वैकल्पिक)', namePh: 'जैसे राहुल', dob: 'जन्म तिथि', tob: 'जन्म समय', pob: 'जन्म स्थान',
       placePh: 'शहर लिखें, जैसे Varanasi', coords: 'अक्षांश, देशांतर और समय क्षेत्र', lat: 'अक्षांश (°N +)', lon: 'देशांतर (°E +)', tz: 'समय क्षेत्र',
@@ -228,6 +230,7 @@ window.I18N = (function () {
     },
     ta: {
       tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி',
+      fromEarth: "பூமியிலிருந்து", fromSun: "சூரியனிலிருந்து", logNote: "தூரங்கள் மடக்கை அளவில் · திசைகள் சரியானவை", distEarth: "பூமியிலிருந்து தூரம்", distSun: "சூரியனிலிருந்து தூரம்", lightTime: "ஒளி வர {t} ஆகும்", elong: "நம் வானில் சூரியனிடமிருந்து {d}°", helioPos: "சூரியனிலிருந்து பார்க்கும்போது", mkm: "மில்லியன் கி.மீ", nearEarth: "பூமிக்கு அருகில்", earth: "பூமி",
       prKicker: "ஜோதிடர்கள்", pr1Title: "ஜோதிடரிடம் பேசுங்கள்", pr1Text: "உங்கள் பிறப்பு வானத்தை ஒரு நிபுணருடன் பார்த்து, தெளிவான தனிப்பட்ட பதில்களைப் பெறுங்கள்.", pr2Title: "உங்கள் கிரகங்கள் பற்றி கேள்விகளா?", pr2Text: "எங்கள் ஜோதிடர்கள் இதன் பொருளை நேரடியாக விளக்குவார்கள்.", pr3Title: "முக்கியமான ஒன்றைத் திட்டமிடுகிறீர்களா?", pr3Text: "அதற்கு நல்ல நேரத்தைத் தேர்ந்தெடுக்க ஜோதிடர் உதவுவார்.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-இல் உங்கள் ஜாதகம்", joinText: "உங்கள் பிறப்பு விவரங்களைச் சேமித்து முழு ஜாதகத்தைப் பார்க்க பதிவு செய்யுங்கள்.", learnMore: "மேலும் அறிக", book: "அழைக்க", signup: "பதிவு செய்", close: 'மூடு', tabTime: 'நேரம்', theme: 'வெளிர் அல்லது இருள் நிறம்', sky: 'வானம்', agTitle: 'உங்கள் முழு ஜாதகம்', agSub: 'AstroGod-ஐத் திறக்கவும்', agShort: 'ஜாதகம்', agLink: 'முழு ஜாதகத்தை AstroGod-இல் பார்க்கவும்',
       birthDetails: 'பிறப்பு விவரங்கள்', name: 'பெயர் (விருப்பம்)', namePh: 'எ.கா. கார்த்திக்', dob: 'பிறந்த தேதி', tob: 'பிறந்த நேரம்', pob: 'பிறந்த ஊர்',
       placePh: 'ஊரின் பெயர், எ.கா. Madurai', coords: 'அட்சரேகை, தீர்க்கரேகை & நேர மண்டலம்', lat: 'அட்சரேகை (°N +)', lon: 'தீர்க்கரேகை (°E +)', tz: 'நேர மண்டலம்',
@@ -269,6 +272,7 @@ window.I18N = (function () {
     },
     te: {
       tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష',
+      fromEarth: "భూమి నుండి", fromSun: "సూర్యుని నుండి", logNote: "దూరాలు లాగరిథమిక్ స్కేల్‌లో · దిశలు సరైనవి", distEarth: "భూమి నుండి దూరం", distSun: "సూర్యుని నుండి దూరం", lightTime: "కాంతికి {t} పడుతుంది", elong: "మన ఆకాశంలో సూర్యుని నుండి {d}°", helioPos: "సూర్యుని నుండి చూస్తే", mkm: "మిలియన్ కి.మీ", nearEarth: "భూమికి దగ్గరగా", earth: "భూమి",
       prKicker: "జ్యోతిష్యులు", pr1Title: "జ్యోతిష్యునితో మాట్లాడండి", pr1Text: "మీ జన్మ ఆకాశాన్ని నిపుణునితో చూసి, స్పష్టమైన వ్యక్తిగత సమాధానాలు పొందండి.", pr2Title: "మీ గ్రహాల గురించి ప్రశ్నలా?", pr2Text: "మా జ్యోతిష్యులు దీని అర్థాన్ని నేరుగా వివరిస్తారు.", pr3Title: "ముఖ్యమైనది ప్లాన్ చేస్తున్నారా?", pr3Text: "దానికి మంచి సమయాన్ని ఎంచుకోవడంలో జ్యోతిష్యుడు సహాయపడతారు.", joinKicker: "ASTROGOD", joinTitle: "AstroGod లో మీ జాతకం", joinText: "మీ జన్మ వివరాలను సేవ్ చేసి పూర్తి జాతకం చూడటానికి సైన్ అప్ చేయండి.", learnMore: "మరింత తెలుసుకోండి", book: "కాల్ చేయండి", signup: "సైన్ అప్", close: 'మూసివేయి', tabTime: 'సమయం', theme: 'లేత లేదా ముదురు రంగు', sky: 'ఆకాశం', agTitle: 'మీ పూర్తి జాతకం', agSub: 'AstroGod తెరవండి', agShort: 'జాతకం', agLink: 'పూర్తి జాతకాన్ని AstroGod లో చూడండి',
       birthDetails: 'జన్మ వివరాలు', name: 'పేరు (ఐచ్ఛికం)', namePh: 'ఉదా. రవి', dob: 'పుట్టిన తేదీ', tob: 'పుట్టిన సమయం', pob: 'పుట్టిన ఊరు',
       placePh: 'ఊరి పేరు, ఉదా. Tirupati', coords: 'అక్షాంశం, రేఖాంశం & సమయ మండలం', lat: 'అక్షాంశం (°N +)', lon: 'రేఖాంశం (°E +)', tz: 'సమయ మండలం',
@@ -310,6 +314,7 @@ window.I18N = (function () {
     },
     ml: {
       tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ',
+      fromEarth: "ഭൂമിയിൽ നിന്ന്", fromSun: "സൂര്യനിൽ നിന്ന്", logNote: "ദൂരങ്ങൾ ലോഗരിതമിക് സ്കെയിലിൽ · ദിശകൾ കൃത്യം", distEarth: "ഭൂമിയിൽ നിന്നുള്ള ദൂരം", distSun: "സൂര്യനിൽ നിന്നുള്ള ദൂരം", lightTime: "പ്രകാശത്തിന് {t} എടുക്കും", elong: "നമ്മുടെ ആകാശത്ത് സൂര്യനിൽ നിന്ന് {d}°", helioPos: "സൂര്യനിൽ നിന്ന് നോക്കുമ്പോൾ", mkm: "ദശലക്ഷം കി.മീ", nearEarth: "ഭൂമിക്കരികെ", earth: "ഭൂമി",
       prKicker: "ജ്യോതിഷികൾ", pr1Title: "ജ്യോതിഷിയോട് സംസാരിക്കൂ", pr1Text: "നിങ്ങളുടെ ജന്മ ആകാശം ഒരു വിദഗ്ധനൊപ്പം നോക്കി വ്യക്തമായ വ്യക്തിഗത ഉത്തരങ്ങൾ നേടൂ.", pr2Title: "നിങ്ങളുടെ ഗ്രഹങ്ങളെക്കുറിച്ച് ചോദ്യങ്ങളുണ്ടോ?", pr2Text: "ഞങ്ങളുടെ ജ്യോതിഷികൾ ഇതിന്റെ അർത്ഥം നേരിട്ട് വിശദീകരിക്കും.", pr3Title: "പ്രധാനപ്പെട്ട എന്തെങ്കിലും പ്ലാൻ ചെയ്യുകയാണോ?", pr3Text: "അതിന് നല്ല സമയം തിരഞ്ഞെടുക്കാൻ ജ്യോതിഷി സഹായിക്കും.", joinKicker: "ASTROGOD", joinTitle: "AstroGod-ൽ നിങ്ങളുടെ ജാതകം", joinText: "ജനന വിവരങ്ങൾ സേവ് ചെയ്യാനും പൂർണ്ണ ജാതകം കാണാനും സൈൻ അപ്പ് ചെയ്യൂ.", learnMore: "കൂടുതൽ അറിയൂ", book: "വിളിക്കൂ", signup: "സൈൻ അപ്പ്", close: 'അടയ്ക്കുക', tabTime: 'സമയം', theme: 'ഇളം അല്ലെങ്കിൽ ഇരുണ്ട നിറം', sky: 'ആകാശം', agTitle: 'നിങ്ങളുടെ പൂർണ്ണ ജാതകം', agSub: 'AstroGod തുറക്കുക', agShort: 'ജാതകം', agLink: 'പൂർണ്ണ ജാതകം AstroGod-ൽ കാണുക',
       birthDetails: 'ജനന വിവരങ്ങൾ', name: 'പേര് (ഐച്ഛികം)', namePh: 'ഉദാ. അനു', dob: 'ജനന തീയതി', tob: 'ജനന സമയം', pob: 'ജനന സ്ഥലം',
       placePh: 'സ്ഥലപ്പേര്, ഉദാ. Kochi', coords: 'അക്ഷാംശം, രേഖാംശം & സമയ മേഖല', lat: 'അക്ഷാംശം (°N +)', lon: 'രേഖാംശം (°E +)', tz: 'സമയ മേഖല',
@@ -351,6 +356,7 @@ window.I18N = (function () {
     },
     kn: {
       tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ',
+      fromEarth: "ಭೂಮಿಯಿಂದ", fromSun: "ಸೂರ್ಯನಿಂದ", logNote: "ದೂರಗಳು ಲಾಗರಿದಮಿಕ್ ಪ್ರಮಾಣದಲ್ಲಿ · ದಿಕ್ಕುಗಳು ನಿಖರ", distEarth: "ಭೂಮಿಯಿಂದ ದೂರ", distSun: "ಸೂರ್ಯನಿಂದ ದೂರ", lightTime: "ಬೆಳಕಿಗೆ {t} ಬೇಕು", elong: "ನಮ್ಮ ಆಕಾಶದಲ್ಲಿ ಸೂರ್ಯನಿಂದ {d}°", helioPos: "ಸೂರ್ಯನಿಂದ ನೋಡಿದಾಗ", mkm: "ಮಿಲಿಯನ್ ಕಿ.ಮೀ", nearEarth: "ಭೂಮಿಯ ಹತ್ತಿರ", earth: "ಭೂಮಿ",
       prKicker: "ಜ್ಯೋತಿಷಿಗಳು", pr1Title: "ಜ್ಯೋತಿಷಿಯೊಂದಿಗೆ ಮಾತನಾಡಿ", pr1Text: "ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶವನ್ನು ತಜ್ಞರೊಂದಿಗೆ ನೋಡಿ, ಸ್ಪಷ್ಟ ವೈಯಕ್ತಿಕ ಉತ್ತರಗಳನ್ನು ಪಡೆಯಿರಿ.", pr2Title: "ನಿಮ್ಮ ಗ್ರಹಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿವೆಯೇ?", pr2Text: "ನಮ್ಮ ಜ್ಯೋತಿಷಿಗಳು ಇದರ ಅರ್ಥವನ್ನು ನೇರವಾಗಿ ವಿವರಿಸುತ್ತಾರೆ.", pr3Title: "ಮುಖ್ಯವಾದದ್ದನ್ನು ಯೋಜಿಸುತ್ತಿದ್ದೀರಾ?", pr3Text: "ಅದಕ್ಕೆ ಒಳ್ಳೆಯ ಸಮಯ ಆರಿಸಲು ಜ್ಯೋತಿಷಿ ಸಹಾಯ ಮಾಡುತ್ತಾರೆ.", joinKicker: "ASTROGOD", joinTitle: "AstroGod ನಲ್ಲಿ ನಿಮ್ಮ ಜಾತಕ", joinText: "ನಿಮ್ಮ ಜನ್ಮ ವಿವರಗಳನ್ನು ಉಳಿಸಲು ಮತ್ತು ಪೂರ್ಣ ಜಾತಕ ನೋಡಲು ಸೈನ್ ಅಪ್ ಮಾಡಿ.", learnMore: "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ", book: "ಕರೆ ಮಾಡಿ", signup: "ಸೈನ್ ಅಪ್", close: 'ಮುಚ್ಚು', tabTime: 'ಸಮಯ', theme: 'ತಿಳಿ ಅಥವಾ ಗಾಢ ಬಣ್ಣ', sky: 'ಆಕಾಶ', agTitle: 'ನಿಮ್ಮ ಪೂರ್ಣ ಜಾತಕ', agSub: 'AstroGod ತೆರೆಯಿರಿ', agShort: 'ಜಾತಕ', agLink: 'ಪೂರ್ಣ ಜಾತಕವನ್ನು AstroGod ನಲ್ಲಿ ನೋಡಿ',
       birthDetails: 'ಜನ್ಮ ವಿವರಗಳು', name: 'ಹೆಸರು (ಐಚ್ಛಿಕ)', namePh: 'ಉದಾ. ಪ್ರಕಾಶ್', dob: 'ಹುಟ್ಟಿದ ದಿನಾಂಕ', tob: 'ಹುಟ್ಟಿದ ಸಮಯ', pob: 'ಹುಟ್ಟಿದ ಸ್ಥಳ',
       placePh: 'ಊರಿನ ಹೆಸರು, ಉದಾ. Mysuru', coords: 'ಅಕ್ಷಾಂಶ, ರೇಖಾಂಶ & ಸಮಯ ವಲಯ', lat: 'ಅಕ್ಷಾಂಶ (°N +)', lon: 'ರೇಖಾಂಶ (°E +)', tz: 'ಸಮಯ ವಲಯ',
