@@ -1152,6 +1152,57 @@
   document.querySelectorAll('.reopen').forEach(b => b.addEventListener('click', () => appEl.classList.remove('hide-' + b.dataset.open)));
   const closeSheet = () => { if (isPhone() && appEl.dataset.sheet) setSheet(''); };
 
+  // An open info card closes on the next click or tap anywhere (tapping another planet or star
+  // in the sky opens that one's card instead, a moment later on release).
+  document.addEventListener('pointerdown', e => {
+    if (!tipFor || !tipPinned || e.target.closest('#tip')) return;
+    S.sel = null; showTipFor(null); renderPanel();
+  }, true);
+
+  // Phones: pull a sheet down by its heading (or keep pulling once its content is at the top) to close it.
+  document.querySelectorAll('.sheet-panel').forEach(panel => {
+    let y0 = null, dy = 0, dragging = false, fromHead = false;
+    const begin = (y, target) => { y0 = y; dy = 0; dragging = false; fromHead = !!target.closest('.sheet-head, .sheet-grab'); };
+    const move = (y, ev) => {
+      if (y0 == null) return;
+      const d = y - y0;
+      if (!dragging) {
+        if (d > 8 && (fromHead || panel.scrollTop <= 0)) dragging = true;
+        else if (Math.abs(d) > 8) { y0 = null; return; }       // a normal scroll of the sheet's content
+      }
+      if (dragging) {
+        if (ev.cancelable) ev.preventDefault();
+        dy = Math.max(0, d);
+        panel.style.setProperty('transform', `translate(-50%, ${dy}px)`, 'important');
+        panel.style.setProperty('transition', 'none');
+      }
+    };
+    const end = () => {
+      if (y0 == null) return;
+      if (dragging) {
+        if (dy > 70) setSheet('');
+        panel.style.removeProperty('transform'); panel.style.removeProperty('transition');
+      }
+      y0 = null; dragging = false;
+    };
+    panel.addEventListener('touchstart', e => { if (isPhone() && e.touches.length === 1) begin(e.touches[0].clientY, e.target); }, { passive: true });
+    panel.addEventListener('touchmove', e => move(e.touches[0].clientY, e), { passive: false });
+    panel.addEventListener('touchend', end); panel.addEventListener('touchcancel', end);
+    // mouse (narrow desktop windows): drag the heading down
+    panel.addEventListener('mousedown', e => { if (isPhone() && e.target.closest('.sheet-head, .sheet-grab') && !e.target.closest('button')) begin(e.clientY, e.target); });
+    window.addEventListener('mousemove', e => move(e.clientY, e));
+    window.addEventListener('mouseup', end);
+    // trackpad / mouse wheel: scrolling further up once the sheet is already at its top closes it
+    let lastWheel = 0, gestureAtTop = false, pull = 0;
+    panel.addEventListener('wheel', e => {
+      if (!isPhone()) return;
+      const now = performance.now();
+      if (now - lastWheel > 250) { gestureAtTop = panel.scrollTop <= 0; pull = 0; }   // a new scroll gesture
+      lastWheel = now;
+      if (gestureAtTop && e.deltaY < 0) { pull -= e.deltaY; if (pull > 160) { pull = 0; gestureAtTop = false; setSheet(''); } }
+    }, { passive: true });
+  });
+
   // ---------- toast ----------
   let toastT;
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 5200); }
