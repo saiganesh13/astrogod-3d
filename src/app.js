@@ -264,16 +264,21 @@
     if (eclBuiltFor !== null && Math.abs(astro.time.tt - eclBuiltFor) < 180) return;
     eclBuiltFor = astro.time.tt;
     eclGroup.children.slice().forEach(c => { eclGroup.remove(c); c.geometry.dispose(); });
-    const pts = []; for (let l = 0; l <= 360; l += 2) pts.push(C.eclipticPoint(astro.rEctEqj, l));
-    const ticks = [];
+    const E = (lon, lat) => C.eclipticPoint(astro.rEctEqj, lon, lat);
+    const pts = []; for (let l = 0; l <= 360; l += 2) pts.push(E(l, 0));
+    // The 12 rasis as dashed boxes: equal 30° sidereal segments of the zodiac belt (±BAND° from the
+    // ecliptic). They are drawn in ivory, apart from the gold star figures, because the signs and the
+    // constellations do not line up (e.g. the first degrees of Thulam lie among Virgo's stars).
+    const BAND = 10, dashes = [];
     rasiLabels = [];
     for (let k = 0; k < 12; k++) {
       const lb = k * 30 + astro.ayan;
-      ticks.push([C.eclipticPoint(astro.rEctEqj, lb, -3), C.eclipticPoint(astro.rEctEqj, lb, 3)]);
-      rasiLabels.push({ k, pos: new THREE.Vector3(...C.eclipticPoint(astro.rEctEqj, lb + 15, -4.2)).multiplyScalar(R_LINE) });
+      for (let b = -BAND; b < BAND; b += 2.1) dashes.push([E(lb, b), E(lb, Math.min(BAND, b + 1.2))]);   // sign boundary
+      rasiLabels.push({ k, pos: new THREE.Vector3(...E(lb + 15, BAND - 2.6)).multiplyScalar(R_LINE) });
     }
-    const m1 = new THREE.Mesh(ribbonGeometry([pts], 0.07, R_LINE - 2), lineMat(0xd9b86a, 0.45));
-    const m2 = new THREE.Mesh(ribbonGeometry(ticks, 0.09, R_LINE - 2), lineMat(0xd9b86a, 0.6));
+    for (const edge of [-BAND, BAND]) for (let l = 0; l < 360; l += 3) dashes.push([E(l, edge), E(l + 1.6, edge)]);   // belt edges
+    const m1 = new THREE.Mesh(ribbonGeometry([pts], 0.06, R_LINE - 2), lineMat(0xd9b86a, 0.35));
+    const m2 = new THREE.Mesh(ribbonGeometry(dashes, 0.13, R_LINE - 2), lineMat(0xece4d0, 0.7));
     eclGroup.add(m1, m2);
   }
 
@@ -711,11 +716,18 @@
       }
       // rasi belt
       if (S.opt.ecliptic) {
-        g.textAlign = 'center'; g.font = `${L.native ? '' : 'italic '}400 11px ${FONT}`;
+        g.textAlign = 'center'; g.font = `500 12px ${FONT}`;
         for (const r of rasiLabels) {
           W3.copy(r.pos).applyMatrix4(skyM); const al = belowAlpha(W3); if (!al) continue;
           const p = project(W3); if (!p) continue;
-          g.globalAlpha = al * 0.7; g.fillStyle = '#d9b86a'; g.fillText(F(L.ui.belt, { r: rName(r.k) }), p.x, p.y);
+          // the sign's name in an outlined pill, so it reads as the box's label, not a star figure's
+          const txt = F(L.ui.belt, { r: rName(r.k) }), w = g.measureText(txt).width + 16, h = 20;
+          g.globalAlpha = al * 0.9;
+          g.beginPath();
+          if (g.roundRect) g.roundRect(p.x - w / 2, p.y - h / 2, w, h, 10); else g.rect(p.x - w / 2, p.y - h / 2, w, h);
+          g.fillStyle = 'rgba(14,12,9,0.72)'; g.fill();
+          g.strokeStyle = 'rgba(236,228,208,0.55)'; g.lineWidth = 1; g.setLineDash([3, 3]); g.stroke(); g.setLineDash([]);
+          g.fillStyle = '#ece4d0'; g.fillText(txt, p.x, p.y + 0.5);
         }
       }
     }
