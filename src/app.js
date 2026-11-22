@@ -2193,8 +2193,9 @@
     const of = 1 - sstep(lD, -3.0, -1.6);   // orbits fade as the planets shrink away
     for (const l of SP.orbits.children) l.material.opacity = 0.5 * of;
     for (const l of SP.moonOrbit.children) l.material.opacity = 0.45 * of;
-    const av = sstep(lD, -4.7, -4.3) * (1 - sstep(lD, -2.7, -2.1)), kv = sstep(lD, -3.9, -3.3) * (1 - sstep(lD, -1.6, -1.1));
-    A.ast.material.opacity = 0.6 * av; A.ast.visible = av > 0.01; A.kb.material.opacity = 0.6 * kv; A.kb.visible = kv > 0.01;
+    // the belts are thin dust from far away: each fades once it shrinks to a small ring on screen (asteroids past ~10 AU, Kuiper belt past ~150 AU)
+    const av = sstep(lD, -4.7, -4.3) * (1 - sstep(lD, -3.95, -3.55)), kv = sstep(lD, -3.9, -3.3) * (1 - sstep(lD, -2.75, -2.35));
+    A.ast.material.opacity = 0.6 * av; A.ast.visible = av > 0.01; A.kb.material.opacity = 0.5 * kv; A.kb.visible = kv > 0.01;
     const sub = aetherSubject();
     for (const { b, mesh } of Object.values(SP.bodies)) if (!FULL_SIZE.has(b.id)) mesh.scale.setScalar(radiusAU(b) * (0.1 + 0.9 * (sub ? sub[b.id] || 0 : 1)));
     const ren = SP.ren; ren.autoClear = false; ren.clear();
@@ -2357,8 +2358,8 @@
     // the two belts, labelled on the side nearest you
     if (names) {
       const beltLabel = (R, a, text) => { if (a < 0.02) return; const p = proj(SP.cam, new THREE.Vector3(Math.cos(aeth.yaw) * R, 0, Math.sin(aeth.yaw) * R)); if (p) label(text, p.x, p.y + 14, '#cdbf9e', a * 0.85, `500 11.5px ${FONT}`, 'center'); };
-      beltLabel(2.75, sstep(lD, -4.9, -4.5) * (1 - sstep(lD, -3.6, -3.1)), L.ui.asteroidBelt);
-      beltLabel(42, sstep(lD, -3.4, -3.0) * (1 - sstep(lD, -1.9, -1.4)), L.ui.kuiperBelt);
+      beltLabel(2.75, sstep(lD, -4.9, -4.5) * (1 - sstep(lD, -3.95, -3.55)), L.ui.asteroidBelt);
+      beltLabel(42, sstep(lD, -3.4, -3.0) * (1 - sstep(lD, -2.75, -2.35)), L.ui.kuiperBelt);
     }
     // the brightest nearby stars by name
     const sa = sstep(lD, -1.4, -0.6) * (1 - sstep(lD, 2.9, 3.5));
