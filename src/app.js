@@ -1202,6 +1202,103 @@
   let SP = null, posSpace = {}, spaceZoom = () => { };
   const ctl = { target: new THREE.Vector3(), dist: 0.2, yaw: 0, pitch: 0.3, follow: 'Earth', anim: null, zoomT: null, zoomP: null };
 
+  // ---- realism: shaders for the space view (they write logarithmic depth like three's own materials) ----
+  const LDV0 = '#include <common>\n#include <logdepthbuf_pars_vertex>\n', LDV1 = '#include <logdepthbuf_vertex>\n';
+  const LDF0 = '#include <logdepthbuf_pars_fragment>\n', LDF1 = '#include <logdepthbuf_fragment>\n';
+  const WORLD_VS = LDV0 + 'varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vO;\n' +
+    'void main(){ vUv=uv; vO=normal; vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w;\n' + LDV1 + '}';
+  const shaderMat = (o) => new THREE.ShaderMaterial(Object.assign({ extensions: { derivatives: true, fragDepth: true } }, o));
+  // Earth: daylight surface, city lights on the night side, sunlight glinting off the oceans, blue limb
+  const earthMat = (day, night, spec) => shaderMat({
+    uniforms: { dayMap: { value: day }, nightMap: { value: night }, specMap: { value: spec }, camPos: { value: new THREE.Vector3() } },
+    vertexShader: WORLD_VS,
+    fragmentShader: LDF0 + 'uniform sampler2D dayMap, nightMap, specMap; uniform vec3 camPos; varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vO;\n' +
+      'void main(){ vec3 n=normalize(vN), L=normalize(-vW), V=normalize(camPos-vW); float d=dot(n,L);\n' +
+      ' vec3 col=texture2D(dayMap,vUv).rgb*smoothstep(-0.06,0.22,d)*(0.12+0.95*max(d,0.0))*1.18;\n' +
+      ' col+=texture2D(nightMap,vUv).rgb*vec3(1.0,0.8,0.5)*(1.0-smoothstep(-0.16,0.06,d))*1.7;\n' +
+      ' vec3 H=normalize(L+V); col+=vec3(1.0,0.93,0.8)*pow(max(dot(n,H),0.0),70.0)*texture2D(specMap,vUv).r*0.75*smoothstep(0.0,0.2,d);\n' +
+      ' float rim=pow(1.0-max(dot(n,V),0.0),3.0); col+=vec3(0.3,0.55,1.0)*rim*smoothstep(-0.25,0.4,d)*0.55;\n' +
+      ' gl_FragColor=vec4(col,1.0);\n' + LDF1 + '}',
+  });
+  const cloudMat = (clouds) => shaderMat({
+    uniforms: { cloudMap: { value: clouds } },
+    vertexShader: WORLD_VS,
+    fragmentShader: LDF0 + 'uniform sampler2D cloudMap; varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vO;\n' +
+      'void main(){ vec3 n=normalize(vN), L=normalize(-vW); float d=dot(n,L); float c=texture2D(cloudMap,vUv).r;\n' +
+      ' float lit=smoothstep(-0.08,0.25,d)*(0.2+0.85*max(d,0.0)); gl_FragColor=vec4(vec3(1.0)*lit, c*(0.12+0.83*smoothstep(-0.12,0.2,d)));\n' + LDF1 + '}',
+    transparent: true, depthWrite: false,
+  });
+  // a thin glowing shell where a planet has an air or haze layer, bright only on the sunlit side
+  const atmosMat = (color, strength) => shaderMat({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uStrength: { value: strength }, camPos: { value: new THREE.Vector3() } },
+    vertexShader: WORLD_VS,
+    fragmentShader: LDF0 + 'uniform vec3 uColor; uniform float uStrength; uniform vec3 camPos; varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vO;\n' +
+      'void main(){ vec3 n=normalize(vN), L=normalize(-vW), V=normalize(camPos-vW); float rim=pow(1.0-abs(dot(n,V)),3.5);\n' +
+      ' gl_FragColor=vec4(uColor*rim*smoothstep(-0.3,0.5,dot(n,L))*uStrength,1.0);\n' + LDF1 + '}',
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const ATMOS = { Earth: ['#5b9cff', 1.1], Venus: ['#f5dca0', 0.8], Mars: ['#e8a27a', 0.35], Jupiter: ['#eadbc0', 0.28], Saturn: ['#efe1b8', 0.25], Uranus: ['#a8ecf4', 0.6], Neptune: ['#6f93ff', 0.6] };
+  // the Sun's surface: its map, slowly boiling granulation, darker towards the edge
+  const sunSurfaceMat = (map) => shaderMat({
+    uniforms: { map: { value: map }, uTime: { value: 0 }, camPos: { value: new THREE.Vector3() } },
+    vertexShader: WORLD_VS,
+    fragmentShader: LDF0 + GLSL_NOISE + 'uniform sampler2D map; uniform float uTime; uniform vec3 camPos; varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vO;\n' +
+      'void main(){ vec3 n=normalize(vN), V=normalize(camPos-vW); float mu=max(dot(n,V),0.0);\n' +
+      ' vec3 base=texture2D(map,vUv+vec2(uTime*0.0008,0.0)).rgb; float g=fbm(vO*38.0+vec3(0.0,0.0,uTime*0.12)); float g2=fbm(vO*9.0-vec3(uTime*0.03));\n' +
+      ' vec3 col=base*(0.78+0.42*g)*(0.85+0.3*g2); col=mix(col,vec3(1.0,0.86,0.55),0.25); col*=(0.42+0.58*pow(mu,0.45))*1.45;\n' +
+      ' gl_FragColor=vec4(col,1.0);\n' + LDF1 + '}',
+  });
+  // the corona: a camera-facing glow with moving streamers and flares (prominences) at the edge
+  const CORONA_R = 7;   // in solar radii
+  const coronaMat = () => shaderMat({
+    uniforms: { uTime: { value: 0 }, uFade: { value: 0 } },
+    vertexShader: LDV0 + 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);\n' + LDV1 + '}',
+    fragmentShader: LDF0 + GLSL_NOISE + 'uniform float uTime; uniform float uFade; varying vec2 vUv;\n' +
+      'void main(){ vec2 p=(vUv-0.5)*' + (2 * CORONA_R).toFixed(1) + '; float r=length(p); float an=atan(p.y,p.x); float e=max(r-1.0,0.0);\n' +
+      ' vec3 dir=vec3(cos(an),sin(an),0.0);\n' +
+      ' float glow=exp(-e*2.4)*0.85+exp(-e*0.7)*0.12;\n' +
+      ' float st=fbm(dir*2.6+vec3(0.0,0.0,uTime*0.05)); float rays=pow(st,3.2)*exp(-e*0.75)*2.2;\n' +
+      ' float fl=fbm(vec3(an*6.0, e*3.0-uTime*0.35, uTime*0.07))*exp(-e*2.6);\n' +
+      ' float pr=smoothstep(0.58,0.74,fbm(vec3(an*7.0, e*14.0-uTime*0.18, 2.0+uTime*0.02)))*smoothstep(0.34,0.02,e)*step(0.0,r-0.985);\n' +
+      ' vec3 col=vec3(1.0,0.87,0.62)*(glow+rays+fl*0.55)+vec3(1.0,0.36,0.14)*pr*1.6;\n' +
+      ' col*=smoothstep(' + CORONA_R.toFixed(1) + ',' + (CORONA_R * 0.6).toFixed(1) + ',r);\n' +
+      ' gl_FragColor=vec4(col*uFade,1.0);\n' + LDF1 + '}',
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  // sharp 4k–8k maps (in hd/), fetched only when you get close to a body
+  const HD_FILES = { Earth: { map: 'earth.jpg', night: 'earth_night.jpg', clouds: 'earth_clouds.jpg', spec: 'earth_spec.jpg' }, Moon: { map: 'moon.jpg' }, Mars: { map: 'mars.jpg' },
+    Jupiter: { map: 'jupiter.jpg' }, Saturn: { map: 'saturn.jpg' }, Mercury: { map: 'mercury.jpg' }, Venus: { map: 'venus.jpg' }, Sun: { map: 'sun.jpg' } };
+  const hdState = {};
+  function maybeHD(id, rp) {
+    if (rp < 150 || hdState[id] || !HD_FILES[id] || !SP) return;
+    hdState[id] = 'loading';
+    const o = SP.bodies[id], aniso = SP.ren.capabilities.getMaxAnisotropy();
+    for (const [slot, file] of Object.entries(HD_FILES[id])) {
+      new THREE.TextureLoader().load('hd/' + file, t => {
+        if (slot !== 'clouds' && slot !== 'spec') t.encoding = THREE.sRGBEncoding;
+        t.anisotropy = aniso; t.wrapS = THREE.RepeatWrapping;
+        const m = o.mesh.material;
+        if (id === 'Earth') { if (slot === 'map') m.uniforms.dayMap.value = t; else if (slot === 'night') m.uniforms.nightMap.value = t; else if (slot === 'spec') m.uniforms.specMap.value = t; else if (o.clouds) o.clouds.material.uniforms.cloudMap.value = t; }
+        else if (m.uniforms && m.uniforms.map) m.uniforms.map.value = t;
+        else { m.map = t; m.needsUpdate = true; }
+        hdState[id] = 'sharp'; needsRender = true;
+      }, undefined, () => { hdState[id] = 'unavailable'; });
+    }
+  }
+  // per frame: animate the Sun when it is close enough to show its corona
+  function spaceFrame(now) {
+    const sun = SP.bodies.Sun, k = (H / 2) / Math.tan(SP.cam.fov / 2 * DEG);
+    const rp = radiusAU(sun.b) / Math.max(SP.cam.position.distanceTo(sun.mesh.position), 1e-9) * k;
+    const fade = THREE.MathUtils.smoothstep(rp, 18, 90);
+    const t = now / 1000;
+    sun.corona.material.uniforms.uFade.value = fade; sun.corona.visible = fade > 0.001;
+    sun.corona.quaternion.copy(SP.cam.quaternion);
+    sun.mesh.material.uniforms.uTime.value = t; sun.corona.material.uniforms.uTime.value = t;
+    SP.glow.material.opacity = 1 - 0.75 * fade;
+    for (const o of Object.values(SP.bodies)) { const u = o.mesh.material.uniforms; if (u && u.camPos) u.camPos.value.copy(SP.cam.position); if (o.atmos) o.atmos.material.uniforms.camPos.value.copy(SP.cam.position); }
+    return fade > 0.001 && rp < 60000;   // keep animating while the corona is in view
+  }
+
   function buildSpace() {
     const ren = new THREE.WebGLRenderer({ canvas: spaceCanvas, antialias: true, logarithmicDepthBuffer: true });
     ren.setPixelRatio(dpr); ren.setClearColor(0x030305, 1); ren.outputEncoding = THREE.sRGBEncoding;
@@ -1256,13 +1353,22 @@
       sp.computeLineDistances(); sp.name = 'spokes'; scn.add(sp);
     }
     // bodies
-    const geo = new THREE.SphereGeometry(1, 96, 64), bodies = {};
-    const ldTex = key => { if (!TEX[key]) return null; const t = texLoader.load(TEX[key], () => { needsRender = true; }); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t; };
+    const geo = new THREE.SphereGeometry(1, 128, 96), bodies = {};
+    const ldTex = key => { if (!TEX[key]) return null; const t = texLoader.load(TEX[key], () => { needsRender = true; }); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; t.wrapS = THREE.RepeatWrapping; return t; };
     for (const b of SPACE_BODIES) {
       const map = ldTex(b.id.toLowerCase());
-      const mat = b.id === 'Sun' ? new THREE.MeshBasicMaterial({ map, color: 0xffffff }) : new THREE.MeshStandardMaterial({ map, roughness: 1, metalness: 0, color: map ? 0xffffff : spColor(b.id) });
+      let mat;
+      if (b.id === 'Sun') mat = sunSurfaceMat(map);
+      else if (b.id === 'Earth') { const lin = key => { const t = ldTex(key); if (t) t.encoding = THREE.LinearEncoding; return t; }; mat = earthMat(map, ldTex('earth_night'), lin('earth_spec')); }
+      else mat = new THREE.MeshStandardMaterial({ map, roughness: 1, metalness: 0, color: map ? 0xffffff : spColor(b.id) });
       const mesh = new THREE.Mesh(geo, mat); scn.add(mesh);
       const o = { b, mesh };
+      if (b.id === 'Earth') {   // cloud layer just above the surface
+        const ct = ldTex('earth_clouds'); if (ct) ct.encoding = THREE.LinearEncoding;
+        o.clouds = new THREE.Mesh(geo, cloudMat(ct)); o.clouds.scale.setScalar(1.008); o.clouds.renderOrder = 1; mesh.add(o.clouds);
+      }
+      if (ATMOS[b.id]) { o.atmos = new THREE.Mesh(geo, atmosMat(...ATMOS[b.id])); o.atmos.scale.setScalar(b.id === 'Earth' ? 1.035 : 1.03); o.atmos.renderOrder = 2; mesh.add(o.atmos); }
+      if (b.id === 'Sun') { o.corona = new THREE.Mesh(new THREE.PlaneGeometry(2 * CORONA_R, 2 * CORONA_R), coronaMat()); o.corona.renderOrder = 3; scn.add(o.corona); }
       if (b.ring) {
         const rg = new THREE.RingGeometry(1.24, 2.27, 160, 1), uv = rg.attributes.uv, p = rg.attributes.position;
         for (let i = 0; i < uv.count; i++) { const r = Math.hypot(p.getX(i), p.getY(i)); uv.setXY(i, (r - 1.24) / 1.03, 0.5); }
@@ -1305,6 +1411,7 @@
       } catch (e) { }
     }
     SP.glow.scale.setScalar(radiusAU(SP.bodies.Sun.b) * 9);
+    SP.bodies.Sun.corona.position.copy(SP.bodies.Sun.mesh.position); SP.bodies.Sun.corona.scale.setScalar(radiusAU(SP.bodies.Sun.b));
     // orbits: one full lap from this moment (rebuilt only when the date moves a lot)
     if (SP.orbitsAt === null || Math.abs(S.utc - SP.orbitsAt) > 2 * 365.25 * 864e5) {
       SP.orbitsAt = S.utc; clearGroup(SP.orbits);
@@ -1395,6 +1502,7 @@
       const dCam = SP.cam.position.distanceTo(mesh.position);
       const rp = radiusAU(b) / Math.max(dCam, 1e-9) * k;
       posSpace[b.id] = { x: p.x, y: p.y, r: Math.max(rp, 6) };
+      maybeHD(b.id, rp);
       if (p.x < -60 || p.x > W + 60 || p.y < -30 || p.y > H + 30) continue;
       const c = spColor(b.id), sel = S.sel === b.id;
       if (rp < 9) { g.strokeStyle = c; g.globalAlpha = 0.9; g.lineWidth = sel ? 2 : 1.3; g.beginPath(); g.arc(p.x, p.y, sel ? 9 : 7, 0, 2 * Math.PI); g.stroke(); }
@@ -1689,6 +1797,7 @@
     stepZoom();
     if (S.view === 'space' && SP) {
       if (stepSpaceAnim(now)) needsRender = true;
+      if (spaceFrame(now)) needsRender = true;
       if (needsRender) { SP.ren.render(SP.scn, SP.cam); drawSpaceOverlay(); needsRender = false; }
     } else if (needsRender) { renderer.render(scene, camera); drawOverlay(); needsRender = false; }
   }

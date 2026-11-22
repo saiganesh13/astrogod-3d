@@ -9,9 +9,14 @@ Live reference copy: https://saiganesh13.github.io/astrogod-3d/
 
 ## 1. Hosting it on the AstroGod domain (the short version)
 
-1. Take **`index.html`** from this folder.
-2. Upload it to any path on the web server or CDN, for example `https://astrogod.io/3d/index.html`.
-3. Done. No build step is needed on the server, and no other file has to be uploaded.
+1. Take **`index.html`** and the **`hd/`** folder from this folder.
+2. Upload both to the same path on the web server or CDN, for example `https://astrogod.io/3d/index.html`
+   and `https://astrogod.io/3d/hd/…`.
+3. Done. No build step is needed on the server.
+
+`hd/` holds sharp 4k–8k planet maps (about 19 MB in total). The page fetches each one only when a visitor
+zooms in close to that body in the "From Space" view. If `hd/` is missing, everything still works with the
+built-in maps; close-ups are just softer.
 
 It works at any path (root or a subfolder) and on any static host: Nginx, Apache, S3 + CloudFront,
 Netlify, Vercel, Firebase Hosting, Cloudflare Pages and similar.
@@ -79,7 +84,8 @@ src/
   i18n.js             ← every word on the page, in all 11 language modes
   cities.js           ← built-in cities with coordinates and time zones
   sky-data.js         ← generated star catalogue, constellation figures, Indian star names
-textures/             ← planet surface maps (Solar System Scope, CC BY 4.0)
+textures/             ← built-in planet maps, 1–2k (Solar System Scope, CC BY 4.0)
+hd/                   ← sharp 4k–8k maps fetched on demand when zooming in (same source and licence)
 brand/                ← AstroGod logo (figure + wordmark) and the two astrologer photos for the banners
 vendor/               ← local copies of three.js r128 and Astronomy Engine 2.1.19 (for --inline-libs)
 tools/
