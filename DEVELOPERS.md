@@ -148,14 +148,23 @@ node build.js
   positions in the J2000 ecliptic frame (1 unit = 1 AU), dashed orbits, IAU rotation axes, Earth/planet
   surface maps, a second WebGL renderer with a logarithmic depth buffer, and an "Enlarged / Real size"
   switch (enlarged = planets ×600, Sun ×20, Moon distance ×60; distances otherwise true).
-- **From Aether view** (`buildAether()` / `aetherRender()` in `app.js`): a log-scale journey out from Earth
-  to the dark void and back, on the same renderer as "From Space". `aeth.lD` is log10 of the viewing distance
-  in light-years (Earth close-up ≈ −5.4, the void = 10.3). Each frame draws three passes so every scale keeps
-  precision: galaxies and the cosmic web (unit 1 million ly), catalogue stars at estimated 3D distances, the
-  Oort cloud and a particle Milky Way (unit 1 ly), then the solar system scene (unit 1 AU) while it is close.
-  Galaxy positions for the named ones are real (RA/Dec/distance); the Virgo Cluster, local volume, dwarfs and
-  cosmic web are a fixed-seed illustration. Galaxies are deliberately flat pictures with no inner detail.
-  The Journey button plays out and back at Slow / Normal / Fast; tapping a named galaxy flies to it.
+- **To Aether view** (`buildAether()` / `aetherRender()` / `makeRoute()` in `app.js`): a log-scale journey out from Earth
+  to the dark void and back, on the same renderer as "From Space". `aeth.lD` is log10 of the viewing distance in light-years
+  (Earth close-up ≈ −5.4, the void = 10.3). Each frame draws three passes so every scale keeps precision: galaxies and the
+  cosmic web (unit 1 million ly), stars, the Oort cloud and the Milky Way (unit 1 ly), then the solar system scene (unit 1 AU)
+  while it is close.
+  - **Journey** (▶, Slow / Normal / Fast): a guided route with stops — Earth, Moon, Earth and Moon, Sun, inner planets with the
+    asteroid belt, Jupiter, Saturn, Kuiper belt, Oort cloud, Alpha Centauri, our star neighbourhood, the galactic centre, the
+    whole Milky Way, Andromeda, the Local Group, the Virgo Cluster, the Virgo Supercluster, the cosmic web and the void. The way
+    back skips the close-ups and is quicker. Each stop is one entry in `makeRoute()`; between stops the target slides over in
+    step with the zoom so nothing races across the screen. Pausing keeps the camera where it is.
+  - **Galaxies** are procedural images drawn once into float buffers (`faceImg`, `edgeImg`, `bulgeImg`, `irrImg`) and uploaded
+    as textures: a face-on disc (old yellow disc, blue arms, dust lanes, pink star-forming knots), an edge-on card with a dark
+    dust lane that turns to face you when the disc is seen side-on, and a round 3D bulge. `LOOKS` holds each named galaxy's
+    recipe. The Milky Way image uses the same arms, bar angle and Sun position as its particle cloud. Distant galaxies are
+    point sprites picked from a 4×4 atlas of small galaxy pictures (spirals, barred, ellipticals, lenticulars, irregulars).
+  - Galaxy positions for the named ones are real (RA/Dec/distance); the Virgo Cluster, local volume, dwarfs and cosmic web
+    are a fixed-seed illustration. Planets other than the one being visited are drawn smaller during close-ups.
 - **Layouts:** desktop (1024 px and wider) has a sidebar; phones and tablets get a top bar, bottom tabs and
   bottom sheets (swipe down or tap the sky to close).
 

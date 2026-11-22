@@ -149,7 +149,8 @@ svg{flex:none}
 .phone-only{display:none}
 @media (max-width:1023px){ #app.mode-space #zOut,#app.mode-space #zIn,#app.mode-aether #zOut,#app.mode-aether #zIn{display:none}
   #viewSeg .lg{display:none} #viewSeg .sh{display:inline}
-  #zoombar #speedSeg{flex:1 1 0;min-width:0} #zoombar #speedSeg button{flex:1;padding:0 4px;font-size:12px}
+  #zoombar #speedSeg{flex:1 1 0;min-width:0} #zoombar #speedSeg button{flex:1 1 0;padding:0 3px;font-size:12px}
+  html[lang="ta"] #zoombar #speedSeg button,html[lang="ml"] #zoombar #speedSeg button,html[lang="te"] #zoombar #speedSeg button,html[lang="kn"] #zoombar #speedSeg button{font-size:11px;padding:0 2px}
   .journey{padding:0 14px 0 11px} #app.mode-space #zoombar #sizeSeg{display:none!important} .phone-only{display:inline-flex}
   #zoombar{flex-wrap:wrap;border-radius:24px;row-gap:6px}
   #zoombar #viewSeg{order:-2;flex:1 1 100%} #zoombar #viewSeg button{flex:1;padding:0 6px;font-size:12.5px}
@@ -196,7 +197,7 @@ svg{flex:none}
 .pr-text p{margin:6px 0 4px;font-size:12.5px;line-height:1.5;color:var(--text-2)}
 .pr-text .pr-k{margin:0 0 3px;font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--accent-ink)}
 .pr-btns{grid-column:1/-1;display:flex;gap:8px;margin-top:6px}
-.pr-btns>*{flex:1 1 0;min-width:0;justify-content:center;text-align:center;min-height:42px;height:auto;padding:6px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;text-decoration:none}
+.pr-btns>*{flex:1 1 0;min-width:0;justify-content:center;text-align:center;min-height:42px;height:auto;padding:6px 10px;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:1.2;text-decoration:none}
 .btn-quiet{background:var(--surface-3);color:var(--text);font-size:13.5px}
 .new-btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--gold-grad);color:var(--gold-ink);font-size:13.5px;font-weight:700;cursor:pointer}
 .new-btn:hover,.btn-quiet:hover{filter:brightness(1.06)}
@@ -350,7 +351,8 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
   .side-foot{position:fixed;z-index:12;right:var(--edge-r);top:var(--edge-t);margin:0;padding:0;border:0;gap:8px}
   .side-foot .icon-btn{width:42px;height:42px;background:var(--card-bg);border-color:var(--card-line);box-shadow:var(--card-shadow)}
   .ag-pill{display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:999px;background:var(--ask-bg);color:var(--ask-ink);font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;box-shadow:var(--card-shadow)}
-  #zoombar{left:var(--edge-l);right:var(--edge-r);top:calc(var(--edge-t) + 54px)}
+  #zoombar{left:var(--edge-l);right:var(--edge-r);top:calc(var(--edge-t) + 54px);border-radius:24px}
+  #zoombar>*{max-width:100%}
   .find{flex:1;width:auto}
   #zoomTxt,#zFit{display:none}
   #findList{width:calc(100vw - 32px);max-width:420px}
@@ -388,6 +390,10 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
   .ag-pill{padding:0 12px}
   .ag-pill .ag-txt{display:none}
 }
+@media (max-width:560px){ .journey{width:38px;padding:0;justify-content:center} .journey span{display:none} }
+@media (max-width:360px){ .pr-btns{flex-direction:column} .pr-btns>*{flex:none;white-space:normal}
+  html:not([lang="en"]) .tab{font-size:10px} html:not([lang="en"]) .tab>span:last-child{letter-spacing:-.01em}
+  html[lang="ta"] #zoombar #speedSeg button,html[lang="ml"] #zoombar #speedSeg button{font-size:10px;padding:0 1px} }
 @media (max-width:340px){ .brand-wm{display:none} }
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
 </style>
@@ -502,8 +508,8 @@ td .sub{display:block;font-size:11.5px;font-weight:500;color:var(--text-2)}
 
     <div id="zoombar" class="card" role="toolbar" aria-label="Find and zoom">
       <button class="zb reopen" type="button" id="openBirth" data-open="birth" data-i18n-aria="birthDetails" aria-label="Birth details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <div class="seg" id="viewSeg" role="group" aria-label="From Earth, from space or from the aether"><button type="button" data-view="sky" aria-pressed="true"><span class="lg" data-i18n="fromEarth">From Earth</span><span class="sh" data-i18n="vEarth">Earth</span></button><button type="button" data-view="space" aria-pressed="false"><span class="lg" data-i18n="fromSpace">From Space</span><span class="sh" data-i18n="vSpace">Space</span></button><button type="button" data-view="aether" aria-pressed="false"><span class="lg" data-i18n="fromAether">From Aether</span><span class="sh" data-i18n="vAether">Aether</span></button></div>
-      <button class="journey only-aether" type="button" id="aJourney" aria-pressed="false"><svg class="ic-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg><svg class="ic-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4.5h4.2v15H6zM13.8 4.5H18v15h-4.2z"/></svg><span data-i18n="journey">Journey</span></button>
+      <div class="seg" id="viewSeg" role="group" aria-label="From Earth, from space or to the aether"><button type="button" data-view="sky" aria-pressed="true"><span class="lg" data-i18n="fromEarth">From Earth</span><span class="sh" data-i18n="vEarth">Earth</span></button><button type="button" data-view="space" aria-pressed="false"><span class="lg" data-i18n="fromSpace">From Space</span><span class="sh" data-i18n="vSpace">Space</span></button><button type="button" data-view="aether" aria-pressed="false"><span class="lg" data-i18n="fromAether">To Aether</span><span class="sh" data-i18n="vAether">Aether</span></button></div>
+      <button class="journey only-aether" type="button" id="aJourney" aria-pressed="false" data-i18n-aria="journey" aria-label="Journey"><svg class="ic-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg><svg class="ic-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4.5h4.2v15H6zM13.8 4.5H18v15h-4.2z"/></svg><span data-i18n="journey">Journey</span></button>
       <div class="seg only-aether" id="speedSeg" role="group" data-i18n-aria="speed" aria-label="Travel speed"><button type="button" data-speed="slow" aria-pressed="false" data-i18n="slow">Slow</button><button type="button" data-speed="normal" aria-pressed="true" data-i18n="normal">Normal</button><button type="button" data-speed="fast" aria-pressed="false" data-i18n="fast">Fast</button></div>
       <button class="zb only-aether" type="button" id="aetherHome" data-i18n-aria="home" aria-label="Back to Earth" title="Back to Earth"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></svg></button>
       <div class="seg only-space" id="sizeSeg" role="group" aria-label="Planet size"><button type="button" data-size="big" aria-pressed="true" data-i18n="bigSize">Enlarged</button><button type="button" data-size="real" aria-pressed="false" data-i18n="realSize">Real size</button></div>
@@ -1026,7 +1032,7 @@ window.I18N = (function () {
   // ---------- interface text ----------
   const EN = {
     tagline: 'your birth sky in 3D', lang: 'Language', fromSpace: "From Space",
-      fromAether: "From Aether", vEarth: "Earth", vSpace: "Space", vAether: "Aether", journey: "Journey", slow: "Slow", normal: "Normal", fast: "Fast", speed: "Travel speed", aLabels: "Names", aetherHint: "Drag to look around · scroll or pinch to travel · ▶ Journey flies out to the aether and back · tap a galaxy to visit it", youHere: "You are here", ly: "light-years", mly: "million light-years", gly: "billion light-years", distFrom: "{d} from Earth", aetherLine: "Complete darkness · the void", milkyWay: "Milky Way", andromeda: "Andromeda", virgoCl: "Virgo Cluster", lmc: "Large Magellanic Cloud", smc: "Small Magellanic Cloud", stage: { earth: "Earth", earthMoon: "Earth and Moon", inner: "The inner planets", solar: "The solar system", edge: "Edge of the solar system", oort: "The Oort cloud", near: "The nearest stars", hood: "Our star neighbourhood", milky: "The Milky Way galaxy", local: "The Local Group of galaxies", virgo: "The Virgo Supercluster", web: "The cosmic web", aether: "Aether" },
+      fromAether: "To Aether", vEarth: "Earth", vSpace: "Space", vAether: "Aether", journey: "Journey", slow: "Slow", normal: "Normal", fast: "Fast", speed: "Travel speed", aLabels: "Names", aetherHint: "Drag to look around · scroll or pinch to travel · ▶ Journey flies out to the aether and back · tap a galaxy to visit it", youHere: "You are here", ly: "light-years", mly: "million light-years", gly: "billion light-years", distFrom: "{d} from Earth", aetherLine: "Complete darkness · the void", milkyWay: "Milky Way", andromeda: "Andromeda", virgoCl: "Virgo Cluster", lmc: "Large Magellanic Cloud", smc: "Small Magellanic Cloud", asteroidBelt: "Asteroid belt", kuiperBelt: "Kuiper belt", sgrA: "Sagittarius A* · black hole", stage: { earth: "Earth", kuiper: "The Kuiper belt", alphaCen: "Alpha Centauri · the nearest star", gc: "Heart of the Milky Way", earthMoon: "Earth and Moon", inner: "The inner planets", solar: "The solar system", edge: "Edge of the solar system", oort: "The Oort cloud", near: "The nearest stars", hood: "Our star neighbourhood", milky: "The Milky Way galaxy", local: "The Local Group of galaxies", virgo: "The Virgo Supercluster", web: "The cosmic web", aether: "Aether" },
       sopt: { orbits: "Orbits", names: "Planet names", rasi: "Rasi directions", zodiac: "Zodiac stars", stars: "Stars" },
       open: "Open", bigSize: "Enlarged", realSize: "Real size", home: "Back to Earth", spaceHint: "Drag to turn · right-drag or two fingers to move · scroll or pinch to zoom · tap a planet to fly there",
       fromEarth: "From Earth", fromSun: "From Sun", logNote: "Distances on a log scale · directions are true", distEarth: "From Earth", distSun: "From Sun", lightTime: "light takes {t}", elong: "{d}° from the Sun in our sky", helioPos: "Seen from the Sun", mkm: "million km", nearEarth: "near Earth", earth: "Earth",
@@ -1092,7 +1098,7 @@ window.I18N = (function () {
     en: EN,
     hi: {
       tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा', fromSpace: "अंतरिक्ष से",
-      fromAether: "आकाश तत्व से", vEarth: "पृथ्वी", vSpace: "अंतरिक्ष", vAether: "आकाश तत्व", journey: "यात्रा", slow: "धीमा", normal: "सामान्य", fast: "तेज़", speed: "यात्रा की गति", aLabels: "नाम", aetherHint: "चारों ओर देखने के लिए खींचें · यात्रा के लिए स्क्रॉल या पिंच · ▶ यात्रा आकाश तत्व तक जाकर लौटती है · किसी गैलेक्सी पर टैप करके वहाँ जाएँ", youHere: "आप यहाँ हैं", ly: "प्रकाश वर्ष", mly: "मिलियन प्रकाश वर्ष", gly: "अरब प्रकाश वर्ष", distFrom: "पृथ्वी से {d}", aetherLine: "पूर्ण अंधकार · शून्य", milkyWay: "आकाशगंगा", andromeda: "एंड्रोमेडा", virgoCl: "कन्या गैलेक्सी समूह", lmc: "बड़ा मैगेलैनिक बादल", smc: "छोटा मैगेलैनिक बादल", stage: { earth: "पृथ्वी", earthMoon: "पृथ्वी और चंद्रमा", inner: "भीतरी ग्रह", solar: "सौर मंडल", edge: "सौर मंडल का छोर", oort: "ऊर्ट बादल", near: "सबसे पास के तारे", hood: "हमारा तारा-पड़ोस", milky: "आकाशगंगा", local: "स्थानीय गैलेक्सी समूह", virgo: "कन्या महागुच्छ", web: "ब्रह्मांडीय जाल", aether: "आकाश तत्व" },
+      fromAether: "आकाश तत्व तक", vEarth: "पृथ्वी", vSpace: "अंतरिक्ष", vAether: "आकाश तत्व", journey: "यात्रा", slow: "धीमा", normal: "सामान्य", fast: "तेज़", speed: "यात्रा की गति", aLabels: "नाम", aetherHint: "चारों ओर देखने के लिए खींचें · यात्रा के लिए स्क्रॉल या पिंच · ▶ यात्रा आकाश तत्व तक जाकर लौटती है · किसी गैलेक्सी पर टैप करके वहाँ जाएँ", youHere: "आप यहाँ हैं", ly: "प्रकाश वर्ष", mly: "मिलियन प्रकाश वर्ष", gly: "अरब प्रकाश वर्ष", distFrom: "पृथ्वी से {d}", aetherLine: "पूर्ण अंधकार · शून्य", milkyWay: "आकाशगंगा", andromeda: "एंड्रोमेडा", virgoCl: "कन्या गैलेक्सी समूह", lmc: "बड़ा मैगेलैनिक बादल", smc: "छोटा मैगेलैनिक बादल", asteroidBelt: "क्षुद्रग्रह पट्टी", kuiperBelt: "काइपर बेल्ट", sgrA: "सैजिटेरियस A* · ब्लैक होल", stage: { earth: "पृथ्वी", kuiper: "काइपर बेल्ट", alphaCen: "अल्फ़ा सेंटॉरी · सबसे पास का तारा", gc: "आकाशगंगा का केंद्र", earthMoon: "पृथ्वी और चंद्रमा", inner: "भीतरी ग्रह", solar: "सौर मंडल", edge: "सौर मंडल का छोर", oort: "ऊर्ट बादल", near: "सबसे पास के तारे", hood: "हमारा तारा-पड़ोस", milky: "आकाशगंगा", local: "स्थानीय गैलेक्सी समूह", virgo: "कन्या महागुच्छ", web: "ब्रह्मांडीय जाल", aether: "आकाश तत्व" },
       sopt: { orbits: "कक्षाएँ", names: "ग्रहों के नाम", rasi: "राशि दिशाएँ", zodiac: "राशि तारे", stars: "तारे" },
       open: "ओपन", bigSize: "बड़ा करके", realSize: "असली आकार", home: "पृथ्वी पर लौटें", spaceHint: "घुमाने के लिए खींचें · खिसकाने के लिए राइट-ड्रैग या दो उँगलियाँ · ज़ूम के लिए स्क्रॉल या पिंच · ग्रह पर टैप करके वहाँ जाएँ",
       fromEarth: "पृथ्वी से", fromSun: "सूर्य से", logNote: "दूरियाँ लघुगणकीय पैमाने पर · दिशाएँ सटीक", distEarth: "पृथ्वी से दूरी", distSun: "सूर्य से दूरी", lightTime: "प्रकाश को {t} लगते हैं", elong: "हमारे आकाश में सूर्य से {d}°", helioPos: "सूर्य से देखने पर", mkm: "मिलियन किमी", nearEarth: "पृथ्वी के पास", earth: "पृथ्वी",
@@ -1137,7 +1143,7 @@ window.I18N = (function () {
     },
     ta: {
       tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி', fromSpace: "விண்வெளியிலிருந்து",
-      fromAether: "ஆகாயத்திலிருந்து", vEarth: "பூமி", vSpace: "விண்வெளி", vAether: "ஆகாயம்", journey: "பயணம்", slow: "மெதுவாக", normal: "இயல்பு", fast: "வேகமாக", speed: "பயண வேகம்", aLabels: "பெயர்கள்", aetherHint: "சுற்றிப் பார்க்க இழுக்கவும் · பயணிக்க உருட்டவும் அல்லது பிஞ்ச் · ▶ பயணம் ஆகாயம் வரை சென்று திரும்பும் · ஒரு விண்மீன் திரளைத் தொட்டு அங்கு செல்லவும்", youHere: "நீங்கள் இங்கே", ly: "ஒளி ஆண்டுகள்", mly: "மில்லியன் ஒளி ஆண்டுகள்", gly: "பில்லியன் ஒளி ஆண்டுகள்", distFrom: "பூமியிலிருந்து {d}", aetherLine: "முழு இருள் · வெறுமை", milkyWay: "பால்வீதி", andromeda: "ஆண்ட்ரோமீடா", virgoCl: "கன்னி விண்மீன் திரள் கொத்து", lmc: "பெரிய மெகல்லனிக் மேகம்", smc: "சிறிய மெகல்லனிக் மேகம்", stage: { earth: "பூமி", earthMoon: "பூமியும் சந்திரனும்", inner: "உள் கிரகங்கள்", solar: "சூரியக் குடும்பம்", edge: "சூரியக் குடும்பத்தின் எல்லை", oort: "ஊர்ட் மேகம்", near: "அருகிலுள்ள நட்சத்திரங்கள்", hood: "நம் நட்சத்திர அண்டை", milky: "பால்வீதி விண்மீன் திரள்", local: "உள்ளூர் விண்மீன் திரள் குழு", virgo: "கன்னி மீக்கொத்து", web: "பிரபஞ்ச வலை", aether: "ஆகாயம்" },
+      fromAether: "ஆகாயத்திற்கு", vEarth: "பூமி", vSpace: "விண்வெளி", vAether: "ஆகாயம்", journey: "பயணம்", slow: "மெதுவாக", normal: "இயல்பு", fast: "வேகமாக", speed: "பயண வேகம்", aLabels: "பெயர்கள்", aetherHint: "சுற்றிப் பார்க்க இழுக்கவும் · பயணிக்க உருட்டவும் அல்லது பிஞ்ச் · ▶ பயணம் ஆகாயம் வரை சென்று திரும்பும் · ஒரு விண்மீன் திரளைத் தொட்டு அங்கு செல்லவும்", youHere: "நீங்கள் இங்கே", ly: "ஒளி ஆண்டுகள்", mly: "மில்லியன் ஒளி ஆண்டுகள்", gly: "பில்லியன் ஒளி ஆண்டுகள்", distFrom: "பூமியிலிருந்து {d}", aetherLine: "முழு இருள் · வெறுமை", milkyWay: "பால்வீதி", andromeda: "ஆண்ட்ரோமீடா", virgoCl: "கன்னி விண்மீன் திரள் கொத்து", lmc: "பெரிய மெகல்லனிக் மேகம்", smc: "சிறிய மெகல்லனிக் மேகம்", asteroidBelt: "சிறுகோள் பட்டை", kuiperBelt: "கைப்பர் பட்டை", sgrA: "சஜிட்டேரியஸ் A* · கருந்துளை", stage: { earth: "பூமி", kuiper: "கைப்பர் பட்டை", alphaCen: "ஆல்ஃபா சென்டாரி · அருகிலுள்ள நட்சத்திரம்", gc: "பால்வீதியின் மையம்", earthMoon: "பூமியும் சந்திரனும்", inner: "உள் கிரகங்கள்", solar: "சூரியக் குடும்பம்", edge: "சூரியக் குடும்பத்தின் எல்லை", oort: "ஊர்ட் மேகம்", near: "அருகிலுள்ள நட்சத்திரங்கள்", hood: "நம் நட்சத்திர அண்டை", milky: "பால்வீதி விண்மீன் திரள்", local: "உள்ளூர் விண்மீன் திரள் குழு", virgo: "கன்னி மீக்கொத்து", web: "பிரபஞ்ச வலை", aether: "ஆகாயம்" },
       sopt: { orbits: "சுற்றுப்பாதைகள்", names: "கிரகப் பெயர்கள்", rasi: "ராசி திசைகள்", zodiac: "ராசி நட்சத்திரங்கள்", stars: "நட்சத்திரங்கள்" },
       open: "ஓப்பன்", bigSize: "பெரிதாக்கி", realSize: "உண்மை அளவு", home: "பூமிக்குத் திரும்பு", spaceHint: "சுழற்ற இழுக்கவும் · நகர்த்த வலது இழுப்பு அல்லது இரு விரல்கள் · பெரிதாக்க உருட்டவும் · கிரகத்தைத் தொட்டு அங்கு பறக்கவும்",
       fromEarth: "பூமியிலிருந்து", fromSun: "சூரியனிலிருந்து", logNote: "தூரங்கள் மடக்கை அளவில் · திசைகள் சரியானவை", distEarth: "பூமியிலிருந்து தூரம்", distSun: "சூரியனிலிருந்து தூரம்", lightTime: "ஒளி வர {t} ஆகும்", elong: "நம் வானில் சூரியனிடமிருந்து {d}°", helioPos: "சூரியனிலிருந்து பார்க்கும்போது", mkm: "மில்லியன் கி.மீ", nearEarth: "பூமிக்கு அருகில்", earth: "பூமி",
@@ -1182,7 +1188,7 @@ window.I18N = (function () {
     },
     te: {
       tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష', fromSpace: "అంతరిక్షం నుండి",
-      fromAether: "ఆకాశం నుండి", vEarth: "భూమి", vSpace: "అంతరిక్షం", vAether: "ఆకాశం", journey: "ప్రయాణం", slow: "నెమ్మదిగా", normal: "సాధారణం", fast: "వేగంగా", speed: "ప్రయాణ వేగం", aLabels: "పేర్లు", aetherHint: "చుట్టూ చూడటానికి లాగండి · ప్రయాణించడానికి స్క్రోల్ లేదా పించ్ · ▶ ప్రయాణం ఆకాశం వరకు వెళ్ళి తిరిగి వస్తుంది · గెలాక్సీని తాకి అక్కడికి వెళ్ళండి", youHere: "మీరు ఇక్కడ ఉన్నారు", ly: "కాంతి సంవత్సరాలు", mly: "మిలియన్ కాంతి సంవత్సరాలు", gly: "బిలియన్ కాంతి సంవత్సరాలు", distFrom: "భూమి నుండి {d}", aetherLine: "పూర్తి చీకటి · శూన్యం", milkyWay: "పాలపుంత", andromeda: "ఆండ్రోమెడా", virgoCl: "కన్యా గెలాక్సీ సమూహం", lmc: "పెద్ద మాజెల్లానిక్ మేఘం", smc: "చిన్న మాజెల్లానిక్ మేఘం", stage: { earth: "భూమి", earthMoon: "భూమి మరియు చంద్రుడు", inner: "లోపలి గ్రహాలు", solar: "సౌర కుటుంబం", edge: "సౌర కుటుంబం అంచు", oort: "ఊర్ట్ మేఘం", near: "దగ్గరి నక్షత్రాలు", hood: "మన నక్షత్ర పొరుగు", milky: "పాలపుంత గెలాక్సీ", local: "స్థానిక గెలాక్సీ సమూహం", virgo: "కన్యా మహాసమూహం", web: "విశ్వ జాలం", aether: "ఆకాశం" },
+      fromAether: "ఆకాశానికి", vEarth: "భూమి", vSpace: "అంతరిక్షం", vAether: "ఆకాశం", journey: "ప్రయాణం", slow: "నెమ్మదిగా", normal: "సాధారణం", fast: "వేగంగా", speed: "ప్రయాణ వేగం", aLabels: "పేర్లు", aetherHint: "చుట్టూ చూడటానికి లాగండి · ప్రయాణించడానికి స్క్రోల్ లేదా పించ్ · ▶ ప్రయాణం ఆకాశం వరకు వెళ్ళి తిరిగి వస్తుంది · గెలాక్సీని తాకి అక్కడికి వెళ్ళండి", youHere: "మీరు ఇక్కడ ఉన్నారు", ly: "కాంతి సంవత్సరాలు", mly: "మిలియన్ కాంతి సంవత్సరాలు", gly: "బిలియన్ కాంతి సంవత్సరాలు", distFrom: "భూమి నుండి {d}", aetherLine: "పూర్తి చీకటి · శూన్యం", milkyWay: "పాలపుంత", andromeda: "ఆండ్రోమెడా", virgoCl: "కన్యా గెలాక్సీ సమూహం", lmc: "పెద్ద మాజెల్లానిక్ మేఘం", smc: "చిన్న మాజెల్లానిక్ మేఘం", asteroidBelt: "గ్రహశకల పట్టీ", kuiperBelt: "కైపర్ బెల్ట్", sgrA: "సాజిటేరియస్ A* · కృష్ణబిలం", stage: { earth: "భూమి", kuiper: "కైపర్ బెల్ట్", alphaCen: "ఆల్ఫా సెంటారి · దగ్గరి నక్షత్రం", gc: "పాలపుంత కేంద్రం", earthMoon: "భూమి మరియు చంద్రుడు", inner: "లోపలి గ్రహాలు", solar: "సౌర కుటుంబం", edge: "సౌర కుటుంబం అంచు", oort: "ఊర్ట్ మేఘం", near: "దగ్గరి నక్షత్రాలు", hood: "మన నక్షత్ర పొరుగు", milky: "పాలపుంత గెలాక్సీ", local: "స్థానిక గెలాక్సీ సమూహం", virgo: "కన్యా మహాసమూహం", web: "విశ్వ జాలం", aether: "ఆకాశం" },
       sopt: { orbits: "కక్ష్యలు", names: "గ్రహాల పేర్లు", rasi: "రాశి దిశలు", zodiac: "రాశి నక్షత్రాలు", stars: "నక్షత్రాలు" },
       open: "ఓపెన్", bigSize: "పెద్దదిగా", realSize: "అసలు పరిమాణం", home: "భూమికి తిరిగి", spaceHint: "తిప్పడానికి లాగండి · కదపడానికి కుడి-లాగు లేదా రెండు వేళ్లు · జూమ్‌కు స్క్రోల్ · గ్రహాన్ని తాకి అక్కడికి వెళ్ళండి",
       fromEarth: "భూమి నుండి", fromSun: "సూర్యుని నుండి", logNote: "దూరాలు లాగరిథమిక్ స్కేల్‌లో · దిశలు సరైనవి", distEarth: "భూమి నుండి దూరం", distSun: "సూర్యుని నుండి దూరం", lightTime: "కాంతికి {t} పడుతుంది", elong: "మన ఆకాశంలో సూర్యుని నుండి {d}°", helioPos: "సూర్యుని నుండి చూస్తే", mkm: "మిలియన్ కి.మీ", nearEarth: "భూమికి దగ్గరగా", earth: "భూమి",
@@ -1227,7 +1233,7 @@ window.I18N = (function () {
     },
     ml: {
       tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ', fromSpace: "ബഹിരാകാശത്തുനിന്ന്",
-      fromAether: "ആകാശത്തുനിന്ന്", vEarth: "ഭൂമി", vSpace: "ബഹിരാകാശം", vAether: "ആകാശം", journey: "യാത്ര", slow: "സാവധാനം", normal: "സാധാരണ", fast: "വേഗം", speed: "യാത്രാ വേഗം", aLabels: "പേരുകൾ", aetherHint: "ചുറ്റും നോക്കാൻ വലിക്കുക · യാത്ര ചെയ്യാൻ സ്ക്രോൾ അല്ലെങ്കിൽ പിഞ്ച് · ▶ യാത്ര ആകാശം വരെ പോയി തിരികെ വരും · ഒരു ഗാലക്സിയിൽ തൊട്ട് അവിടേക്ക് പോകുക", youHere: "നിങ്ങൾ ഇവിടെ", ly: "പ്രകാശവർഷം", mly: "ദശലക്ഷം പ്രകാശവർഷം", gly: "നൂറുകോടി പ്രകാശവർഷം", distFrom: "ഭൂമിയിൽ നിന്ന് {d}", aetherLine: "പൂർണ്ണ ഇരുട്ട് · ശൂന്യത", milkyWay: "ആകാശഗംഗ", andromeda: "ആൻഡ്രോമിഡ", virgoCl: "കന്നി ഗാലക്സി കൂട്ടം", lmc: "വലിയ മഗല്ലനിക് മേഘം", smc: "ചെറിയ മഗല്ലനിക് മേഘം", stage: { earth: "ഭൂമി", earthMoon: "ഭൂമിയും ചന്ദ്രനും", inner: "ഉൾഗ്രഹങ്ങൾ", solar: "സൗരയൂഥം", edge: "സൗരയൂഥത്തിന്റെ അതിര്", oort: "ഊർട്ട് മേഘം", near: "ഏറ്റവും അടുത്ത നക്ഷത്രങ്ങൾ", hood: "നമ്മുടെ നക്ഷത്ര അയൽപക്കം", milky: "ആകാശഗംഗ ഗാലക്സി", local: "പ്രാദേശിക ഗാലക്സി കൂട്ടം", virgo: "കന്നി മഹാകൂട്ടം", web: "പ്രപഞ്ച വല", aether: "ആകാശം" },
+      fromAether: "ആകാശത്തിലേക്ക്", vEarth: "ഭൂമി", vSpace: "ബഹിരാകാശം", vAether: "ആകാശം", journey: "യാത്ര", slow: "സാവധാനം", normal: "സാധാരണ", fast: "വേഗം", speed: "യാത്രാ വേഗം", aLabels: "പേരുകൾ", aetherHint: "ചുറ്റും നോക്കാൻ വലിക്കുക · യാത്ര ചെയ്യാൻ സ്ക്രോൾ അല്ലെങ്കിൽ പിഞ്ച് · ▶ യാത്ര ആകാശം വരെ പോയി തിരികെ വരും · ഒരു ഗാലക്സിയിൽ തൊട്ട് അവിടേക്ക് പോകുക", youHere: "നിങ്ങൾ ഇവിടെ", ly: "പ്രകാശവർഷം", mly: "ദശലക്ഷം പ്രകാശവർഷം", gly: "നൂറുകോടി പ്രകാശവർഷം", distFrom: "ഭൂമിയിൽ നിന്ന് {d}", aetherLine: "പൂർണ്ണ ഇരുട്ട് · ശൂന്യത", milkyWay: "ആകാശഗംഗ", andromeda: "ആൻഡ്രോമിഡ", virgoCl: "കന്നി ഗാലക്സി കൂട്ടം", lmc: "വലിയ മഗല്ലനിക് മേഘം", smc: "ചെറിയ മഗല്ലനിക് മേഘം", asteroidBelt: "ഛിന്നഗ്രഹ വലയം", kuiperBelt: "കൈപ്പർ ബെൽറ്റ്", sgrA: "സാജിറ്റേറിയസ് A* · തമോഗർത്തം", stage: { earth: "ഭൂമി", kuiper: "കൈപ്പർ ബെൽറ്റ്", alphaCen: "ആൽഫ സെന്റോറി · ഏറ്റവും അടുത്ത നക്ഷത്രം", gc: "ആകാശഗംഗയുടെ ഹൃദയം", earthMoon: "ഭൂമിയും ചന്ദ്രനും", inner: "ഉൾഗ്രഹങ്ങൾ", solar: "സൗരയൂഥം", edge: "സൗരയൂഥത്തിന്റെ അതിര്", oort: "ഊർട്ട് മേഘം", near: "ഏറ്റവും അടുത്ത നക്ഷത്രങ്ങൾ", hood: "നമ്മുടെ നക്ഷത്ര അയൽപക്കം", milky: "ആകാശഗംഗ ഗാലക്സി", local: "പ്രാദേശിക ഗാലക്സി കൂട്ടം", virgo: "കന്നി മഹാകൂട്ടം", web: "പ്രപഞ്ച വല", aether: "ആകാശം" },
       sopt: { orbits: "ഭ്രമണപഥങ്ങൾ", names: "ഗ്രഹനാമങ്ങൾ", rasi: "രാശി ദിശകൾ", zodiac: "രാശി നക്ഷത്രങ്ങൾ", stars: "നക്ഷത്രങ്ങൾ" },
       open: "ഓപ്പൺ", bigSize: "വലുതാക്കി", realSize: "യഥാർത്ഥ വലിപ്പം", home: "ഭൂമിയിലേക്ക് മടങ്ങുക", spaceHint: "തിരിക്കാൻ വലിക്കുക · നീക്കാൻ റൈറ്റ്-ഡ്രാഗ് അല്ലെങ്കിൽ രണ്ട് വിരൽ · സൂമിന് സ്ക്രോൾ · ഗ്രഹത്തിൽ തൊട്ട് അവിടേക്ക് പറക്കുക",
       fromEarth: "ഭൂമിയിൽ നിന്ന്", fromSun: "സൂര്യനിൽ നിന്ന്", logNote: "ദൂരങ്ങൾ ലോഗരിതമിക് സ്കെയിലിൽ · ദിശകൾ കൃത്യം", distEarth: "ഭൂമിയിൽ നിന്നുള്ള ദൂരം", distSun: "സൂര്യനിൽ നിന്നുള്ള ദൂരം", lightTime: "പ്രകാശത്തിന് {t} എടുക്കും", elong: "നമ്മുടെ ആകാശത്ത് സൂര്യനിൽ നിന്ന് {d}°", helioPos: "സൂര്യനിൽ നിന്ന് നോക്കുമ്പോൾ", mkm: "ദശലക്ഷം കി.മീ", nearEarth: "ഭൂമിക്കരികെ", earth: "ഭൂമി",
@@ -1272,7 +1278,7 @@ window.I18N = (function () {
     },
     kn: {
       tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ', fromSpace: "ಬಾಹ್ಯಾಕಾಶದಿಂದ",
-      fromAether: "ಆಕಾಶದಿಂದ", vEarth: "ಭೂಮಿ", vSpace: "ಬಾಹ್ಯಾಕಾಶ", vAether: "ಆಕಾಶ", journey: "ಪ್ರಯಾಣ", slow: "ನಿಧಾನ", normal: "ಸಾಮಾನ್ಯ", fast: "ವೇಗ", speed: "ಪ್ರಯಾಣದ ವೇಗ", aLabels: "ಹೆಸರುಗಳು", aetherHint: "ಸುತ್ತಲೂ ನೋಡಲು ಎಳೆಯಿರಿ · ಪ್ರಯಾಣಿಸಲು ಸ್ಕ್ರೋಲ್ ಅಥವಾ ಪಿಂಚ್ · ▶ ಪ್ರಯಾಣ ಆಕಾಶದವರೆಗೆ ಹೋಗಿ ಹಿಂತಿರುಗುತ್ತದೆ · ಗ್ಯಾಲಕ್ಸಿಯನ್ನು ತಟ್ಟಿ ಅಲ್ಲಿಗೆ ಹೋಗಿ", youHere: "ನೀವು ಇಲ್ಲಿದ್ದೀರಿ", ly: "ಬೆಳಕಿನ ವರ್ಷಗಳು", mly: "ಮಿಲಿಯನ್ ಬೆಳಕಿನ ವರ್ಷಗಳು", gly: "ಶತಕೋಟಿ ಬೆಳಕಿನ ವರ್ಷಗಳು", distFrom: "ಭೂಮಿಯಿಂದ {d}", aetherLine: "ಸಂಪೂರ್ಣ ಕತ್ತಲೆ · ಶೂನ್ಯ", milkyWay: "ಆಕಾಶಗಂಗೆ", andromeda: "ಆಂಡ್ರೊಮೆಡಾ", virgoCl: "ಕನ್ಯಾ ಗ್ಯಾಲಕ್ಸಿ ಗುಂಪು", lmc: "ದೊಡ್ಡ ಮೆಗೆಲಾನಿಕ್ ಮೋಡ", smc: "ಚಿಕ್ಕ ಮೆಗೆಲಾನಿಕ್ ಮೋಡ", stage: { earth: "ಭೂಮಿ", earthMoon: "ಭೂಮಿ ಮತ್ತು ಚಂದ್ರ", inner: "ಒಳಗಿನ ಗ್ರಹಗಳು", solar: "ಸೌರವ್ಯೂಹ", edge: "ಸೌರವ್ಯೂಹದ ಅಂಚು", oort: "ಊರ್ಟ್ ಮೋಡ", near: "ಹತ್ತಿರದ ನಕ್ಷತ್ರಗಳು", hood: "ನಮ್ಮ ನಕ್ಷತ್ರ ನೆರೆಹೊರೆ", milky: "ಆಕಾಶಗಂಗೆ ಗ್ಯಾಲಕ್ಸಿ", local: "ಸ್ಥಳೀಯ ಗ್ಯಾಲಕ್ಸಿ ಗುಂಪು", virgo: "ಕನ್ಯಾ ಮಹಾಗುಂಪು", web: "ವಿಶ್ವ ಜಾಲ", aether: "ಆಕಾಶ" },
+      fromAether: "ಆಕಾಶಕ್ಕೆ", vEarth: "ಭೂಮಿ", vSpace: "ಬಾಹ್ಯಾಕಾಶ", vAether: "ಆಕಾಶ", journey: "ಪ್ರಯಾಣ", slow: "ನಿಧಾನ", normal: "ಸಾಮಾನ್ಯ", fast: "ವೇಗ", speed: "ಪ್ರಯಾಣದ ವೇಗ", aLabels: "ಹೆಸರುಗಳು", aetherHint: "ಸುತ್ತಲೂ ನೋಡಲು ಎಳೆಯಿರಿ · ಪ್ರಯಾಣಿಸಲು ಸ್ಕ್ರೋಲ್ ಅಥವಾ ಪಿಂಚ್ · ▶ ಪ್ರಯಾಣ ಆಕಾಶದವರೆಗೆ ಹೋಗಿ ಹಿಂತಿರುಗುತ್ತದೆ · ಗ್ಯಾಲಕ್ಸಿಯನ್ನು ತಟ್ಟಿ ಅಲ್ಲಿಗೆ ಹೋಗಿ", youHere: "ನೀವು ಇಲ್ಲಿದ್ದೀರಿ", ly: "ಬೆಳಕಿನ ವರ್ಷಗಳು", mly: "ಮಿಲಿಯನ್ ಬೆಳಕಿನ ವರ್ಷಗಳು", gly: "ಶತಕೋಟಿ ಬೆಳಕಿನ ವರ್ಷಗಳು", distFrom: "ಭೂಮಿಯಿಂದ {d}", aetherLine: "ಸಂಪೂರ್ಣ ಕತ್ತಲೆ · ಶೂನ್ಯ", milkyWay: "ಆಕಾಶಗಂಗೆ", andromeda: "ಆಂಡ್ರೊಮೆಡಾ", virgoCl: "ಕನ್ಯಾ ಗ್ಯಾಲಕ್ಸಿ ಗುಂಪು", lmc: "ದೊಡ್ಡ ಮೆಗೆಲಾನಿಕ್ ಮೋಡ", smc: "ಚಿಕ್ಕ ಮೆಗೆಲಾನಿಕ್ ಮೋಡ", asteroidBelt: "ಕ್ಷುದ್ರಗ್ರಹ ಪಟ್ಟಿ", kuiperBelt: "ಕೈಪರ್ ಪಟ್ಟಿ", sgrA: "ಸ್ಯಾಜಿಟೇರಿಯಸ್ A* · ಕಪ್ಪು ಕುಳಿ", stage: { earth: "ಭೂಮಿ", kuiper: "ಕೈಪರ್ ಪಟ್ಟಿ", alphaCen: "ಆಲ್ಫಾ ಸೆಂಟಾರಿ · ಹತ್ತಿರದ ನಕ್ಷತ್ರ", gc: "ಆಕಾಶಗಂಗೆಯ ಹೃದಯ", earthMoon: "ಭೂಮಿ ಮತ್ತು ಚಂದ್ರ", inner: "ಒಳಗಿನ ಗ್ರಹಗಳು", solar: "ಸೌರವ್ಯೂಹ", edge: "ಸೌರವ್ಯೂಹದ ಅಂಚು", oort: "ಊರ್ಟ್ ಮೋಡ", near: "ಹತ್ತಿರದ ನಕ್ಷತ್ರಗಳು", hood: "ನಮ್ಮ ನಕ್ಷತ್ರ ನೆರೆಹೊರೆ", milky: "ಆಕಾಶಗಂಗೆ ಗ್ಯಾಲಕ್ಸಿ", local: "ಸ್ಥಳೀಯ ಗ್ಯಾಲಕ್ಸಿ ಗುಂಪು", virgo: "ಕನ್ಯಾ ಮಹಾಗುಂಪು", web: "ವಿಶ್ವ ಜಾಲ", aether: "ಆಕಾಶ" },
       sopt: { orbits: "ಕಕ್ಷೆಗಳು", names: "ಗ್ರಹಗಳ ಹೆಸರು", rasi: "ರಾಶಿ ದಿಕ್ಕುಗಳು", zodiac: "ರಾಶಿ ನಕ್ಷತ್ರಗಳು", stars: "ನಕ್ಷತ್ರಗಳು" },
       open: "ಓಪನ್", bigSize: "ದೊಡ್ಡದಾಗಿ", realSize: "ನಿಜ ಗಾತ್ರ", home: "ಭೂಮಿಗೆ ಹಿಂತಿರುಗಿ", spaceHint: "ತಿರುಗಿಸಲು ಎಳೆಯಿರಿ · ಸರಿಸಲು ರೈಟ್-ಡ್ರ್ಯಾಗ್ ಅಥವಾ ಎರಡು ಬೆರಳು · ಜೂಮ್‌ಗೆ ಸ್ಕ್ರೋಲ್ · ಗ್ರಹವನ್ನು ತಟ್ಟಿ ಅಲ್ಲಿಗೆ ಹಾರಿ",
       fromEarth: "ಭೂಮಿಯಿಂದ", fromSun: "ಸೂರ್ಯನಿಂದ", logNote: "ದೂರಗಳು ಲಾಗರಿದಮಿಕ್ ಪ್ರಮಾಣದಲ್ಲಿ · ದಿಕ್ಕುಗಳು ನಿಖರ", distEarth: "ಭೂಮಿಯಿಂದ ದೂರ", distSun: "ಸೂರ್ಯನಿಂದ ದೂರ", lightTime: "ಬೆಳಕಿಗೆ {t} ಬೇಕು", elong: "ನಮ್ಮ ಆಕಾಶದಲ್ಲಿ ಸೂರ್ಯನಿಂದ {d}°", helioPos: "ಸೂರ್ಯನಿಂದ ನೋಡಿದಾಗ", mkm: "ಮಿಲಿಯನ್ ಕಿ.ಮೀ", nearEarth: "ಭೂಮಿಯ ಹತ್ತಿರ", earth: "ಭೂಮಿ",
@@ -2983,13 +2989,13 @@ window.I18N = (function () {
   $('spaceHome').addEventListener('click', () => { if (SP) focusSpace('Earth'); });
 
 
-  // ---------- From Aether: out from Earth, past the stars and galaxies, into the dark void ----------
+  // ---------- To Aether: out from Earth, past the stars and galaxies, into the dark void ----------
   // One camera path on a log scale (aeth.lD = log10 of the viewing distance in light-years), drawn in
   // three passes so every scale keeps precision: galaxies (unit 1 million ly), stars and the Milky Way
   // (unit 1 ly), then the solar system scene itself (unit 1 AU) while it is still close.
   const LY_AU = 63241.077, AETH_MAX = 10.3;
   const AETH_SPEED = { slow: 0.45, normal: 0.95, fast: 2.0, home: 4.0 };   // decades of distance per second
-  const aeth = { lD: 0, lD0: 0, lDT: null, rate: 9, yaw: 0, pitch: 0.32, playing: false, dir: 1, hold: 0, speed: 'normal', rush: false, lastT: 0, userAt: 0, focus: null, focusOn: false, fk: 0, cap: '', capT: 0 };
+  const aeth = { lD: 0, lD0: 0, lDT: null, rate: 9, yaw: 0, pitch: 0.32, playing: false, dir: 1, hold: 0, speed: 'normal', rush: false, lastT: 0, userAt: 0, focus: null, focusOn: false, fk: 0, cap: '', capT: 0, tour: null, tourT: null, free: null };
   let AET = null, posAether = [], aetherZoom = () => { };
   const sstep = (x, a, b) => { const t = clampV((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const rng = seed => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
@@ -2997,7 +3003,7 @@ window.I18N = (function () {
   const radec3 = (ra, dec) => toScene(C.radecVec(ra, dec)).normalize();
   const easeIO = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   // Out here everything is added light, so the shaders skip depth (z = 0) and only clip what is behind you.
-  const AET_K = { value: 800 }, AET_MAXPX = { value: 80 };
+  const AET_K = { value: 800 }, AET_MAXPX = { value: 80 }, MW_MAXPX = { value: 24 }, GAS_MAXPX = { value: 400 }, POP_MAXPX = { value: 160 };
   const CPTS_VS = `attribute vec3 color; attribute float size; uniform float uK; uniform float uVis; uniform float uMaxPx; varying vec3 vC; varying float vA;
     void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); float d=length(mv.xyz); float px=size*uK/max(d,1e-12);
       float a=uVis*smoothstep(0.5*size,2.5*size,d);
@@ -3005,8 +3011,10 @@ window.I18N = (function () {
       if(px>uMaxPx){ a*=pow(uMaxPx/px,2.0); px=uMaxPx; }
       vC=color; vA=a; gl_Position=projectionMatrix*mv; gl_Position.z=0.0; gl_PointSize=a<0.002?0.0:px; }`;
   const CPTS_FS = `varying vec3 vC; varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; gl_FragColor=vec4(vC*exp(-r*r*4.5)*vA,1.0); }`;
+  const GAS_FS = `varying vec3 vC; varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float r2=dot(c,c)*4.0; if(r2>1.0) discard; gl_FragColor=vec4(vC*exp(-r2*2.6)*(1.0-r2)*vA,1.0); }`;
   const addMat = o => new THREE.ShaderMaterial(Object.assign({ transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }, o));
   const cptsMat = () => addMat({ uniforms: { uK: AET_K, uMaxPx: AET_MAXPX, uVis: { value: 1 } }, vertexShader: CPTS_VS, fragmentShader: CPTS_FS });
+  const gasMat = () => addMat({ uniforms: { uK: AET_K, uMaxPx: GAS_MAXPX, uVis: { value: 1 } }, vertexShader: CPTS_VS, fragmentShader: GAS_FS });
   // stars at their (estimated) distances: brightness follows from absolute magnitude and how far you are
   const STAR3_VS = `attribute vec3 color; attribute float absMag; uniform float uScale; uniform float uVis; varying vec3 vC;
     void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); float d=max(length(mv.xyz),1e-12);
@@ -3014,47 +3022,189 @@ window.I18N = (function () {
       float k=clamp(0.32+(6.0-m)*0.14,0.0,1.0)*clamp((8.6-m)/2.6,0.0,1.0)*uVis;
       vC=color*k; gl_Position=projectionMatrix*mv; gl_Position.z=0.0; gl_PointSize=k<0.004?0.0:clamp((6.9-m)*1.4,1.5,13.0)*uScale; }`;
   const STAR3_FS = `varying vec3 vC; void main(){ vec2 c=gl_PointCoord-0.5; float r=length(c)*2.0; if(r>1.0) discard; float a=exp(-r*r*6.0)+0.7*exp(-r*r*40.0); gl_FragColor=vec4(vC*a,1.0); }`;
-  // a galaxy seen as a flat picture (no detail inside; it fades away if you get too close)
-  const GAL_VS = `uniform float uVis; uniform float uSize; varying vec2 vUv; varying float vA;
-    void main(){ vUv=uv; float d=length((modelViewMatrix*vec4(0.0,0.0,0.0,1.0)).xyz); vA=uVis*smoothstep(0.45*uSize,1.3*uSize,d);
+  // A disc galaxy is three pieces: its face-on image (a flat card), an edge-on image that turns to face you
+  // when you see the disc from the side (with the dark dust lane), and a round 3D bulge of old stars.
+  const FACE_VS = `uniform float uVis; uniform float uSize; uniform vec3 uN; varying vec2 vUv; varying float vA;
+    void main(){ vUv=uv; vec3 c=(modelMatrix*vec4(0.0,0.0,0.0,1.0)).xyz; vec3 v=cameraPosition-c; float d=length(v);
+      float h=abs(dot(v,uN)), ci=h/d; vA=uVis*max(smoothstep(0.45*uSize,1.3*uSize,d),smoothstep(0.04*uSize,0.17*uSize,h))*smoothstep(0.03,0.3,ci);
       gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_Position.z=0.0; }`;
-  const GAL_FS = `uniform sampler2D map; uniform vec3 uCol; varying vec2 vUv; varying float vA; void main(){ gl_FragColor=vec4(texture2D(map,vUv).rgb*uCol*vA,1.0); }`;
+  const FACE_FS = `uniform sampler2D map; uniform vec3 uCol; varying vec2 vUv; varying float vA; void main(){ gl_FragColor=vec4(texture2D(map,vUv).rgb*uCol*vA,1.0); }`;
+  const EDGE_VS = `uniform float uVis; uniform float uSize; uniform float uH; uniform vec3 uN; varying vec2 vUv; varying float vA;
+    void main(){ vUv=uv; vec3 c=(modelMatrix*vec4(0.0,0.0,0.0,1.0)).xyz; vec3 v=cameraPosition-c; float d=length(v); v/=d;
+      float ci=abs(dot(v,uN)); vec3 u=cross(uN,v); float lu=length(u); u=lu>1e-4?u/lu:vec3(1.0,0.0,0.0);
+      vec3 w=c+u*position.x*uSize+uN*position.y*uSize*uH;
+      vA=uVis*(1.0-smoothstep(0.07,0.3,ci))*smoothstep(0.45*uSize,1.3*uSize,d);
+      gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0); gl_Position.z=0.0; }`;
+  const EDGE_FS = `uniform sampler2D map; uniform vec3 uCol; varying vec2 vUv; varying float vA; void main(){ vec4 t=texture2D(map,vUv); gl_FragColor=vec4(t.rgb*uCol*vA,t.a*vA); }`;
+  const BULGE_VS = `uniform float uVis; uniform float uSize; uniform float uQ; uniform float uRot; varying vec2 vUv; varying float vA;
+    void main(){ vUv=uv; vec4 mv=modelViewMatrix*vec4(0.0,0.0,0.0,1.0); float d=length(mv.xyz);
+      vec2 p=position.xy*uSize*vec2(1.0,uQ); float c=cos(uRot), s=sin(uRot); mv.xy+=vec2(c*p.x-s*p.y,s*p.x+c*p.y);
+      vA=uVis*smoothstep(0.06*uSize,0.35*uSize,d); gl_Position=projectionMatrix*mv; gl_Position.z=0.0; }`;
+  // far-away galaxies: tiny pictures picked from an atlas, turned and tilted, or a soft dot when too small
+  const POP_VS = `attribute vec3 color; attribute float size; attribute vec3 shape; uniform float uK; uniform float uVis; uniform float uMaxPx;
+    varying vec3 vC; varying float vA; varying vec3 vS; varying float vPx;
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); float d=length(mv.xyz); float px=size*uK/max(d,1e-12);
+      float a=uVis*smoothstep(0.7*size,3.0*size,d);
+      if(px<1.5){ a*=px*px/2.25; px=1.5; }
+      if(px>uMaxPx){ a*=pow(uMaxPx/px,2.0); px=uMaxPx; }
+      vC=color; vA=a; vS=shape; vPx=px; gl_Position=projectionMatrix*mv; gl_Position.z=0.0; gl_PointSize=a<0.002?0.0:px; }`;
+  const POP_FS = `uniform sampler2D map; varying vec3 vC; varying float vA; varying vec3 vS; varying float vPx;
+    void main(){ vec2 p=gl_PointCoord-0.5; float r=length(p)*2.0;
+      float cr=cos(vS.y), sr=sin(vS.y); vec2 q=vec2(cr*p.x-sr*p.y,sr*p.x+cr*p.y); q.y/=vS.z;
+      float inside=step(abs(q.x),0.5)*step(abs(q.y),0.5);
+      vec2 tile=vec2(mod(vS.x,4.0),floor(vS.x/4.0)+0.001);
+      vec3 col=texture2D(map,(tile+clamp(q+0.5,0.01,0.99))/4.0).rgb*inside;
+      float dt=exp(-r*r*5.0)*step(r,1.0)*0.8;
+      col=mix(vec3(dt),col*1.5,smoothstep(2.5,7.0,vPx));
+      gl_FragColor=vec4(col*vC*vA,1.0); }`;
 
-  function galaxyTex(kind, seed) {
-    const N = 256, c = N / 2, cv = document.createElement('canvas'); cv.width = cv.height = N;
-    const g = cv.getContext('2d'), r = rng(seed);
-    g.fillStyle = '#000'; g.fillRect(0, 0, N, N); g.globalCompositeOperation = 'lighter';
-    const blob = (x, y, rad, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.fillRect(x - rad, y - rad, 2 * rad, 2 * rad); };
-    if (kind === 'spiral') {
-      blob(c, c, N * 0.47, '120,135,185', 0.3);
-      for (let i = 0; i < 2400; i++) {
-        const rad = 7 + Math.pow(r(), 0.85) * 108, th = (i % 2) * Math.PI + Math.log(rad / 7) / 0.36 + gauss(r) * 0.2;
-        const pink = r() < 0.07;
-        blob(c + Math.cos(th) * rad, c + Math.sin(th) * rad, 2 + r() * 5, pink ? '255,130,165' : '170,190,255', pink ? 0.45 : 0.2);
-      }
-      blob(c, c, 34, '255,222,165', 0.85); blob(c, c, 11, '255,242,215', 1);
-    } else if (kind === 'irregular') {
-      blob(c, c, N * 0.4, '170,170,190', 0.22);
-      for (let i = 0; i < 700; i++) { const x = c + gauss(r) * 30, y = c + gauss(r) * 17; const pink = r() < 0.1; blob(x, y, 3 + r() * 9, pink ? '255,140,170' : '185,200,255', pink ? 0.35 : 0.16); }
-    } else {   // 'disc': soft unresolved light of a whole galaxy, bright bulge
-      const gr = g.createRadialGradient(c, c, 0, c, c, c);
-      gr.addColorStop(0, 'rgba(255,236,200,1)'); gr.addColorStop(0.08, 'rgba(250,220,180,0.7)'); gr.addColorStop(0.3, 'rgba(170,175,210,0.25)'); gr.addColorStop(0.7, 'rgba(120,130,180,0.07)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = gr; g.fillRect(0, 0, N, N);
-    }
-    return new THREE.CanvasTexture(cv);
+  // ---- procedural galaxy images: drawn once into float buffers, then uploaded as textures ----
+  const NOISE = (() => { const r = rng(99), a = new Float32Array(65536); for (let i = 0; i < a.length; i++) a[i] = r(); return a; })();
+  function vnoise(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    const i0 = xi & 255, i1 = (xi + 1) & 255, j0 = (yi & 255) << 8, j1 = ((yi + 1) & 255) << 8;
+    const a = NOISE[j0 + i0], b = NOISE[j0 + i1], c = NOISE[j1 + i0], d = NOISE[j1 + i1];
+    return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
   }
+  function fbm2(x, y, o) { let s = 0, w = 0.5, f = 1, n = 0; for (let i = 0; i < o; i++) { s += w * vnoise(x * f, y * f); n += w; f *= 2.03; w *= 0.5; } return s / n; }
+  const raster = (W, H) => ({ W, H, E: new Float32Array(W * H * 3), A: new Float32Array(W * H) });
+  // a soft blob of light; (x, y) in -1..1 of a square region (ox, oy, N) of the raster
+  function splat(R, ox, oy, N, x, y, rad, col, k) {
+    const cx = (x + 1) / 2 * N - 0.5, cy = (y + 1) / 2 * N - 0.5, pr = Math.max(0.6, rad * N / 2), e = Math.ceil(pr * 2.5);
+    for (let j = Math.max(0, Math.floor(cy - e)); j <= Math.min(N - 1, Math.ceil(cy + e)); j++)
+      for (let i = Math.max(0, Math.floor(cx - e)); i <= Math.min(N - 1, Math.ceil(cx + e)); i++) {
+        const w = k * Math.exp(-((i - cx) ** 2 + (j - cy) ** 2) / (pr * pr)), q = ((oy + j) * R.W + ox + i) * 3;
+        R.E[q] += col[0] * w; R.E[q + 1] += col[1] * w; R.E[q + 2] += col[2] * w;
+      }
+  }
+  // a disc galaxy seen face-on: old yellow disc, blue spiral arms with dark dust lanes on their inner edge, pink star-forming knots
+  function faceImg(P, R, ox, oy, N) {
+    const n = P.n || 0, tp = Math.tan((P.pitch || 15) * DEG), sp = Math.sin((P.pitch || 15) * DEG), sd = (P.seed || 1) * 7.31;
+    const yc = P.young || [0.5, 0.66, 1.0], oc = P.old || [1.0, 0.82, 0.6], fl = P.flocc || 0, rOut = P.rOut || 0.92, rIn = P.rIn || 0.08;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = (i + 0.5) / N * 2 - 1, y = (j + 0.5) / N * 2 - 1, r = Math.hypot(x, y); if (r > 1) continue;
+      const th = Math.atan2(y, x), lr = Math.log(Math.max(r, 1e-3) / P.r0);
+      const n1 = fbm2(x * 5 + sd, y * 5 - sd, 4), n2 = fbm2(x * 17 - sd, y * 17 + sd, 3), n3 = fbm2(x * 46 + sd, y * 46, 2);
+      const edge = 1 - sstep(r, rOut * 0.75, rOut), disk = Math.exp(-r / P.h) * edge;
+      let arm = 0, lane = 0;
+      if (n) {
+        const w = P.armW * (0.45 + r), wd = w * 0.36;
+        for (let k = 0; k < n; k++) {
+          let D = th - (P.th0 + k * 2 * Math.PI / n + lr / tp); D -= 2 * Math.PI * Math.round(D / (2 * Math.PI));
+          const dp = D * r * sp, a = P.amps ? P.amps[k] : 1;
+          arm += a * Math.exp(-((dp / w) ** 2)); lane += a * Math.exp(-(((dp - w * 0.55) / wd) ** 2));
+        }
+        const m = sstep(r, rIn, rIn + 0.12) * edge; arm *= m; lane *= m;
+      }
+      const clump = Math.max(0, n2 - 0.3) * 2.4;
+      const floc = fl * sstep(n1, 0.47, 0.72) * sstep(r, rIn * 0.6, rIn + 0.1) * edge;
+      const young = ((P.armK || 1) * (arm * (1 - fl) + floc * 1.6) * (0.3 + 0.8 * clump) * 0.8 + 0.15 * disk) * (0.55 + 0.9 * n3);
+      const old = disk * (1.25 + 0.45 * arm) * (0.8 + 0.4 * n1);
+      let bar = 0;
+      if (P.bar) { const ca = Math.cos(P.bar[1] * DEG), sa = Math.sin(P.bar[1] * DEG), xb = x * ca + y * sa, yb = -x * sa + y * ca; bar = 0.9 * Math.exp(-1.5 * ((xb / P.bar[0]) ** 2 + (yb / (P.bar[0] * 0.3)) ** 2)); }
+      let ring = 0, rlane = 0;
+      if (P.ring) { const g = (r - P.ring[0]) / 0.04; ring = P.ring[1] * Math.exp(-g * g) * (0.3 + 1.4 * Math.max(0, n2 - 0.3)); rlane = P.ring[2] * Math.exp(-(((r - P.ring[0] - 0.025) / 0.03) ** 2)) * (0.4 + n1); }
+      const fil = 0.4 * sstep(n2, 0.5, 0.72) * sstep(r, 0.1, 0.25) * edge;
+      const tau = (P.dust || 0) * (lane * (0.2 + 1.0 * n1) + 0.6 * fil) + rlane;
+      const tr = Math.exp(-1.7 * tau), core = (P.core || 0) * Math.exp(-r / 0.028);
+      const q = ((oy + j) * R.W + ox + i) * 3, ey = young + ring;
+      for (let c = 0; c < 3; c++) R.E[q + c] += (oc[c] * (old + bar) + yc[c] * ey) * tr + core * [1, 0.93, 0.8][c];
+      R.A[(oy + j) * R.W + ox + i] = 1 - tr;
+    }
+    const r_ = rng((P.seed || 1) + 7);
+    for (let s = 0; s < (P.hii || 0); s++) {   // star-forming regions and young clusters along the arms
+      let x, y;
+      if (n && r_() > fl) { const k = Math.floor(r_() * n), rr = rIn + 0.04 + Math.pow(r_(), 0.85) * (rOut * 0.82 - rIn), t = P.th0 + k * 2 * Math.PI / n + Math.log(rr / P.r0) / tp + gauss(r_) * 0.12; x = rr * Math.cos(t); y = rr * Math.sin(t); }
+      else { const rr = rIn + Math.sqrt(r_()) * (rOut * 0.75 - rIn), t = r_() * 2 * Math.PI; x = rr * Math.cos(t); y = rr * Math.sin(t); }
+      const pink = r_() < 0.5;
+      splat(R, ox, oy, N, x, y, (pink ? 0.006 : 0.004) * (0.5 + r_()), pink ? [1.0, 0.36, 0.52] : [0.66, 0.78, 1.0], (pink ? 0.5 : 0.35) * (P.hiiK || 1) * (0.15 + Math.pow(r_(), 3) * 1.6));
+    }
+    if (P.comp) splat(R, ox, oy, N, P.comp[0], P.comp[1], P.comp[2], [1.0, 0.8, 0.58], P.comp[3]);
+    return R;
+  }
+  // the same disc seen edge-on: a thin bright plane split by a dark dust lane (alpha = how much it hides what is behind)
+  function edgeImg(P, W, H) {
+    const R = raster(W, H), sd = (P.seed || 1) * 3.7, hr = H / W, oc = P.old || [1.0, 0.82, 0.6], yc = P.young || [0.55, 0.68, 1.0], rOut = P.rOut || 0.92;
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const x = (i + 0.5) / W * 2 - 1, z = ((j + 0.5) / H * 2 - 1) * hr, ax = Math.abs(x), az = Math.abs(z);
+      const n1 = fbm2(x * 9 + sd, z * 40, 3), n2 = fbm2(x * 34 - sd, z * 90 + sd, 3);
+      const span = 1 - sstep(ax, rOut * 0.7, rOut);
+      const disk = Math.exp(-ax / P.h) * span * Math.exp(-az / (P.z0 || 0.02));
+      const thin = (P.armK || 1) * 0.5 * Math.exp(-ax / (P.h * 1.7)) * span * Math.exp(-az / ((P.z0 || 0.02) * 0.35)) * (0.3 + 1.2 * Math.max(0, n2 - 0.25));
+      const lane = (P.dust || 0) * 1.7 * Math.exp(-(((z - (P.zoff || 0)) / (P.zd || 0.012)) ** 2)) * (1 - sstep(ax, rOut * 0.55, rOut * 0.95)) * (0.45 + 1.1 * n1);
+      const plume = P.plume ? P.plume * Math.exp(-((x / 0.13) ** 2)) * Math.exp(-az / 0.11) * Math.max(0, n2 - 0.35) * 2.5 : 0;
+      const tr = Math.exp(-2.2 * lane), q = (j * W + i) * 3;
+      for (let c = 0; c < 3; c++) R.E[q + c] = (oc[c] * disk * 0.8 + yc[c] * thin) * tr + [1.0, 0.25, 0.32][c] * plume;
+      R.A[j * W + i] = (1 - tr) * 0.92;
+    }
+    return R;
+  }
+  // a smooth ball of old stars (elliptical galaxies and bulges), brightest at the centre
+  function bulgeImg(N, c = 9, p = 0.45) {
+    const R = raster(N, N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = (i + 0.5) / N * 2 - 1, y = (j + 0.5) / N * 2 - 1, r = Math.hypot(x, y); if (r > 1) continue;
+      const I = Math.exp(-c * Math.pow(r, p)) * (1 - sstep(r, 0.7, 1.0)), q = (j * N + i) * 3, wc = Math.exp(-r / 0.05);
+      R.E[q] = I * (1.0 + 0.0 * wc); R.E[q + 1] = I * (0.84 + 0.1 * wc); R.E[q + 2] = I * (0.62 + 0.22 * wc);
+    }
+    return R;
+  }
+  // irregular galaxies (like the Magellanic Clouds): lumpy, blue, with a bar and pink nebulae
+  function irrImg(P, R, ox, oy, N) {
+    const sd = (P.seed || 1) * 5.1, r_ = rng((P.seed || 1) + 3), ca = Math.cos((P.ang || 0) * DEG), sa = Math.sin((P.ang || 0) * DEG);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = (i + 0.5) / N * 2 - 1, y = (j + 0.5) / N * 2 - 1, xr = x * ca + y * sa, yr = -x * sa + y * ca;
+      const n1 = fbm2(x * 4 + sd, y * 4 - sd, 4), n2 = fbm2(x * 13 - sd, y * 13 + sd, 3);
+      const body = Math.exp(-2.2 * ((xr / (P.a || 0.7)) ** 2 + (yr / (P.b || 0.5)) ** 2)) * (0.35 + 1.3 * Math.max(0, n1 - 0.32));
+      const bar = P.bar ? Math.exp(-((((xr - P.bar[2]) / P.bar[0]) ** 2) + ((yr - P.bar[3]) / (P.bar[0] * 0.3)) ** 2) * 1.6) * 0.8 : 0;
+      const clump = Math.max(0, n2 - 0.45) * 3 * body;
+      const q = ((oy + j) * R.W + ox + i) * 3;
+      for (let c = 0; c < 3; c++) R.E[q + c] += [0.8, 0.82, 0.95][c] * body * 0.7 + [1.0, 0.88, 0.7][c] * bar + [0.55, 0.7, 1.0][c] * clump;
+    }
+    for (let s = 0; s < (P.hii || 0); s++) {
+      const x = gauss(r_) * (P.a || 0.7) * 0.4, y = gauss(r_) * (P.b || 0.5) * 0.4, xr = x * ca - y * sa, yr = x * sa + y * ca;
+      const pink = r_() < 0.55; splat(R, ox, oy, N, xr, yr, (pink ? 0.012 : 0.008) * (0.5 + r_()), pink ? [1.0, 0.3, 0.48] : [0.6, 0.75, 1.0], pink ? 0.5 : 0.35);
+    }
+    if (P.tarantula) splat(R, ox, oy, N, P.tarantula[0], P.tarantula[1], 0.03, [1.0, 0.35, 0.55], 1.4);
+    return R;
+  }
+  function toTex(R, gain, alpha) {
+    const d = new Uint8Array(R.W * R.H * 4);
+    for (let p = 0, n = R.W * R.H; p < n; p++) {
+      for (let c = 0; c < 3; c++) d[p * 4 + c] = Math.round(255 * (1 - Math.exp(-R.E[p * 3 + c] * gain)));
+      d[p * 4 + 3] = alpha ? Math.round(255 * clampV(R.A[p], 0, 1)) : 255;
+    }
+    const t = new THREE.DataTexture(d, R.W, R.H, THREE.RGBAFormat);
+    t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 4; t.needsUpdate = true;
+    return t;
+  }
+  let BULGE_TEX = null, ELL_TEX = null;
 
   const KNOWN_LY = { 'Rigil Kentaurus': 4.37, Toliman: 4.37, Sirius: 8.6, Procyon: 11.5, Altair: 16.7, Vega: 25, Fomalhaut: 25, Pollux: 34, Arcturus: 36.7, Capella: 42.9, Castor: 51, Aldebaran: 65, Regulus: 79,
     Achernar: 139, Spica: 250, Canopus: 310, Polaris: 433, Betelgeuse: 548, Antares: 550, Rigel: 863, Deneb: 2615, Hadar: 390, Acrux: 320, Mimosa: 280 };
-  // [label key, RA°, Dec°, distance (million ly), diameter (million ly), kind, position angle°, inclination°]
+  // [label key, RA°, Dec°, distance (million ly), diameter (million ly), look, position angle°, inclination°]
   const GALAXIES = [
-    ['andromeda', 10.6847, 41.2690, 2.54, 0.22, 'spiral', 38, 77], ['Triangulum', 23.4621, 30.6599, 2.73, 0.061, 'spiral', 23, 54],
-    ['lmc', 80.8942, -69.7561, 0.163, 0.032, 'irregular', 170, 35], ['smc', 13.1866, -72.8286, 0.20, 0.019, 'irregular', 45, 60],
-    ["Bode's Galaxy", 148.888, 69.065, 11.8, 0.09, 'spiral', 157, 59], ['Cigar Galaxy', 148.968, 69.680, 12, 0.037, 'irregular', 65, 80],
-    ['Centaurus A', 201.365, -43.019, 12, 0.06, 'elliptical'], ['Sombrero', 189.998, -11.623, 31.1, 0.05, 'spiral', 90, 84],
-    ['Whirlpool', 202.47, 47.195, 23, 0.076, 'spiral', 163, 20], ['Pinwheel', 210.802, 54.349, 21, 0.17, 'spiral', 39, 18],
-    ['M87', 187.706, 12.391, 53.5, 0.12, 'elliptical'],
+    ['andromeda', 10.6847, 41.2690, 2.54, 0.22, 'andromeda', 38, 77], ['Triangulum', 23.4621, 30.6599, 2.73, 0.061, 'triangulum', 23, 54],
+    ['lmc', 80.8942, -69.7561, 0.163, 0.032, 'lmc', 170, 35], ['smc', 13.1866, -72.8286, 0.20, 0.019, 'smc', 45, 60],
+    ["Bode's Galaxy", 148.888, 69.065, 11.8, 0.09, 'bode', 157, 59], ['Cigar Galaxy', 148.968, 69.680, 12, 0.037, 'cigar', 65, 82],
+    ['Centaurus A', 201.365, -43.019, 12, 0.06, 'cenA', 115, 75], ['Sombrero', 189.998, -11.623, 31.1, 0.05, 'sombrero', 90, 84],
+    ['Whirlpool', 202.47, 47.195, 23, 0.076, 'whirlpool', 163, 20], ['Pinwheel', 210.802, 54.349, 21, 0.17, 'pinwheel', 39, 18],
+    ['M87', 187.706, 12.391, 53.5, 0.12, 'm87'],
   ];
+  // how each one looks: face = disc image, edge = edge-on image, bulge = size of the central ball (× diameter), ell = elliptical only
+  const LOOKS = {
+    andromeda: { N: 512, face: { n: 2, pitch: 13, r0: 0.12, th0: 0.4, h: 0.28, armW: 0.036, armK: 0.5, dust: 1.1, flocc: 0.55, ring: [0.5, 0.45, 0.9], core: 0.7, rIn: 0.16, rOut: 0.95, hii: 320, hiiK: 0.6, seed: 3 }, bulge: 0.36, bk: 1.3 },
+    triangulum: { face: { n: 2, pitch: 30, r0: 0.07, th0: 1.2, h: 0.3, armW: 0.05, armK: 1.1, dust: 0.45, flocc: 0.6, core: 0.4, rIn: 0.05, rOut: 0.95, hii: 420, hiiK: 1.2, seed: 5, young: [0.48, 0.64, 1.0] }, bulge: 0.08, bk: 0.5 },
+    bode: { face: { n: 2, pitch: 13, r0: 0.1, th0: 2.2, h: 0.22, armW: 0.032, armK: 0.95, dust: 0.85, flocc: 0.15, core: 0.8, rIn: 0.13, rOut: 0.92, hii: 360, seed: 7 }, bulge: 0.3, bk: 1.1 },
+    whirlpool: { face: { n: 2, pitch: 19, r0: 0.07, th0: 0.6, h: 0.26, armW: 0.04, armK: 1.5, dust: 1.2, flocc: 0.08, core: 0.7, rIn: 0.07, rOut: 0.9, hii: 560, hiiK: 1.1, seed: 9, comp: [0.05, 0.86, 0.06, 2.2] }, bulge: 0.14, bk: 0.85 },
+    pinwheel: { face: { n: 4, amps: [1, 0.7, 0.9, 0.45], pitch: 25, r0: 0.05, th0: 2.9, h: 0.3, armW: 0.035, armK: 1.2, dust: 0.7, flocc: 0.35, core: 0.5, rIn: 0.05, rOut: 0.95, hii: 640, hiiK: 1.1, seed: 11 }, bulge: 0.05, bk: 0.5 },
+    sombrero: { face: { n: 0, h: 0.3, dust: 0.25, ring: [0.7, 0.55, 1.5], core: 0.6, rIn: 0.1, rOut: 0.95, hii: 0, seed: 13 }, edge: { h: 0.32, z0: 0.03, zd: 0.03, zoff: -0.012, dust: 1.5, armK: 0.8, rOut: 0.96, seed: 13 }, bulge: 0.75, bk: 1.5, soft: true },
+    cigar: { face: { n: 0, h: 0.26, dust: 0.9, flocc: 0.8, core: 0.5, rIn: 0.02, rOut: 0.9, hii: 160, hiiK: 1.3, seed: 17 }, edge: { h: 0.3, z0: 0.06, zd: 0.03, dust: 1.4, armK: 1.3, plume: 1.4, rOut: 0.9, seed: 17 }, bulge: 0.15, bk: 0.6 },
+    cenA: { ell: { size: 2.2, q: 0.85, k: 1.3 }, edge: { h: 0.4, z0: 0.05, zd: 0.05, dust: 1.7, armK: 0.6, rOut: 0.62, seed: 19, young: [1.0, 0.55, 0.6] } },
+    m87: { ell: { size: 4.5, q: 0.95, k: 1.6 } },
+    lmc: { irr: { a: 0.8, b: 0.6, ang: 10, bar: [0.32, 0, -0.1, -0.08], hii: 120, tarantula: [0.22, 0.12], seed: 23 } },
+    smc: { irr: { a: 0.85, b: 0.42, ang: 35, hii: 70, seed: 29 } },
+  };
   const galName = k => L.ui[k] || k;
 
   function buildAether() {
@@ -3063,25 +3213,35 @@ window.I18N = (function () {
     const nG = toScene(gnp).normalize(), cG = toScene(gc).normalize(), GC = cG.clone().multiplyScalar(26000);
     const e1 = GC.clone().negate().addScaledVector(nG, GC.dot(nG)).normalize(), e2 = new THREE.Vector3().crossVectors(nG, e1);
     const inDisc = (R, th, z) => GC.clone().addScaledVector(e1, R * Math.cos(th)).addScaledVector(e2, R * Math.sin(th)).addScaledVector(nG, z);
-    const cloud = () => ({ pos: [], col: [], size: [], add(p, c, s) { this.pos.push(p.x, p.y, p.z); this.col.push(c[0], c[1], c[2]); this.size.push(s); } });
-    const mkPoints = (cl, scn, name) => {
+    const cloud = () => ({ pos: [], col: [], size: [], shape: [], add(p, c, s, sh) { this.pos.push(p.x, p.y, p.z); this.col.push(c[0], c[1], c[2]); this.size.push(s); if (sh) this.shape.push(sh[0], sh[1], sh[2]); } });
+    const geoOf = cl => {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cl.pos), 3)); g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(cl.col), 3)); g.setAttribute('size', new THREE.BufferAttribute(new Float32Array(cl.size), 1));
-      const p = new THREE.Points(g, cptsMat()); p.frustumCulled = false; p.name = name; scn.add(p); return p;
+      if (cl.shape.length) g.setAttribute('shape', new THREE.BufferAttribute(new Float32Array(cl.shape), 3));
+      return g;
     };
+    const mkPoints = (cl, scn, name, mat) => { const p = new THREE.Points(geoOf(cl), mat || cptsMat()); p.frustumCulled = false; p.name = name; scn.add(p); return p; };
     const plane = new THREE.PlaneGeometry(1, 1);
-    const tex = { spiral: galaxyTex('spiral', 3), irregular: galaxyTex('irregular', 5), disc: galaxyTex('disc', 1) };
-    const mkPlane = (scn, kind, pos, diam, a, n, col) => {
-      const m = addMat({ uniforms: { map: { value: tex[kind] }, uCol: { value: new THREE.Vector3(...col) }, uVis: { value: 1 }, uSize: { value: diam } }, vertexShader: GAL_VS, fragmentShader: GAL_FS, side: THREE.DoubleSide });
-      const mesh = new THREE.Mesh(plane, m); mesh.frustumCulled = false;
+    const A = { ly, mly, camL, camM, GC, nG, named: [], labels: [], gals: [] };
+    A.qGal = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nG);
+    if (!BULGE_TEX) { BULGE_TEX = toTex(bulgeImg(256), 1.6, false); ELL_TEX = toTex(bulgeImg(256, 6.5, 0.6), 2.2, false); }
+    const mkFace = (scn, tex, pos, diam, a, n, col) => {
+      const m = addMat({ uniforms: { map: { value: tex }, uCol: { value: new THREE.Vector3(...col) }, uVis: { value: 1 }, uSize: { value: diam }, uN: { value: n.clone() } }, vertexShader: FACE_VS, fragmentShader: FACE_FS, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(plane, m); mesh.frustumCulled = false; mesh.renderOrder = 0;
       mesh.position.copy(pos); mesh.scale.setScalar(diam);
       mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(a, new THREE.Vector3().crossVectors(n, a), n));
       scn.add(mesh); return mesh;
     };
-    const A = { ly, mly, camL, camM, GC, nG, named: [], labels: [], lg: [], far: [], halos: [] };
-    // a soft glowing core, so a galaxy still reads as a galaxy when you see it edge-on
-    const mkHalo = (pos, diam, group) => { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffe2b8, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending })); h.position.copy(pos); h.scale.setScalar(diam * 0.45); h.frustumCulled = false; h.userData.group = group; mly.add(h); A.halos.push(h); };
-    A.qGal = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nG);
+    const mkEdge = (scn, tex, pos, diam, n, col, hr) => {
+      const m = new THREE.ShaderMaterial({ uniforms: { map: { value: tex }, uCol: { value: new THREE.Vector3(...col) }, uVis: { value: 1 }, uSize: { value: diam }, uH: { value: hr }, uN: { value: n.clone() } },
+        vertexShader: EDGE_VS, fragmentShader: EDGE_FS, side: THREE.DoubleSide, transparent: true, depthTest: false, depthWrite: false,
+        blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+      const mesh = new THREE.Mesh(plane, m); mesh.frustumCulled = false; mesh.renderOrder = 2; mesh.position.copy(pos); scn.add(mesh); return mesh;
+    };
+    const mkBulge = (scn, pos, size, k, q, rot, tex) => {
+      const m = addMat({ uniforms: { map: { value: tex || BULGE_TEX }, uCol: { value: new THREE.Vector3(k, k, k) }, uVis: { value: 1 }, uSize: { value: size }, uQ: { value: q || 1 }, uRot: { value: rot || 0 } }, vertexShader: BULGE_VS, fragmentShader: FACE_FS });
+      const mesh = new THREE.Mesh(plane, m); mesh.frustumCulled = false; mesh.renderOrder = 1; mesh.position.copy(pos); scn.add(mesh); return mesh;
+    };
 
     {   // the catalogue stars in 3D
       const r = rng(7), pos = new Float32Array(NS * 3), col = new Float32Array(NS * 3), am = new Float32Array(NS);
@@ -3096,6 +3256,7 @@ window.I18N = (function () {
         const p = toScene([starDir[i * 3], starDir[i * 3 + 1], starDir[i * 3 + 2]]).multiplyScalar(dly);
         pos.set([p.x, p.y, p.z], i * 3); col.set(bvColor(bv), i * 3); am[i] = m - 5 * Math.log10(dly / 32.6156);
         if (KNOWN_LY[nm]) A.named.push({ i, p, absMag: am[i] });
+        if (nm === 'Rigil Kentaurus') { A.alphaCen = p.clone(); A.alphaCenI = i; }
       }
       const mk = (P, Cc, M, name) => {
         const g = new THREE.BufferGeometry();
@@ -3105,6 +3266,14 @@ window.I18N = (function () {
       };
       A.stars = mk(pos, col, am, 'stars3d');
       A.sunPt = mk(new Float32Array(3), new Float32Array(bvColor(0.65)), new Float32Array([4.83]), 'sun');
+      // the countless fainter stars of our part of the galaxy, too faint to see from Earth
+      const NF = isPhone() ? 14000 : 24000, fp = new Float32Array(NF * 3), fc = new Float32Array(NF * 3), fm = new Float32Array(NF);
+      const gx = new THREE.Vector3(1, 0, 0).applyQuaternion(A.qGal), gz = new THREE.Vector3(0, 0, 1).applyQuaternion(A.qGal);
+      for (let i = 0; i < NF; i++) {
+        const R = 150 + Math.sqrt(r()) * 4200, th = r() * 2 * Math.PI, p = gx.clone().multiplyScalar(R * Math.cos(th)).addScaledVector(gz, R * Math.sin(th)).addScaledVector(nG, gauss(r) * 350);
+        fp.set([p.x, p.y, p.z], i * 3); const bv = -0.2 + Math.pow(r(), 0.7) * 1.8; fc.set(bvColor(bv), i * 3); fm[i] = bv < 0.2 ? -2.2 + r() * 2.5 : -0.6 + r() * 3.5;
+      }
+      A.field = mk(fp, fc, fm, 'fieldStars');
     }
     {   // the Oort cloud: a faint shell of icy bodies far beyond the planets
       const c = cloud(), r = rng(11);
@@ -3114,30 +3283,56 @@ window.I18N = (function () {
       }
       A.oort = mkPoints(c, ly, 'oort');
     }
+    {   // the asteroid belt (with Jupiter's Trojans) and the Kuiper belt, drawn with the planets
+      const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 32); return new THREE.CanvasTexture(c); })();
+      const r = rng(13), mkBelt = (n, f, col, op) => {
+        const pos = new Float32Array(n * 3), cl = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) { const p = f(i); pos.set([p.x, p.y, p.z], i * 3); const k = 0.55 + 0.45 * r(); cl.set([col[0] * k, col[1] * k, col[2] * k], i * 3); }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(cl, 3));
+        const m = new THREE.Points(g, new THREE.PointsMaterial({ size: 1.3 * dpr, map: dotTex, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: op, depthWrite: false }));
+        m.frustumCulled = false; m.visible = false; SP.scn.add(m); return m;
+      };
+      const J = SP.bodies.Jupiter.mesh.position, jA = Math.atan2(J.z, J.x);
+      const ring = (R0, R1, inc) => { const R = R0 + (R1 - R0) * Math.pow(r(), 0.9), t = r() * 2 * Math.PI; return new THREE.Vector3(R * Math.cos(t), R * Math.sin(gauss(r) * inc), R * Math.sin(t)); };
+      A.ast = mkBelt(5200, i => {
+        if (i < 4300) return ring(2.15, 3.3, 0.09);
+        const t = jA + (i % 2 ? 1 : -1) * Math.PI / 3 + gauss(r) * 0.22, R = 5.2 + gauss(r) * 0.15;
+        return new THREE.Vector3(R * Math.cos(t), R * Math.sin(gauss(r) * 0.15), R * Math.sin(t));
+      }, [0.78, 0.7, 0.6], 0.7);
+      A.kb = mkBelt(6000, () => ring(30, 50, 0.12), [0.62, 0.72, 0.9], 0.55);
+    }
     {   // the Milky Way: bar and bulge, four trailing arms, a thin disc; the Sun sits between two arms
-      const c = cloud(), r = rng(21), pitch = 13 * DEG, th0 = 0.15 - Math.log(26000 / 4000) / Math.tan(pitch), K = 0.07;
+      const c = cloud(), r = rng(21), pitch = 13 * DEG, th0 = 0.15 - Math.log(26000 / 4000) / Math.tan(pitch), K = 0.045;
       const barA = 27 * DEG, bar = e1.clone().multiplyScalar(Math.cos(barA)).addScaledVector(e2, Math.sin(barA)), barP = new THREE.Vector3().crossVectors(nG, bar);
-      const N = isPhone() ? 45000 : 70000;
+      const N = isPhone() ? 40000 : 60000;
       for (let i = 0; i < N; i++) {
         const u = r();
-        if (u < 0.16) {
-          const p = GC.clone().addScaledVector(bar, gauss(r) * 5200).addScaledVector(barP, gauss(r) * 1900).addScaledVector(nG, gauss(r) * 1400), k = K * 0.32 * (0.6 + 0.6 * r());
-          c.add(p, [1.0 * k, 0.8 * k, 0.55 * k], 700 + 600 * r());
+        if (u < 0.14) {
+          const p = GC.clone().addScaledVector(bar, gauss(r) * 5200).addScaledVector(barP, gauss(r) * 1900).addScaledVector(nG, gauss(r) * 1400), k = K * 0.6 * (0.6 + 0.6 * r());
+          c.add(p, [1.0 * k, 0.8 * k, 0.55 * k], 350 + 300 * r());
         } else if (u < 0.86) {
           let R = 3500 + (-Math.log(1 - r() * 0.985)) * 9500; if (R > 52000) R = 3500 + r() * 48000;
-          const th = th0 + (i % 4) * Math.PI / 2 + Math.log(R / 4000) / Math.tan(pitch) + gauss(r) * 0.12;
-          const p = inDisc(R + gauss(r) * (500 + R * 0.025), th, gauss(r) * (250 + 0.004 * R));
-          const q = r(), k = K * (q < 0.06 ? 1.5 : 0.7 + 0.5 * r()), cc = q < 0.06 ? [1.0, 0.45, 0.6] : q < 0.6 ? [0.62, 0.74, 1.0] : [0.95, 0.9, 0.8];
-          c.add(p, cc.map(x => x * k), 300 + 500 * r());
+          const arm = i % 4, th = th0 + arm * Math.PI / 2 + Math.log(R / 4000) / Math.tan(pitch) + gauss(r) * 0.11;
+          const p = inDisc(R + gauss(r) * (500 + R * 0.025), th, gauss(r) * (220 + 0.004 * R));
+          const q = r(), k = K * (arm % 2 ? 1 : 0.7) * (q < 0.06 ? 1.5 : 0.7 + 0.5 * r()), cc = q < 0.06 ? [1.0, 0.45, 0.6] : q < 0.6 ? [0.62, 0.74, 1.0] : [0.95, 0.9, 0.8];
+          c.add(p, cc.map(x => x * k * 2), 160 + 260 * r());
         } else {
           const R = -Math.log(1 - r() * 0.99) * 11000, k = K * 0.55;
-          c.add(inDisc(R, r() * 2 * Math.PI, gauss(r) * 600), [0.9 * k, 0.85 * k, 0.75 * k], 900 + 900 * r());
+          c.add(inDisc(R, r() * 2 * Math.PI, gauss(r) * 600), [0.9 * k, 0.85 * k, 0.75 * k].map(x => x * 2), 450 + 450 * r());
         }
       }
-      A.mw = mkPoints(c, ly, 'mwStars');
-      A.mwDisc = mkPlane(ly, 'disc', GC, 115000, e1, nG, [0.75, 0.72, 0.7]);
-      A.mwFar = mkPlane(mly, 'spiral', GC.clone().multiplyScalar(1e-6), 0.1, e1, nG, [1.35, 1.35, 1.35]);
-      mkHalo(GC.clone().multiplyScalar(1e-6), 0.1, 'mw');   // the Milky Way as a whole, from far away
+      A.mw = mkPoints(c, ly, 'mwStars', addMat({ uniforms: { uK: AET_K, uMaxPx: MW_MAXPX, uVis: { value: 1 } }, vertexShader: CPTS_VS, fragmentShader: CPTS_FS }));   // smaller sparks, so flying through stays sharp
+      // the picture of the whole galaxy: same arms, bar angle and Sun position as the particles above
+      const MWD = 115000, look = { n: 4, amps: [0.55, 1, 0.55, 1], pitch: 13, r0: 4000 / (MWD / 2), th0, h: 0.2, armW: 0.042, armK: 1.0, dust: 0.85, flocc: 0.22,
+        bar: [0.24, 27], core: 0.25, rIn: 0.08, rOut: 0.9, hii: isPhone() ? 600 : 900, hiiK: 0.7, seed: 21 };
+      const NM = isPhone() ? 512 : 1024;
+      A.mwFace = mkFace(ly, toTex(faceImg(look, raster(NM, NM), 0, 0, NM), 1.5, false), GC, MWD, e1, nG, [1.25, 1.25, 1.25]);
+      A.mwEdge = mkEdge(ly, toTex(edgeImg({ h: 0.2, z0: 0.016, zd: 0.011, dust: 1.1, armK: 1.1, rOut: 0.9, seed: 21 }, 512, 64), 1.6, true), GC, MWD, nG, [1.2, 1.2, 1.2], 0.125);
+      A.mwBulge = mkBulge(ly, GC, 30000, 0.75, 0.7, 0);
+      // globular clusters swarming round the centre
+      const gcl = cloud();
+      for (let i = 0; i < 160; i++) { const d = new THREE.Vector3(gauss(r), gauss(r), gauss(r)).normalize(), R = 3000 + (-Math.log(1 - r() * 0.97)) * 13000, k = 0.18 + 0.2 * r(); gcl.add(GC.clone().addScaledVector(d, R), [1.0 * k, 0.86 * k, 0.66 * k], 220 + 200 * r()); }
+      A.glob = mkPoints(gcl, ly, 'globulars');
     }
     {   // the band of the Milky Way across the sky, while you are still inside it
       const m = addMat({
@@ -3149,75 +3344,151 @@ window.I18N = (function () {
     }
     {   // named galaxies, Local Group dwarfs, the Virgo Cluster and the galaxies of our local volume
       const near = cloud();
-      for (const [key, ra, dec, dist, diam, kind, pa, inc] of GALAXIES) {
-        const lE = new THREE.Vector3(...C.radecVec(ra, dec)), pos = toScene(V3(lE)).multiplyScalar(dist);
-        const lg = dist < 5;
-        if (kind === 'elliptical') near.add(pos, [0.95, 0.82, 0.62].map(x => x * 0.85), diam * 0.75);
-        else {
-          const east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 0, 1), lE).normalize(), north = new THREE.Vector3().crossVectors(lE, east);
-          const a = north.clone().multiplyScalar(Math.cos(pa * DEG)).addScaledVector(east, Math.sin(pa * DEG)), mm = new THREE.Vector3().crossVectors(lE, a);
-          const n = lE.clone().multiplyScalar(Math.cos(inc * DEG)).addScaledVector(mm, Math.sin(inc * DEG));
-          const mesh = mkPlane(mly, kind, pos, diam, toScene(V3(a)).normalize(), toScene(V3(n)).normalize(), kind === 'spiral' ? [1.35, 1.35, 1.35] : [1.1, 1.1, 1.15]);
-          (lg ? A.lg : A.far).push(mesh); mkHalo(pos, diam, lg ? 'lg' : 'far');
+      for (const [key, ra, dec, dist, diam, lk, pa, inc] of GALAXIES) {
+        const lE = new THREE.Vector3(...C.radecVec(ra, dec)), pos = toScene(V3(lE)).multiplyScalar(dist), LK = LOOKS[lk];
+        const lg = dist < 5, G = { key, lg, parts: [] };
+        const east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 0, 1), lE).normalize(), north = new THREE.Vector3().crossVectors(lE, east);
+        const a = north.clone().multiplyScalar(Math.cos((pa || 0) * DEG)).addScaledVector(east, Math.sin((pa || 0) * DEG)), mm = new THREE.Vector3().crossVectors(lE, a);
+        const nn = lE.clone().multiplyScalar(Math.cos((inc || 0) * DEG)).addScaledVector(mm, Math.sin((inc || 0) * DEG));
+        const aS = toScene(V3(a)).normalize(), nS = toScene(V3(nn)).normalize();
+        if (LK.ell) {
+          const ang = Math.atan2(aS.y, Math.hypot(aS.x, aS.z));
+          G.parts.push(mkBulge(mly, pos, diam * LK.ell.size, LK.ell.k, LK.ell.q, ang, ELL_TEX)); G.parts.push(mkBulge(mly, pos, diam * LK.ell.size * 0.4, LK.ell.k * 0.8, LK.ell.q, ang));
+          near.add(pos, [0.95, 0.82, 0.62].map(x => x * 0.8), diam * 0.6);
+        } else if (LK.irr) {
+          const N = 256, R = raster(N, N); irrImg(LK.irr, R, 0, 0, N);
+          G.parts.push(mkFace(mly, toTex(R, 1.4, false), pos, diam, aS, nS, [1.2, 1.2, 1.25]));
+          G.parts.push(mkBulge(mly, pos, diam * 0.7, 0.18, 0.7, 0));   // its thickness, seen from the side
+          near.add(pos, [0.5, 0.5, 0.55], diam * 0.3);
+        }
+        if (LK.face) {
+          const N = LK.N || 256;
+          G.parts.push(mkFace(mly, toTex(faceImg(LK.face, raster(N, N), 0, 0, N), 1.5, false), pos, diam, aS, nS, [1.3, 1.3, 1.3]));
           near.add(pos, [0.5, 0.48, 0.45], diam * 0.3);
         }
+        if (LK.face || LK.edge) {
+          const f = LK.face || {}, ep = LK.edge || { h: f.h, z0: 0.018, zd: 0.012, dust: (f.dust || 0.5) * 0.9, armK: f.armK, rOut: f.rOut, seed: f.seed, young: f.young };
+          G.parts.push(mkEdge(mly, toTex(edgeImg(ep, 256, 64), 1.6, true), pos, diam, nS, [1.25, 1.25, 1.25], 0.25));
+        }
+        if (LK.bulge) G.parts.push(mkBulge(mly, pos, diam * LK.bulge, LK.bk, 0.8, 0, LK.soft ? ELL_TEX : null));
+        A.gals.push(G);
         A.labels.push({ key, pos, diamLy: diam * 1e6, posLy: pos.clone().multiplyScalar(1e6),
           vis: key === 'lmc' || key === 'smc' ? lD => sstep(lD, 4.6, 5.0) * (1 - sstep(lD, 7.0, 7.5)) : lg ? lD => sstep(lD, 5.2, 5.6) * (1 - sstep(lD, 7.6, 8.1)) : lD => sstep(lD, 6.6, 7.0) * (1 - sstep(lD, 8.4, 8.9)) });
       }
       A.galPts = mkPoints(near, mly, 'galPts');
-      const r = rng(31), dw = cloud();
+      // a small atlas of galaxy pictures for the crowds: spirals, barred spirals, ellipticals, lenticulars, irregulars
+      const AT = 128, atlas = raster(AT * 4, AT * 4), r = rng(31);
+      const tiles = [
+        { n: 2, pitch: 14, r0: 0.08, th0: 0, h: 0.24, armW: 0.05, armK: 1.3, dust: 0.9, core: 0.9, rIn: 0.1, rOut: 0.9, hii: 40, seed: 41 },
+        { n: 2, pitch: 22, r0: 0.07, th0: 1, h: 0.28, armW: 0.06, armK: 1.4, dust: 0.8, flocc: 0.3, core: 0.6, rIn: 0.07, rOut: 0.9, hii: 50, seed: 42 },
+        { n: 3, pitch: 18, r0: 0.07, th0: 2, h: 0.26, armW: 0.05, armK: 1.2, dust: 0.7, flocc: 0.5, core: 0.5, rIn: 0.07, rOut: 0.92, hii: 50, seed: 43 },
+        { n: 2, pitch: 16, r0: 0.25, th0: 0.3, h: 0.26, armW: 0.05, armK: 1.3, dust: 0.9, bar: [0.3, 0], core: 0.8, rIn: 0.3, rOut: 0.9, hii: 40, seed: 44 },
+        { n: 2, pitch: 10, r0: 0.12, th0: 2.5, h: 0.22, armW: 0.04, armK: 0.9, dust: 1.0, ring: [0.45, 0.5, 0.8], core: 1.1, rIn: 0.14, rOut: 0.9, hii: 30, seed: 45 },
+        { n: 2, pitch: 25, r0: 0.2, th0: 1.7, h: 0.3, armW: 0.06, armK: 1.5, dust: 0.6, bar: [0.24, 0], core: 0.6, rIn: 0.24, rOut: 0.92, hii: 50, seed: 46 },
+        null, null, null, null,   // ellipticals
+        { n: 0, h: 0.2, dust: 0.1, core: 1.2, rIn: 0.1, rOut: 0.85, seed: 47 }, { n: 0, h: 0.24, dust: 0.3, ring: [0.55, 0.2, 0.5], core: 1.0, rIn: 0.1, rOut: 0.85, seed: 48 },   // lenticulars
+        'irr', 'irr',
+        { n: 2, pitch: 14, r0: 0.1, th0: 0.9, h: 0.25, armW: 0.05, armK: 1.2, dust: 1.1, core: 0.8, rIn: 0.1, rOut: 0.9, hii: 40, seed: 49 },
+        { n: 4, pitch: 20, r0: 0.06, th0: 0.2, h: 0.28, armW: 0.04, armK: 1.2, dust: 0.8, flocc: 0.4, core: 0.6, rIn: 0.06, rOut: 0.92, hii: 60, seed: 50 },
+      ];
+      const B = bulgeImg(AT), BE = bulgeImg(AT, 6.5, 0.6);
+      tiles.forEach((t, k) => {
+        const ox = (k % 4) * AT, oy = Math.floor(k / 4) * AT;
+        if (t === 'irr') irrImg({ a: 0.6, b: 0.4, ang: 30 * k, hii: 12, seed: 60 + k }, atlas, ox, oy, AT);
+        else if (t) faceImg(t, atlas, ox, oy, AT);
+        const bk = t === null ? 1.8 : t === 'irr' ? 0 : t.n === 0 ? 0.9 : 0.35, bs = t === null ? 1 : 0.4;   // ellipticals: the whole tile is the ball; spirals: a small bulge
+        if (bk) for (let j = 0; j < AT; j++) for (let i = 0; i < AT; i++) {
+          const si = Math.floor(((i + 0.5) / AT - 0.5) / bs * AT + AT / 2), sj = Math.floor(((j + 0.5) / AT - 0.5) / bs * AT + AT / 2);
+          if (si < 0 || sj < 0 || si >= AT || sj >= AT) continue;
+          const q = ((oy + j) * atlas.W + ox + i) * 3, s = (sj * AT + si) * 3;
+          for (let c = 0; c < 3; c++) atlas.E[q + c] += (t === null ? BE : B).E[s + c] * bk;
+        }
+      });
+      const atlasTex = toTex(atlas, 1.5, false);
+      const popMat = () => addMat({ uniforms: { map: { value: atlasTex }, uK: AET_K, uMaxPx: POP_MAXPX, uVis: { value: 1 } }, vertexShader: POP_VS, fragmentShader: POP_FS });
+      const ELL = [6, 7, 8, 9], S0 = [10, 11], SPI = [0, 1, 2, 3, 4, 5, 14, 15], IRR = [12, 13];
+      const pick = a => a[Math.floor(r() * a.length)];
+      const galaxy = (cl, p, type, diam, k) => {   // type: 'e' elliptical, 's' spiral, 'i' irregular
+        const tile = type === 'e' ? (r() < 0.3 ? pick(S0) : pick(ELL)) : type === 'i' ? pick(IRR) : pick(SPI);
+        const q = type === 'e' ? 0.6 + 0.4 * r() : type === 'i' ? 0.5 + 0.5 * r() : 0.15 + 0.85 * Math.abs(Math.cos(r() * Math.PI / 2));
+        const tint = type === 'e' ? [1.0, 0.9, 0.78] : type === 'i' ? [0.85, 0.9, 1.05] : [0.95, 0.97, 1.05];
+        cl.add(p, tint.map(x => x * k), diam * 2.6, [tile, r() * Math.PI * 2, q]);
+      };
+      const dw = cloud();
       const M31 = radec3(10.6847, 41.2690).multiplyScalar(2.54);
-      for (let i = 0; i < 36; i++) {
-        const host = i < 20 ? new THREE.Vector3() : M31, s = i < 20 ? 0.35 : 0.25, k = 0.25 + 0.25 * r();
-        dw.add(host.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s)), [0.9 * k, 0.85 * k, 0.8 * k], 0.004 + 0.008 * r());
+      for (let i = 0; i < 44; i++) {   // dwarf galaxies around the Milky Way and Andromeda, and the two close companions of Andromeda
+        const host = i < 22 ? new THREE.Vector3() : M31, s = i < 22 ? 0.3 : 0.22;
+        galaxy(dw, host.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s)), r() < 0.6 ? 'e' : 'i', 0.004 + 0.006 * r(), 0.4 + 0.3 * r());
       }
-      A.dwarfs = mkPoints(dw, mly, 'dwarfs');
+      galaxy(dw, M31.clone().add(new THREE.Vector3(0.012, -0.01, 0.006)), 'e', 0.008, 1.0);    // M32
+      galaxy(dw, M31.clone().add(new THREE.Vector3(-0.02, 0.028, -0.01)), 'e', 0.017, 0.9);    // M110
+      A.dwarfs = mkPoints(dw, mly, 'dwarfs', popMat());
       const vc = cloud(), M87 = radec3(187.706, 12.391).multiplyScalar(53.5);
-      for (let i = 0; i < 320; i++) {
-        const ell = r() < 0.7, k = 0.45 + 0.5 * r();
-        vc.add(M87.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(2.6)), (ell ? [1.0, 0.85, 0.65] : [0.7, 0.8, 1.0]).map(x => x * k), 0.02 + 0.09 * r());
+      for (let i = 0; i < 420; i++) {   // the Virgo Cluster: mostly ellipticals in the dense core, spirals round the edges
+        const off = new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(2.4), core = off.length() < 2.6;
+        galaxy(vc, M87.clone().add(off), core && r() < 0.75 ? 'e' : r() < 0.85 ? 's' : 'i', 0.02 + 0.06 * Math.pow(r(), 2), 0.55 + 0.45 * r());
       }
       const sgp = radec3(283.75, 15.70), sx = new THREE.Vector3().crossVectors(sgp, new THREE.Vector3(0, 1, 0)).normalize(), sy = new THREE.Vector3().crossVectors(sgp, sx);
       const groups = []; for (let i = 0; i < 45; i++) { const R = 8 + (-Math.log(1 - r() * 0.98)) * 38, th = r() * 2 * Math.PI; groups.push(M87.clone().multiplyScalar(0.45).addScaledVector(sx, R * Math.cos(th)).addScaledVector(sy, R * Math.sin(th)).addScaledVector(sgp, gauss(r) * 9)); }
-      for (let i = 0; i < 2600; i++) {
+      for (let i = 0; i < 2600; i++) {   // groups and loose galaxies of the local supercluster, flattened into its plane
         let p;
         if (i < 1350) p = groups[i % groups.length].clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(1.6));
         else { const R = (-Math.log(1 - r() * 0.98)) * 45, th = r() * 2 * Math.PI; p = M87.clone().multiplyScalar(0.45).addScaledVector(sx, R * Math.cos(th)).addScaledVector(sy, R * Math.sin(th)).addScaledVector(sgp, gauss(r) * 14); }
         if (p.length() < 4) continue;
-        const k = 0.35 + 0.5 * r();
-        vc.add(p, (r() < 0.5 ? [1.0, 0.88, 0.72] : [0.72, 0.8, 1.0]).map(x => x * k), 0.02 + 0.08 * r());
+        const u = r(); galaxy(vc, p, u < 0.25 ? 'e' : u < 0.88 ? 's' : 'i', 0.02 + 0.06 * Math.pow(r(), 2), 0.45 + 0.5 * r());
       }
-      A.volume = mkPoints(vc, mly, 'volume');
+      A.volume = mkPoints(vc, mly, 'volume', popMat());
+      const icl = cloud();   // the faint glow of hot gas and loose stars that fills the cluster
+      icl.add(M87, [0.5, 0.42, 0.34].map(x => x * 0.22), 9); icl.add(M87, [0.6, 0.5, 0.4].map(x => x * 0.3), 3.5);
+      for (const gp of groups.slice(0, 20)) icl.add(gp, [0.35, 0.36, 0.5].map(x => x * 0.08), 5);
+      A.icl = mkPoints(icl, mly, 'clusterGlow', gasMat());
       A.virgo = M87;
+      A.M31ly = M31.clone().multiplyScalar(1e6);
       A.LGCly = M31.clone().multiplyScalar(0.5e6);
     }
-    {   // the cosmic web: clusters joined by long filaments of galaxies, with voids between
+    {   // the cosmic web: clusters joined by long filaments of galaxies and gas, with empty voids between
       const r = rng(41), nodes = [radec3(187.706, 12.391).multiplyScalar(53.5)];
       for (let i = 0; i < 80; i++) nodes.push(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).normalize().multiplyScalar(2000 * Math.cbrt(r())));
       const edges = new Set();
       nodes.forEach((a, i) => nodes.map((b, j) => [j, a.distanceTo(b)]).filter(([j]) => j !== i).sort((x, y) => x[1] - y[1]).slice(0, 3).forEach(([j]) => edges.add(i < j ? i + ',' + j : j + ',' + i)));
-      const c = cloud(), col = () => { const k = 0.28 + 0.22 * r(); return (r() < 0.55 ? [0.7, 0.76, 1.0] : [1.0, 0.86, 0.7]).map(x => x * k); };
+      const c = cloud(), gas = cloud(), col = () => { const k = 0.28 + 0.22 * r(); return (r() < 0.55 ? [0.7, 0.76, 1.0] : [1.0, 0.86, 0.7]).map(x => x * k); };
       const E = [...edges].map(s => s.split(',').map(Number));
       for (const [i, j] of E) {
         const a = nodes[i], b = nodes[j], len = a.distanceTo(b), n = Math.round(len / 5), s = 7 + 0.02 * len;
         for (let k = 0; k < n; k++) c.add(a.clone().lerp(b, r()).add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s)), col(), 2 + 4 * r());
+        for (let k = 0, m = Math.round(len / 22); k < m; k++) gas.add(a.clone().lerp(b, r()).add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(s * 1.6)), [0.3, 0.34, 0.75].map(x => x * (0.05 + 0.04 * r())), 40 + 50 * r());
       }
-      for (const a of nodes) for (let k = 0; k < 220; k++) c.add(a.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(16)), col().map(x => x * 1.4), 2 + 4 * r());
+      for (const a of nodes) {
+        for (let k = 0; k < 220; k++) c.add(a.clone().add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(16)), col().map(x => x * 1.4), 2 + 4 * r());
+        gas.add(a, [0.85, 0.62, 0.5].map(x => x * 0.12), 90 + 60 * r()); gas.add(a, [1.0, 0.85, 0.7].map(x => x * 0.25), 28);
+      }
       for (let k = 0; k < 16000; k++) { const [i, j] = E[Math.floor(r() * E.length)]; c.add(nodes[i].clone().lerp(nodes[j], r()).add(new THREE.Vector3(gauss(r), gauss(r), gauss(r)).multiplyScalar(55)), col().map(x => x * 0.6), 3 + 5 * r()); }
       A.web = mkPoints(c, mly, 'web');
+      A.webGas = mkPoints(gas, mly, 'webGas', gasMat());
     }
     return A;
   }
 
   // where the camera looks and from where, for a given scale
   const _av = new THREE.Vector3();
+  const angWrap = a => ((a % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
   const aetherPitch = lD => lD < 3.2 ? 0.32 : lD < 5.8 ? 0.32 + 0.58 * sstep(lD, 3.3, 4.6) : 0.9 - 0.62 * sstep(lD, 5.8, 6.8);
+  const qAt = lD => new THREE.Quaternion().slerp(AET.qGal, sstep(lD, 3.4, 4.6));
+  // the free-explore path: Earth → Sun → centre of the galaxy → centre of the Local Group as you pull back
+  function pathT(lD) {
+    const A = AET, s1 = sstep(lD, aeth.lD0 + 0.3, -4.4), s2 = sstep(lD, 3.7, 4.8), s3 = sstep(lD, 5.9, 6.5);
+    return SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU).multiplyScalar(1 - s1).lerp(A.GC, s2).lerp(A.LGCly, s3);
+  }
   function aetherCams() {
     const A = AET, lD = aeth.lD, d = Math.pow(10, lD) * (1 + Math.max(0, H / W * 0.75 - 1) * sstep(lD, 4.0, 5.0));   // pull back a little more on a tall phone screen
-    const s1 = sstep(lD, aeth.lD0 + 0.3, -4.4), s2 = sstep(lD, 3.7, 4.8), s3 = sstep(lD, 5.9, 6.5);
-    const T = SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU).multiplyScalar(1 - s1).lerp(A.GC, s2).lerp(A.LGCly, s3);
+    let T;
+    if (aeth.playing && aeth.tourT) T = aeth.tourT.clone();
+    else {
+      T = pathT(lD);
+      if (aeth.free) T.lerp(aeth.free.T, 1 - sstep(lD - aeth.free.lD, 0.3, 1.5));   // stay where the Journey was paused, until you pull far back
+    }
     if (aeth.focus && aeth.fk > 0) T.lerp(aeth.focus.pos, easeIO(aeth.fk));
-    const q = new THREE.Quaternion().slerp(A.qGal, sstep(lD, 3.4, 4.6));
+    const q = qAt(lD);
     const cp = Math.cos(aeth.pitch), dir = new THREE.Vector3(cp * Math.cos(aeth.yaw), Math.sin(aeth.pitch), cp * Math.sin(aeth.yaw)).applyQuaternion(q);
     const P = T.clone().addScaledVector(dir, d);
     A.camL.position.copy(P); A.camL.up.set(0, 1, 0).applyQuaternion(q); A.camL.lookAt(T);
@@ -3228,57 +3499,136 @@ window.I18N = (function () {
     A.T = T; A.P = P; A.d = d;
   }
   function setVis(o, v) { o.material.uniforms.uVis.value = v; o.visible = v > 0.001; }
+  // Planets are drawn enlarged; during a close-up of one body the others shrink back, so Jupiter does not loom beside the Moon.
+  const FULL_SIZE = new Set(['Sun', 'Earth', 'Moon']), SUBJ = { earth: {}, moon: {}, earthMoon: {}, sun: {}, jupiter: { Jupiter: 1 }, saturn: { Saturn: 1 } };
+  function aetherSubject() {
+    const val = (m, id) => m ? (m[id] ? 1 : 0) : 1, out = {};
+    let mA = null, mB = null, e = 1;
+    if (aeth.playing && aeth.tour) { const t = aeth.tour; mA = SUBJ[t.from.key] || null; mB = SUBJ[t.route[t.i].key] || null; e = t.hold > 0 ? 1 : easeIO(t.u); }
+    else { const close = 1 - sstep(aeth.lD, -4.9, -4.4); if (close <= 0) return null; mA = null; e = close; mB = {}; for (const { b, mesh } of Object.values(SP.bodies)) if (SP.cam.position.distanceTo(mesh.position) < radiusAU(b) * 14) mB[b.id] = 1; }
+    if (!mA && !mB) return null;
+    for (const id of Object.keys(SP.bodies)) out[id] = val(mA, id) * (1 - e) + val(mB, id) * e;
+    return out;
+  }
   function aetherRender(now) {
     const A = AET, lD = aeth.lD;
-    AET_K.value = (H * dpr / 2) / Math.tan(55 / 2 * DEG); AET_MAXPX.value = 30 * dpr;
+    AET_K.value = (H * dpr / 2) / Math.tan(55 / 2 * DEG); AET_MAXPX.value = 30 * dpr; GAS_MAXPX.value = 420 * dpr; POP_MAXPX.value = 150 * dpr; MW_MAXPX.value = 12 * dpr;
     aetherCams();
     const voidF = 1 - sstep(lD, 9.4, 10.1), inside = 0.35 + 0.65 * sstep(lD, 4.5, 5.5);
     setVis(A.stars, 1 - sstep(lD, 3.8, 4.6));
-    setVis(A.sunPt, sstep(lD, -2.6, -1.4) * (1 - sstep(lD, 4.2, 5.0)));
+    setVis(A.sunPt, sstep(lD, -2.6, -1.4) * (1 - sstep(lD, 4.2, 5.0))); setVis(A.field, sstep(lD, 1.1, 1.8) * (1 - sstep(lD, 3.7, 4.4)));
     setVis(A.oort, 0.8 * sstep(lD, -2.4, -1.5) * (1 - sstep(lD, 0.6, 1.6)));
     setVis(A.band, (S.sp.mw ? 1.35 : 0) * (1 - sstep(lD, 3.2, 4.1))); A.band.position.copy(A.camL.position);
-    setVis(A.mw, sstep(lD, 3.2, 4.1) * (1 - sstep(lD, 6.2, 7.0)));
-    setVis(A.mwDisc, 0.6 * sstep(lD, 3.3, 4.3) * (1 - sstep(lD, 6.2, 7.0)));
-    setVis(A.mwFar, sstep(lD, 5.8, 6.4) * voidF);
-    for (const m of A.lg) setVis(m, inside * voidF);
-    for (const m of A.far) setVis(m, sstep(lD, 4.5, 5.8) * voidF);
-    for (const h of A.halos) { const g = h.userData.group, v = (g === 'lg' ? inside : g === 'mw' ? sstep(lD, 5.8, 6.4) : sstep(lD, 4.5, 5.8)) * voidF; h.material.opacity = 0.5 * v; h.visible = v > 0.001; }
+    const mwIn = sstep(lD, 3.2, 4.1);
+    setVis(A.mw, mwIn * (1 - 0.55 * sstep(lD, 4.6, 5.4)) * (1 - sstep(lD, 6.2, 7.0)));
+    setVis(A.glob, mwIn * (1 - sstep(lD, 5.6, 6.4)));
+    setVis(A.mwFace, sstep(lD, 3.4, 4.4) * voidF); A.mwFace.material.uniforms.uCol.value.setScalar(1.25 * (0.5 + 0.5 * sstep(lD, 4.2, 4.9)));   // not washed out up close setVis(A.mwEdge, sstep(lD, 3.4, 4.4) * voidF); setVis(A.mwBulge, 0.9 * sstep(lD, 3.6, 4.4) * voidF);
+    for (const G of A.gals) { const v = (G.lg ? inside : sstep(lD, 4.5, 5.8)) * voidF; for (const m of G.parts) setVis(m, v); }
     setVis(A.galPts, inside * voidF); setVis(A.dwarfs, sstep(lD, 4.8, 5.6) * voidF);
-    setVis(A.volume, sstep(lD, 5.2, 6.2) * voidF);
-    setVis(A.web, sstep(lD, 7.3, 8.3) * voidF);
+    setVis(A.volume, sstep(lD, 5.2, 6.2) * voidF); setVis(A.icl, sstep(lD, 6.4, 7.0) * voidF);
+    setVis(A.web, sstep(lD, 7.3, 8.3) * voidF); setVis(A.webGas, sstep(lD, 7.6, 8.5) * voidF);
     const of = 1 - sstep(lD, -3.0, -1.6);   // orbits fade as the planets shrink away
     for (const l of SP.orbits.children) l.material.opacity = 0.5 * of;
     for (const l of SP.moonOrbit.children) l.material.opacity = 0.45 * of;
+    const av = sstep(lD, -4.7, -4.3) * (1 - sstep(lD, -2.7, -2.1)), kv = sstep(lD, -3.9, -3.3) * (1 - sstep(lD, -1.6, -1.1));
+    A.ast.material.opacity = 0.6 * av; A.ast.visible = av > 0.01; A.kb.material.opacity = 0.6 * kv; A.kb.visible = kv > 0.01;
+    const sub = aetherSubject();
+    for (const { b, mesh } of Object.values(SP.bodies)) if (!FULL_SIZE.has(b.id)) mesh.scale.setScalar(radiusAU(b) * (0.1 + 0.9 * (sub ? sub[b.id] || 0 : 1)));
     const ren = SP.ren; ren.autoClear = false; ren.clear();
     ren.render(A.mly, A.camM); ren.render(A.ly, A.camL);
-    if (lD < -1.4) { A.sunAnim = spaceFrame(now); ren.clearDepth(); ren.render(SP.scn, SP.cam); } else A.sunAnim = false;
+    if (lD < -1.1) { A.sunAnim = spaceFrame(now); ren.clearDepth(); ren.render(SP.scn, SP.cam); } else A.sunAnim = false;
   }
 
+  // ---------- the Journey: a guided route with stops — Earth, Moon, Sun, planets, stars, galaxies, the void ----------
+  function makeRoute() {
+    const A = AET, B = SP.bodies, at = id => B[id].mesh.position.clone(), lyv = p => p.clone().divideScalar(LY_AU), lA = au => Math.log10(au / LY_AU);
+    const E = at('Earth'), Mo = at('Moon'), J = at('Jupiter'), Sa = at('Saturn'), t = AE.MakeTime(new Date(S.utc)), O = () => new THREE.Vector3();
+    const geoLy = id => { try { return (id === 'Moon' ? AE.GeoMoon(t).Length() : AE.GeoVector(id, t, true).Length()) / LY_AU; } catch (e) { return null; } };
+    const lit = (p, side) => Math.atan2(-p.z, -p.x) + side;   // look from the sunlit side
+    const Wp = [], add = (key, o) => Wp.push(Object.assign({ key, hold: 1.2, back: false, yaw: null, pitch: null }, o));
+    add('earth', { T: lyv(E), lD: aeth.lD0, yaw: lit(E, 0.6), pitch: 0.3, hold: 1.0, back: true, sub: () => L.ui.youHere });
+    add('moon', { T: lyv(Mo), lD: lA(fitDist('Moon') * 2.6), yaw: lit(Mo, 0.45), pitch: 0.16, hold: 2.2, cap: () => bodyName('Moon'), subLy: geoLy('Moon') });
+    add('earthMoon', { T: lyv(E.clone().lerp(Mo, 0.4)), lD: lA(E.distanceTo(Mo) * 2.6), pitch: 0.6, hold: 1.2, back: true, sub: () => ' ' });
+    add('sun', { T: O(), lD: lA(fitDist('Sun') * 2.3), yaw: Math.atan2(E.z, E.x) + 0.5, pitch: 0.15, hold: 2.6, cap: () => bodyName('Sun'), subLy: geoLy('Sun') });
+    add('inner', { T: O(), lD: lA(4.6), pitch: 0.8, hold: 1.4, back: true });
+    add('jupiter', { T: lyv(J), lD: lA(fitDist('Jupiter') * 2.6), yaw: lit(J, 0.5), pitch: 0.12, hold: 1.8, cap: () => bodyName('Jupiter'), subLy: geoLy('Jupiter') });
+    add('saturn', { T: lyv(Sa), lD: lA(fitDist('Saturn') * 1.7), yaw: lit(Sa, -0.5), pitch: 0.62, hold: 2.0, cap: () => bodyName('Saturn'), subLy: geoLy('Saturn') });
+    add('kuiper', { T: O(), lD: lA(150), pitch: 0.55, hold: 1.4, back: true });
+    add('oort', { T: O(), lD: Math.log10(3.2), pitch: 0.3, hold: 1.2, back: true });
+    if (A.alphaCen) {
+      const ac = A.alphaCen, s = new THREE.Vector3().crossVectors(ac, new THREE.Vector3(0, 1, 0)).normalize();
+      add('alphaCen', { T: ac.clone().multiplyScalar(0.5), lD: Math.log10(8.5), yaw: Math.atan2(s.z, s.x), pitch: 0.3, hold: 1.8, subLy: 4.37 });
+    }
+    add('hood', { T: O(), lD: 2.55, pitch: 0.32, hold: 1.0, back: true });
+    add('gc', { T: A.GC.clone(), lD: 4.3, pitch: 0.75, hold: 1.8, subLy: 26000 });
+    add('milky', { T: A.GC.clone(), lD: 5.08, pitch: 0.95, hold: 2.2, back: true });
+    add('andromeda', { T: A.M31ly.clone(), lD: Math.log10(0.22e6 * 1.7), pitch: 0.45, hold: 2.2, cap: () => L.ui.andromeda, subLy: 2.54e6 });
+    const u = A.LGCly.clone().normalize().applyQuaternion(A.qGal.clone().invert());
+    add('local', { T: A.LGCly.clone(), lD: 6.45, yaw: Math.atan2(u.z, u.x) + Math.PI / 2, pitch: 0.7, hold: 1.6, back: true });
+    add('virgoCl', { T: A.virgo.clone().multiplyScalar(1e6), lD: 7.2, pitch: 0.3, hold: 2.0, cap: () => L.ui.virgoCl, subLy: 53.5e6 });
+    add('virgo', { T: A.virgo.clone().multiplyScalar(0.45e6), lD: 8.4, pitch: 0.35, hold: 1.2, back: true });
+    add('web', { T: O(), lD: 9.45, pitch: 0.35, hold: 1.5, back: true });
+    add('aether', { T: O(), lD: AETH_MAX, hold: 3.5, back: true, sub: () => L.ui.aetherLine });
+    return Wp;
+  }
+  const capOf = w => w.cap ? w.cap() : L.ui.stage[w.key] || '';
+  const subOf = w => w.sub ? w.sub() : w.subLy != null ? F(L.ui.distFrom, { d: fmtLy(w.subLy) }) : null;
+  function startTour(dir, rush) {
+    const R = makeRoute(), route = dir > 0 ? R : R.filter(w => w.back).reverse(), lD = aeth.lD;
+    let i = dir > 0 ? (Math.abs(lD - aeth.lD0) < 0.05 && !aeth.free ? 1 : route.findIndex(w => w.lD > lD + 0.15)) : route.findIndex(w => w.lD < lD - 0.15);
+    if (i < 0) i = route.length - 1;
+    const T0 = (AET.T || pathT(lD)).clone();
+    aeth.tour = { route, i, dir, rush, from: { key: Math.abs(lD - aeth.lD0) < 0.05 && !aeth.free ? 'earth' : null, T: T0, lD, yaw: aeth.yaw, pitch: aeth.pitch, cap: aeth.cap, sub: null } };
+    aeth.tourT = T0; aeth.focus = null; aeth.focusOn = false; aeth.fk = 0; aeth.free = null; aeth.lDT = null;
+    setupSeg();
+  }
+  function setupSeg() {
+    const t = aeth.tour, a = t.from, b = t.route[t.i], v = AETH_SPEED[t.rush ? 'home' : aeth.speed] * (t.dir < 0 ? 1.6 : 1);   // the way home is quicker
+    const hi = Math.max(a.lD, b.lD);
+    t.bump = Math.max(0, Math.log10(Math.max(a.T.distanceTo(b.T), 1e-30) * 1.3) - hi);
+    t.da = Math.pow(10, a.lD); t.db = Math.pow(10, b.lD); t.dp = Math.pow(10, hi + t.bump);
+    t.dur = Math.max(2.6 * Math.pow(0.95 / v, 0.7), (Math.abs(a.lD - b.lD) + 2 * t.bump) / v * 1.25);
+    t.wy = b.yaw; t.wp = b.pitch != null ? b.pitch : aetherPitch(b.lD);
+    t.u = 0; t.hold = 0;
+  }
+  function finishTour() {
+    Object.assign(aeth, { playing: false, rush: false, tour: null, tourT: null, free: null, dir: 1, lD: aeth.lD0 });
+    syncJourney();
+  }
+  function tourStep(dt, now) {
+    const t = aeth.tour, a = t.from, b = t.route[t.i], v = AETH_SPEED[t.rush ? 'home' : aeth.speed];
+    if (t.hold > 0) {
+      t.hold -= dt; aeth.yaw += dt * 0.035;   // a slow turn while stopped, to look around
+      if (t.hold <= 0) {
+        const from = { key: b.key, T: aeth.tourT.clone(), lD: aeth.lD, yaw: aeth.yaw, pitch: aeth.pitch, cap: capOf(b), sub: subOf(b) };
+        if (t.i + 1 < t.route.length) { t.from = from; t.i++; setupSeg(); }
+        else if (t.dir > 0) { aeth.cap = from.cap; startTour(-1, false); aeth.tour.from = Object.assign(aeth.tour.from, { key: b.key, cap: from.cap, sub: from.sub }); }
+        else finishTour();
+      }
+      return;
+    }
+    t.u = Math.min(1, t.u + dt / t.dur);
+    const e = easeIO(t.u);
+    aeth.lD = a.lD + (b.lD - a.lD) * e + t.bump * Math.sin(Math.PI * e);
+    const d = Math.pow(10, aeth.lD);
+    // the target slides over in step with the zoom, so it never races across the screen
+    let k;
+    if (t.bump > 0.01) k = e < 0.5 ? 0.5 * (d - t.da) / Math.max(t.dp - t.da, 1e-30) : 0.5 + 0.5 * (t.dp - d) / Math.max(t.dp - t.db, 1e-30);
+    else if (Math.abs(t.db - t.da) > 1e-3 * Math.max(t.da, t.db)) k = (d - t.da) / (t.db - t.da);
+    else k = e;
+    aeth.tourT = a.T.clone().lerp(b.T, clampV(k, 0, 1));
+    if (now - aeth.userAt > 2500) {
+      if (t.wy != null) { const want = a.yaw + angWrap(t.wy - a.yaw) * e; aeth.yaw += angWrap(want - aeth.yaw) * Math.min(1, dt * 2.5); }
+      else aeth.yaw += dt * 0.04;
+      const wantP = a.pitch + (t.wp - a.pitch) * e; aeth.pitch += (wantP - aeth.pitch) * Math.min(1, dt * 2.5);
+    }
+    if (t.u >= 1) t.hold = t.rush ? 0.05 : b.hold * Math.pow(0.95 / v, 0.5) * (t.dir < 0 && b.key !== 'earth' ? 0.4 : 1);
+  }
   function aetherStep(now) {
     const dt = Math.min(0.25, Math.max(0, (now - (aeth.lastT || now)) / 1000)); aeth.lastT = now;
     let moving = false;
-    if (aeth.playing) {
-      moving = true;
-      if (aeth.hold > 0) { aeth.hold -= dt; if (aeth.hold <= 0) aeth.dir = -1; }
-      else {
-        const lD = aeth.lD;
-        // linger a little at each stage, and ease in and out at both ends
-        const dwell = [-4.4, -0.2, 1.6, 4.7, 6.4, 7.8, 9.0].reduce((s, c) => s + Math.exp(-Math.pow((lD - c) / 0.42, 2)), 0);
-        const ends = Math.min(1, 0.4 + (lD - aeth.lD0) * 1.2, 0.3 + (AETH_MAX - lD) * 1.0);
-        const v = AETH_SPEED[aeth.rush ? 'home' : aeth.speed] * (1 - 0.45 * Math.min(1, dwell)) * Math.max(0.3, ends);
-        aeth.lD += aeth.dir * v * dt;
-        if (aeth.dir > 0 && aeth.lD >= AETH_MAX) { aeth.lD = AETH_MAX; aeth.hold = 3.5; }
-        if (aeth.dir < 0 && aeth.lD <= aeth.lD0) { aeth.lD = aeth.lD0; aeth.playing = false; aeth.rush = false; aeth.dir = 1; syncJourney(); }
-      }
-      if (now - aeth.userAt > 2500) {   // a slow turn on the way, leaning to a good angle for each stage
-        if (aeth.lD > 5.4) {   // among the galaxies: turn side-on to the line from us to Andromeda, so both are in view
-          const u = AET.LGCly.clone().normalize().applyQuaternion(AET.qGal.clone().invert());
-          const want = Math.atan2(u.z, u.x) + Math.PI / 2, dy = ((want - aeth.yaw) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
-          aeth.yaw += dy * Math.min(1, dt * 0.8) * sstep(aeth.lD, 5.4, 6.0);
-        } else aeth.yaw += dt * 0.045;
-        aeth.pitch += (aetherPitch(aeth.lD) - aeth.pitch) * Math.min(1, dt * 0.6);
-      }
-    } else if (aeth.lDT != null) {
+    if (aeth.playing && aeth.tour) { moving = true; tourStep(dt, now); }
+    else if (aeth.lDT != null) {
       aeth.lD += (aeth.lDT - aeth.lD) * Math.min(1, dt * aeth.rate);
       if (Math.abs(aeth.lDT - aeth.lD) < 0.002) { aeth.lD = aeth.lDT; aeth.lDT = null; }
       moving = true;
@@ -3289,7 +3639,7 @@ window.I18N = (function () {
     return moving || !!(AET && AET.sunAnim) || now - aeth.capT < 700;
   }
 
-  const AETH_STAGES = [[0.02, 'earth'], [0.8, 'earthMoon'], [6, 'inner'], [100, 'solar'], [3000, 'edge'], [3 * LY_AU, 'oort'], [60 * LY_AU, 'near'], [3000 * LY_AU, 'hood'],
+  const AETH_STAGES = [[0.02, 'earth'], [0.8, 'earthMoon'], [6, 'inner'], [70, 'solar'], [600, 'kuiper'], [3000, 'edge'], [3 * LY_AU, 'oort'], [60 * LY_AU, 'near'], [3000 * LY_AU, 'hood'],
     [2.5e5 * LY_AU, 'milky'], [1.2e7 * LY_AU, 'local'], [3e8 * LY_AU, 'virgo'], [3.5e9 * LY_AU, 'web']];
   function fmtLy(ly) {
     const u = L.ui, au = ly * LY_AU, n = (x, dg) => x.toLocaleString('en-IN', { maximumFractionDigits: dg });
@@ -3311,9 +3661,9 @@ window.I18N = (function () {
     const k = (H / 2) / Math.tan(55 / 2 * DEG), placed = [];
     const label = (text, x, y, color, alpha, font, align) => {
       if (alpha < 0.02) return;
-      g.font = font; const w = g.measureText(text).width, x0 = align === 'center' ? x - w / 2 : x;
+      g.font = font; const w = g.measureText(text).width, x0 = clampV(align === 'center' ? x - w / 2 : x, 6, Math.max(6, W - 6 - w));   // keep labels on screen
       if (placed.some(q => x0 < q.x + q.w && q.x < x0 + w && Math.abs(q.y - y) < 14)) return;
-      placed.push({ x: x0, y, w }); g.globalAlpha = alpha; g.fillStyle = color; g.textAlign = align || 'left'; g.fillText(text, x, y);
+      placed.push({ x: x0, y, w }); g.globalAlpha = alpha; g.fillStyle = color; g.textAlign = 'left'; g.fillText(text, x0, y);
     };
     g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,0.85)'; g.shadowBlur = 6;
     const names = S.sp.names;
@@ -3321,12 +3671,18 @@ window.I18N = (function () {
     const pa = 1 - sstep(lD, -3.4, -2.8);
     if (pa > 0.01) for (const { b, mesh } of Object.values(SP.bodies)) {
       const p = proj(SP.cam, mesh.position); if (!p) continue;
-      const rp = radiusAU(b) / Math.max(SP.cam.position.distanceTo(mesh.position), 1e-12) * k;
+      const rp = mesh.scale.x / Math.max(SP.cam.position.distanceTo(mesh.position), 1e-12) * k;
       maybeHD(b.id, rp);
       posAether.push({ kind: 'planet', id: b.id, x: p.x, y: p.y, r: Math.max(22, rp + 6) });
       const c = spColor(b.id);
       if (rp < 9) { g.globalAlpha = 0.9 * pa; g.strokeStyle = c; g.lineWidth = 1.3; g.beginPath(); g.arc(p.x, p.y, 7, 0, 2 * Math.PI); g.stroke(); }
       if (names) label(bodyName(b.id), p.x + Math.min(Math.max(rp, 7), W / 3) + 7, p.y, c, pa, `600 12.5px ${FONT}`);
+    }
+    // the two belts, labelled on the side nearest you
+    if (names) {
+      const beltLabel = (R, a, text) => { if (a < 0.02) return; const p = proj(SP.cam, new THREE.Vector3(Math.cos(aeth.yaw) * R, 0, Math.sin(aeth.yaw) * R)); if (p) label(text, p.x, p.y + 14, '#cdbf9e', a * 0.85, `500 11.5px ${FONT}`, 'center'); };
+      beltLabel(2.75, sstep(lD, -4.9, -4.5) * (1 - sstep(lD, -3.6, -3.1)), L.ui.asteroidBelt);
+      beltLabel(42, sstep(lD, -3.4, -3.0) * (1 - sstep(lD, -1.9, -1.4)), L.ui.kuiperBelt);
     }
     // the brightest nearby stars by name
     const sa = sstep(lD, -1.4, -0.6) * (1 - sstep(lD, 2.9, 3.5));
@@ -3336,6 +3692,9 @@ window.I18N = (function () {
       if (m > 3.2) continue;
       label(starName(s.i), p.x + 8, p.y, '#ece4d0', sa * Math.min(1, (3.2 - m) / 1.5) * 0.85, `500 11.5px ${FONT}`);
     }
+    // the nearest star
+    const ca = sstep(lD, 0.3, 0.7) * (1 - sstep(lD, 1.7, 2.2));
+    if (ca > 0.01 && A.alphaCen) { const p = proj(A.camL, A.alphaCen); if (p) { g.globalAlpha = ca; g.strokeStyle = '#ece4d0'; g.lineWidth = 1.3; g.beginPath(); g.arc(p.x, p.y, 7, 0, 2 * Math.PI); g.stroke(); label(starName(A.alphaCenI) + ' · 4.37 ' + L.ui.ly, p.x + 12, p.y, '#ece4d0', ca, `600 12px ${FONT}`); } }
     // you are here
     const ya = sstep(lD, 0.5, 1.1) * (1 - sstep(lD, 6.3, 6.9));
     if (ya > 0.01) {
@@ -3346,6 +3705,9 @@ window.I18N = (function () {
         posAether.push({ kind: 'home', x: p.x, y: p.y, r: 20 });
       }
     }
+    // the black hole at the centre of the galaxy
+    const ba = sstep(lD, 3.85, 4.05) * (1 - sstep(lD, 4.6, 4.85));
+    if (names && ba > 0.01) { const p = proj(A.camL, A.GC); if (p) { g.globalAlpha = ba * 0.8; g.strokeStyle = '#ece4d0'; g.lineWidth = 1; g.beginPath(); g.arc(p.x, p.y, 5, 0, 2 * Math.PI); g.stroke(); label(L.ui.sgrA, p.x + 10, p.y + 12, '#ece4d0', ba * 0.85, `500 11.5px ${FONT}`); } }
     const voidF = 1 - sstep(lD, 9.3, 9.9);
     // our galaxy
     const ma = sstep(lD, 4.5, 5.0) * (1 - sstep(lD, 8.4, 9.0));
@@ -3369,22 +3731,30 @@ window.I18N = (function () {
     const va = sstep(lD, 7.1, 7.6) * (1 - sstep(lD, 9.1, 9.6));
     if (names && va > 0.01) { const p = proj(A.camM, A.virgo); if (p) label(L.ui.virgoCl, p.x, p.y - 18, '#ece4d0', va * 0.85, `600 12.5px ${FONT}`, 'center'); }
     // the stage you are in, and how far from Earth
-    const dAU = A.d * LY_AU;
-    let st = 'aether'; for (const [lim, key] of AETH_STAGES) if (dAU < lim) { st = key; break; }
+    const live = () => F(L.ui.distFrom, { d: fmtLy(A.P.distanceTo(SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU))) });
+    let cap, sub;
     const focusName = aeth.focusOn && aeth.focus ? (aeth.focus.key === 'milkyWay' ? L.ui.milkyWay : galName(aeth.focus.key)) : null;
-    const cap = focusName || L.ui.stage[st];
+    if (focusName) { cap = focusName; sub = live(); }
+    else if (aeth.playing && aeth.tour) {
+      const t = aeth.tour, b = t.route[t.i], to = t.hold > 0 || t.u > 0.5;
+      cap = to ? capOf(b) : t.from.cap || capOf(b); sub = (to ? subOf(b) : t.from.sub) || live();
+    } else {
+      const dAU = A.d * LY_AU; let st = 'aether'; for (const [lim, key] of AETH_STAGES) if (dAU < lim) { st = key; break; }
+      cap = L.ui.stage[st]; sub = st === 'aether' ? L.ui.aetherLine : live();
+    }
     if (cap !== aeth.cap) { aeth.cap = cap; aeth.capT = now; }
     const fade = Math.min(1, (now - aeth.capT) / 600);
     const tb = $('timebar'), sr = $('stage').getBoundingClientRect(), tr = tb && tb.offsetParent ? tb.getBoundingClientRect() : null;
     const cy = tr ? tr.top - sr.top - 44 : H - 70;
     g.textAlign = 'center'; g.globalAlpha = fade; g.shadowBlur = 10;
-    g.font = `600 ${isPhone() ? 20 : 24}px "Source Serif 4", ${FONT}`; g.fillStyle = '#e2bf5a'; g.fillText(cap, W / 2, cy);
-    const sub = st === 'aether' && !focusName ? L.ui.aetherLine : F(L.ui.distFrom, { d: fmtLy(A.P.distanceTo(SP.bodies.Earth.mesh.position.clone().divideScalar(LY_AU))) });
+    let fs = isPhone() ? 20 : 24; g.font = `600 ${fs}px "Source Serif 4", ${FONT}`;
+    while (fs > 14 && g.measureText(cap).width > W - 32) { fs -= 1; g.font = `600 ${fs}px "Source Serif 4", ${FONT}`; }   // long names in some languages: shrink to fit
+    g.fillStyle = '#e2bf5a'; g.fillText(cap, W / 2, cy);
     g.font = `500 12.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.8)'; g.fillText(sub, W / 2, cy + 24);
     g.shadowBlur = 0; g.globalAlpha = 1; g.textAlign = 'left';
     g.font = `500 11.5px ${FONT}`; g.fillStyle = 'rgba(236,228,208,0.7)';
     const zr = $('zoombar').getBoundingClientRect();
-    if (!isPhone()) g.fillText(L.ui.aetherHint, 16, 78);
+    if (!isPhone()) g.fillText(L.ui.aetherHint, 16, zr.bottom - sr.top + 16);
     else {   // wrap to the screen width on phones
       let line = '', y = zr.bottom - sr.top + 16;
       for (const w of L.ui.aetherHint.split(' ')) {
@@ -3404,7 +3774,12 @@ window.I18N = (function () {
     document.querySelectorAll('#speedSeg button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.speed === aeth.speed)));
     needsRender = true;
   }
-  function stopJourney() { if (aeth.playing) { aeth.playing = false; aeth.rush = false; syncJourney(); } }
+  function stopJourney() {
+    if (!aeth.playing) return;
+    if (aeth.tourT) aeth.free = { T: aeth.tourT.clone(), lD: aeth.lD };   // stay right here; scrolling carries on from this spot
+    Object.assign(aeth, { playing: false, rush: false, tour: null, tourT: null });
+    syncJourney();
+  }
   function focusGalaxy(lab) {
     stopJourney();
     aeth.focus = { key: lab.key, pos: lab.posLy.clone(), minLD: Math.log10(lab.diamLy * 0.7) };
@@ -3415,27 +3790,30 @@ window.I18N = (function () {
     if (!AET) AET = buildAether();
     const e = SP.bodies.Earth.mesh.position;
     aeth.lD0 = Math.log10(fitDist('Earth') * 2.4 / LY_AU);
-    Object.assign(aeth, { lD: aeth.lD0, lDT: null, yaw: Math.atan2(e.z, e.x) + 0.95, pitch: 0.32, playing: false, rush: false, dir: 1, hold: 0, focus: null, focusOn: false, fk: 0, lastT: performance.now(), cap: '' });
+    Object.assign(aeth, { lD: aeth.lD0, lDT: null, yaw: Math.atan2(-e.z, -e.x) + 0.6, pitch: 0.3, playing: false, rush: false, dir: 1, hold: 0, focus: null, focusOn: false, fk: 0, lastT: performance.now(), cap: '', tour: null, tourT: null, free: null });
     SP.back.visible = false; SP.scn.getObjectByName('spokes').visible = false; SP.ren.setClearColor(0x000000, 1);
     syncJourney();
   }
   function leaveAether() {
     if (!SP) return;
-    aeth.playing = false; SP.ren.autoClear = true; SP.ren.setClearColor(0x030305, 1); SP.back.visible = true;
+    aeth.playing = false; aeth.tour = null; SP.ren.autoClear = true; SP.ren.setClearColor(0x030305, 1); SP.back.visible = true;
     for (const l of SP.orbits.children) l.material.opacity = 0.5;
     for (const l of SP.moonOrbit.children) l.material.opacity = 0.45;
+    if (AET) { AET.ast.visible = false; AET.kb.visible = false; }
+    for (const { b, mesh } of Object.values(SP.bodies)) mesh.scale.setScalar(radiusAU(b));
     placeCam();
   }
   $('aJourney').addEventListener('click', () => {
     if (aeth.playing && !aeth.rush) { stopJourney(); return; }
-    if (aeth.lD >= AETH_MAX - 0.01) aeth.dir = -1; else if (aeth.lD <= aeth.lD0 + 0.01 || aeth.rush) aeth.dir = aeth.rush ? -1 : 1;
-    aeth.focusOn = false; aeth.lDT = null; aeth.rush = false; aeth.hold = 0; aeth.playing = true; aeth.userAt = 0; aeth.lastT = performance.now();
-    syncJourney();
+    const dir = aeth.lD >= AETH_MAX - 0.01 ? -1 : 1;
+    aeth.playing = true; aeth.rush = false; aeth.userAt = 0; aeth.lastT = performance.now();
+    startTour(dir, false); syncJourney();
   });
-  document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { aeth.speed = b.dataset.speed; syncJourney(); }));
+  document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { aeth.speed = b.dataset.speed; if (aeth.tour) { const t = aeth.tour, u = t.u, h = t.hold; setupSeg(); t.u = u; t.hold = h; } syncJourney(); }));
   $('aetherHome').addEventListener('click', () => {
-    if (aeth.lD <= aeth.lD0 + 0.01 && !aeth.focusOn) return;
-    aeth.focusOn = false; aeth.lDT = null; aeth.hold = 0; aeth.dir = -1; aeth.rush = true; aeth.playing = true; aeth.lastT = performance.now(); syncJourney();
+    if (aeth.lD <= aeth.lD0 + 0.01 && !aeth.focusOn && !aeth.free) return;
+    aeth.playing = true; aeth.rush = true; aeth.lastT = performance.now();
+    startTour(-1, true); syncJourney();
   });
   // looking around: drag = turn, wheel / pinch / ± = travel in or out, tap a galaxy to visit it
   {
