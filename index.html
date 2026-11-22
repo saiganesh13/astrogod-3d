@@ -3500,11 +3500,11 @@ window.I18N = (function () {
   }
   function setVis(o, v) { o.material.uniforms.uVis.value = v; o.visible = v > 0.001; }
   // Planets are drawn enlarged; during a close-up of one body the others shrink back, so Jupiter does not loom beside the Moon.
-  const FULL_SIZE = new Set(['Sun', 'Earth', 'Moon']), SUBJ = { earth: {}, moon: {}, earthMoon: {}, sun: {}, jupiter: { Jupiter: 1 }, saturn: { Saturn: 1 } };
+  const FULL_SIZE = new Set(['Sun', 'Earth', 'Moon']), SUBJ = { earth: {}, moon: {}, earthMoon: {}, sun: {} };
   function aetherSubject() {
     const val = (m, id) => m ? (m[id] ? 1 : 0) : 1, out = {};
     let mA = null, mB = null, e = 1;
-    if (aeth.playing && aeth.tour) { const t = aeth.tour; mA = SUBJ[t.from.key] || null; mB = SUBJ[t.route[t.i].key] || null; e = t.hold > 0 ? 1 : easeIO(t.u); }
+    if (aeth.playing && aeth.tour && !(aeth.tour.route[aeth.tour.i].cruise && aeth.tour.hold <= 0)) { const t = aeth.tour; mA = SUBJ[t.from.key] || null; mB = SUBJ[t.route[t.i].key] || null; e = t.hold > 0 ? 1 : easeIO(t.u); }
     else { const close = 1 - sstep(aeth.lD, -4.9, -4.4); if (close <= 0) return null; mA = null; e = close; mB = {}; for (const { b, mesh } of Object.values(SP.bodies)) if (SP.cam.position.distanceTo(mesh.position) < radiusAU(b) * 14) mB[b.id] = 1; }
     if (!mA && !mB) return null;
     for (const id of Object.keys(SP.bodies)) out[id] = val(mA, id) * (1 - e) + val(mB, id) * e;
@@ -3522,7 +3522,8 @@ window.I18N = (function () {
     const mwIn = sstep(lD, 3.2, 4.1);
     setVis(A.mw, mwIn * (1 - 0.55 * sstep(lD, 4.6, 5.4)) * (1 - sstep(lD, 6.2, 7.0)));
     setVis(A.glob, mwIn * (1 - sstep(lD, 5.6, 6.4)));
-    setVis(A.mwFace, sstep(lD, 3.4, 4.4) * voidF); A.mwFace.material.uniforms.uCol.value.setScalar(1.25 * (0.5 + 0.5 * sstep(lD, 4.2, 4.9)));   // not washed out up close setVis(A.mwEdge, sstep(lD, 3.4, 4.4) * voidF); setVis(A.mwBulge, 0.9 * sstep(lD, 3.6, 4.4) * voidF);
+    setVis(A.mwFace, sstep(lD, 3.4, 4.4) * voidF); setVis(A.mwEdge, sstep(lD, 3.4, 4.4) * voidF); setVis(A.mwBulge, 0.9 * sstep(lD, 3.6, 4.4) * voidF);
+    A.mwFace.material.uniforms.uCol.value.setScalar(1.25 * (0.5 + 0.5 * sstep(lD, 4.2, 4.9)));   // not washed out up close
     for (const G of A.gals) { const v = (G.lg ? inside : sstep(lD, 4.5, 5.8)) * voidF; for (const m of G.parts) setVis(m, v); }
     setVis(A.galPts, inside * voidF); setVis(A.dwarfs, sstep(lD, 4.8, 5.6) * voidF);
     setVis(A.volume, sstep(lD, 5.2, 6.2) * voidF); setVis(A.icl, sstep(lD, 6.4, 7.0) * voidF);
@@ -3539,43 +3540,32 @@ window.I18N = (function () {
     if (lD < -1.1) { A.sunAnim = spaceFrame(now); ren.clearDepth(); ren.render(SP.scn, SP.cam); } else A.sunAnim = false;
   }
 
-  // ---------- the Journey: a guided route with stops — Earth, Moon, Sun, planets, stars, galaxies, the void ----------
+  // ---------- the Journey: stops at Earth, the Moon and the Sun, then one long flight out to the void, passing everything ----------
+  const CRUISE = { slow: 0.32, normal: 0.6, fast: 1.2, home: 3.0 };   // decades of distance per second on the long flight
+  const CRUISE_EASE = [-4.0, -2.6, 0.4, 2.5, 5.0, 6.5, 7.8, 9.2];     // a little slower (never stopping) as each wonder goes by
   function makeRoute() {
-    const A = AET, B = SP.bodies, at = id => B[id].mesh.position.clone(), lyv = p => p.clone().divideScalar(LY_AU), lA = au => Math.log10(au / LY_AU);
-    const E = at('Earth'), Mo = at('Moon'), J = at('Jupiter'), Sa = at('Saturn'), t = AE.MakeTime(new Date(S.utc)), O = () => new THREE.Vector3();
+    const B = SP.bodies, at = id => B[id].mesh.position.clone(), lyv = p => p.clone().divideScalar(LY_AU), lA = au => Math.log10(au / LY_AU);
+    const E = at('Earth'), Mo = at('Moon'), t = AE.MakeTime(new Date(S.utc)), O = () => new THREE.Vector3();
     const geoLy = id => { try { return (id === 'Moon' ? AE.GeoMoon(t).Length() : AE.GeoVector(id, t, true).Length()) / LY_AU; } catch (e) { return null; } };
     const lit = (p, side) => Math.atan2(-p.z, -p.x) + side;   // look from the sunlit side
-    const Wp = [], add = (key, o) => Wp.push(Object.assign({ key, hold: 1.2, back: false, yaw: null, pitch: null }, o));
-    add('earth', { T: lyv(E), lD: aeth.lD0, yaw: lit(E, 0.6), pitch: 0.3, hold: 1.0, back: true, sub: () => L.ui.youHere });
-    add('moon', { T: lyv(Mo), lD: lA(fitDist('Moon') * 2.6), yaw: lit(Mo, 0.45), pitch: 0.16, hold: 2.2, cap: () => bodyName('Moon'), subLy: geoLy('Moon') });
-    add('earthMoon', { T: lyv(E.clone().lerp(Mo, 0.4)), lD: lA(E.distanceTo(Mo) * 2.6), pitch: 0.6, hold: 1.2, back: true, sub: () => ' ' });
-    add('sun', { T: O(), lD: lA(fitDist('Sun') * 2.3), yaw: Math.atan2(E.z, E.x) + 0.5, pitch: 0.15, hold: 2.6, cap: () => bodyName('Sun'), subLy: geoLy('Sun') });
-    add('inner', { T: O(), lD: lA(4.6), pitch: 0.8, hold: 1.4, back: true });
-    add('jupiter', { T: lyv(J), lD: lA(fitDist('Jupiter') * 2.6), yaw: lit(J, 0.5), pitch: 0.12, hold: 1.8, cap: () => bodyName('Jupiter'), subLy: geoLy('Jupiter') });
-    add('saturn', { T: lyv(Sa), lD: lA(fitDist('Saturn') * 1.7), yaw: lit(Sa, -0.5), pitch: 0.62, hold: 2.0, cap: () => bodyName('Saturn'), subLy: geoLy('Saturn') });
-    add('kuiper', { T: O(), lD: lA(150), pitch: 0.55, hold: 1.4, back: true });
-    add('oort', { T: O(), lD: Math.log10(3.2), pitch: 0.3, hold: 1.2, back: true });
-    if (A.alphaCen) {
-      const ac = A.alphaCen, s = new THREE.Vector3().crossVectors(ac, new THREE.Vector3(0, 1, 0)).normalize();
-      add('alphaCen', { T: ac.clone().multiplyScalar(0.5), lD: Math.log10(8.5), yaw: Math.atan2(s.z, s.x), pitch: 0.3, hold: 1.8, subLy: 4.37 });
-    }
-    add('hood', { T: O(), lD: 2.55, pitch: 0.32, hold: 1.0, back: true });
-    add('gc', { T: A.GC.clone(), lD: 4.3, pitch: 0.75, hold: 1.8, subLy: 26000 });
-    add('milky', { T: A.GC.clone(), lD: 5.08, pitch: 0.95, hold: 2.2, back: true });
-    add('andromeda', { T: A.M31ly.clone(), lD: Math.log10(0.22e6 * 1.7), pitch: 0.45, hold: 2.2, cap: () => L.ui.andromeda, subLy: 2.54e6 });
-    const u = A.LGCly.clone().normalize().applyQuaternion(A.qGal.clone().invert());
-    add('local', { T: A.LGCly.clone(), lD: 6.45, yaw: Math.atan2(u.z, u.x) + Math.PI / 2, pitch: 0.7, hold: 1.6, back: true });
-    add('virgoCl', { T: A.virgo.clone().multiplyScalar(1e6), lD: 7.2, pitch: 0.3, hold: 2.0, cap: () => L.ui.virgoCl, subLy: 53.5e6 });
-    add('virgo', { T: A.virgo.clone().multiplyScalar(0.45e6), lD: 8.4, pitch: 0.35, hold: 1.2, back: true });
-    add('web', { T: O(), lD: 9.45, pitch: 0.35, hold: 1.5, back: true });
-    add('aether', { T: O(), lD: AETH_MAX, hold: 3.5, back: true, sub: () => L.ui.aetherLine });
-    return Wp;
+    const out = [], add = (key, o) => out.push(Object.assign({ key, hold: 1.2, yaw: null, pitch: null }, o));
+    const home = { T: lyv(E), lD: aeth.lD0, yaw: lit(E, 0.6), pitch: 0.3, sub: () => L.ui.youHere };
+    add('earth', Object.assign({ hold: 1.0 }, home));
+    const moon = { T: lyv(Mo), lD: lA(fitDist('Moon') * 2.6), yaw: lit(Mo, 0.45), pitch: 0.16, cap: () => bodyName('Moon'), subLy: geoLy('Moon') };
+    add('moon', Object.assign({ hold: 2.2 }, moon));
+    add('earthMoon', { T: lyv(E.clone().lerp(Mo, 0.4)), lD: lA(E.distanceTo(Mo) * 2.6), pitch: 0.6, hold: 1.2, sub: () => ' ' });
+    const sun = { T: O(), lD: lA(fitDist('Sun') * 2.3), yaw: Math.atan2(E.z, E.x) + 0.5, pitch: 0.15, cap: () => bodyName('Sun'), subLy: geoLy('Sun') };
+    add('sun', Object.assign({ hold: 2.6 }, sun));
+    add('aether', { T: O(), lD: AETH_MAX, hold: 3.5, cruise: true, sub: () => L.ui.aetherLine });
+    // the way back: one flight in to the Sun, then the Moon, then home (the Earth button flies straight home)
+    const back = [Object.assign({ key: 'sun', hold: 1.8, cruise: true }, sun), Object.assign({ key: 'moon', hold: 1.6 }, moon), Object.assign({ key: 'earth', hold: 0.3 }, home)];
+    return { out, back, rush: [Object.assign({ key: 'earth', hold: 0.3, cruise: true }, home)] };
   }
   const capOf = w => w.cap ? w.cap() : L.ui.stage[w.key] || '';
   const subOf = w => w.sub ? w.sub() : w.subLy != null ? F(L.ui.distFrom, { d: fmtLy(w.subLy) }) : null;
   function startTour(dir, rush) {
-    const R = makeRoute(), route = dir > 0 ? R : R.filter(w => w.back).reverse(), lD = aeth.lD;
-    let i = dir > 0 ? (Math.abs(lD - aeth.lD0) < 0.05 && !aeth.free ? 1 : route.findIndex(w => w.lD > lD + 0.15)) : route.findIndex(w => w.lD < lD - 0.15);
+    const R = makeRoute(), route = dir > 0 ? R.out : rush ? R.rush : R.back, lD = aeth.lD, sunLD = R.out[3].lD;
+    let i = dir < 0 ? 0 : Math.abs(lD - aeth.lD0) < 0.05 && !aeth.free ? 1 : lD > sunLD + 0.1 ? route.length - 1 : route.findIndex(w => w.lD > lD + 0.15);
     if (i < 0) i = route.length - 1;
     const T0 = (AET.T || pathT(lD)).clone();
     aeth.tour = { route, i, dir, rush, from: { key: Math.abs(lD - aeth.lD0) < 0.05 && !aeth.free ? 'earth' : null, T: T0, lD, yaw: aeth.yaw, pitch: aeth.pitch, cap: aeth.cap, sub: null } };
@@ -3607,6 +3597,7 @@ window.I18N = (function () {
       }
       return;
     }
+    if (b.cruise) { cruiseStep(t, a, b, dt, now); return; }
     t.u = Math.min(1, t.u + dt / t.dur);
     const e = easeIO(t.u);
     aeth.lD = a.lD + (b.lD - a.lD) * e + t.bump * Math.sin(Math.PI * e);
@@ -3622,7 +3613,30 @@ window.I18N = (function () {
       else aeth.yaw += dt * 0.04;
       const wantP = a.pitch + (t.wp - a.pitch) * e; aeth.pitch += (wantP - aeth.pitch) * Math.min(1, dt * 2.5);
     }
-    if (t.u >= 1) t.hold = t.rush ? 0.05 : b.hold * Math.pow(0.95 / v, 0.5) * (t.dir < 0 && b.key !== 'earth' ? 0.4 : 1);
+    if (t.u >= 1) t.hold = t.rush ? 0.05 : b.hold * Math.pow(0.95 / v, 0.5) ;
+  }
+  // the long flight: steady speed on the log scale, easing off at both ends, the view centring on whatever is biggest
+  function cruiseStep(t, a, b, dt, now) {
+    const sg = Math.sign(b.lD - a.lD) || 1, lD = aeth.lD;
+    const ease = CRUISE_EASE.reduce((s, c) => s + Math.exp(-(((lD - c) / 0.5) ** 2)), 0);
+    const ends = Math.min(1, 0.2 + Math.abs(lD - a.lD) * 1.1, 0.2 + Math.abs(b.lD - lD) * 1.1);
+    const v = CRUISE[t.rush ? 'home' : aeth.speed] * (t.dir < 0 ? 1.5 : 1) * (1 - 0.35 * Math.min(1, ease)) * ends;
+    aeth.lD += sg * v * dt;
+    const done = (b.lD - aeth.lD) * sg <= 0.002;
+    if (done) aeth.lD = b.lD;
+    aeth.tourT = a.T.clone().lerp(pathT(aeth.lD), sstep(Math.abs(aeth.lD - a.lD), 0, 0.8)).lerp(b.T, 1 - sstep(Math.abs(b.lD - aeth.lD), 0, 0.8));
+    if (now - aeth.userAt > 2500) {
+      if (aeth.lD > 5.4) {   // among the galaxies: turn side-on to the line from us to Andromeda, so both are in view
+        const u = AET.LGCly.clone().normalize().applyQuaternion(AET.qGal.clone().invert());
+        aeth.yaw += angWrap(Math.atan2(u.z, u.x) + Math.PI / 2 - aeth.yaw) * Math.min(1, dt * 0.8) * sstep(aeth.lD, 5.4, 6.0);
+      } else aeth.yaw += dt * 0.045;
+      aeth.pitch += (aetherPitch(aeth.lD) - aeth.pitch) * Math.min(1, dt * 0.6);
+      if (b.yaw != null) {   // coming home: settle into the starting view of Earth
+        const w = 1 - sstep(aeth.lD, b.lD + 0.3, b.lD + 1.6);
+        aeth.yaw += angWrap(b.yaw - aeth.yaw) * Math.min(1, dt * 2.5) * w; aeth.pitch += (b.pitch - aeth.pitch) * Math.min(1, dt * 2.5) * w;
+      }
+    }
+    if (done) t.hold = t.rush ? 0.05 : b.hold * (b.key === 'aether' ? Math.pow(0.95 / AETH_SPEED[aeth.speed], 0.5) : 1);
   }
   function aetherStep(now) {
     const dt = Math.min(0.25, Math.max(0, (now - (aeth.lastT || now)) / 1000)); aeth.lastT = now;
@@ -3735,7 +3749,7 @@ window.I18N = (function () {
     let cap, sub;
     const focusName = aeth.focusOn && aeth.focus ? (aeth.focus.key === 'milkyWay' ? L.ui.milkyWay : galName(aeth.focus.key)) : null;
     if (focusName) { cap = focusName; sub = live(); }
-    else if (aeth.playing && aeth.tour) {
+    else if (aeth.playing && aeth.tour && !(aeth.tour.route[aeth.tour.i].cruise && aeth.tour.hold <= 0)) {
       const t = aeth.tour, b = t.route[t.i], to = t.hold > 0 || t.u > 0.5;
       cap = to ? capOf(b) : t.from.cap || capOf(b); sub = (to ? subOf(b) : t.from.sub) || live();
     } else {

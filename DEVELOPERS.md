@@ -153,11 +153,11 @@ node build.js
   (Earth close-up ≈ −5.4, the void = 10.3). Each frame draws three passes so every scale keeps precision: galaxies and the
   cosmic web (unit 1 million ly), stars, the Oort cloud and the Milky Way (unit 1 ly), then the solar system scene (unit 1 AU)
   while it is close.
-  - **Journey** (▶, Slow / Normal / Fast): a guided route with stops — Earth, Moon, Earth and Moon, Sun, inner planets with the
-    asteroid belt, Jupiter, Saturn, Kuiper belt, Oort cloud, Alpha Centauri, our star neighbourhood, the galactic centre, the
-    whole Milky Way, Andromeda, the Local Group, the Virgo Cluster, the Virgo Supercluster, the cosmic web and the void. The way
-    back skips the close-ups and is quicker. Each stop is one entry in `makeRoute()`; between stops the target slides over in
-    step with the zoom so nothing races across the screen. Pausing keeps the camera where it is.
+  - **Journey** (▶, Slow / Normal / Fast): stops at Earth, the Moon, Earth and Moon, and the Sun, then one continuous flight
+    out to the void (`cruiseStep()`), passing the planets, belts, Oort cloud, nearby stars, the Milky Way, the Local Group,
+    the Virgo Cluster and the cosmic web without stopping (it only slows a little as each goes by). The way back flies in to
+    the Sun, then stops at the Moon and lands at Earth; the Earth button flies straight home. Stops are entries in
+    `makeRoute()`; between stops the target slides over in step with the zoom. Pausing keeps the camera where it is.
   - **Galaxies** are procedural images drawn once into float buffers (`faceImg`, `edgeImg`, `bulgeImg`, `irrImg`) and uploaded
     as textures: a face-on disc (old yellow disc, blue arms, dust lanes, pink star-forming knots), an edge-on card with a dark
     dust lane that turns to face you when the disc is seen side-on, and a round 3D bulge. `LOOKS` holds each named galaxy's
