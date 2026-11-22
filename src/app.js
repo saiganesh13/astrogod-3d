@@ -1497,7 +1497,7 @@
   }
 
   function applySpaceOpts() {
-    document.querySelectorAll('[data-sopt]').forEach(b => b.setAttribute('aria-pressed', String(!!S.sp[b.dataset.sopt])));
+    document.querySelectorAll('[data-sopt]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sopt === 'big' ? S.bigSize : !!S.sp[b.dataset.sopt])));
     if (!SP) return;
     SP.scn.getObjectByName('stars').visible = S.sp.stars;
     SP.scn.getObjectByName('milkyway').visible = S.sp.mw;
@@ -1506,7 +1506,10 @@
     SP.orbits.visible = SP.moonOrbit.visible = S.sp.orbits;
     needsRender = true;
   }
-  document.querySelectorAll('[data-sopt]').forEach(b => b.addEventListener('click', () => { S.sp[b.dataset.sopt] = !S.sp[b.dataset.sopt]; applySpaceOpts(); }));
+  document.querySelectorAll('[data-sopt]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.sopt === 'big') setBig(!S.bigSize); else S.sp[b.dataset.sopt] = !S.sp[b.dataset.sopt];
+    applySpaceOpts();
+  }));
   function setView(view) {
     S.view = view;
     appEl.classList.toggle('mode-space', view === 'space');

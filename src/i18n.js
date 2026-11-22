@@ -124,7 +124,7 @@ window.I18N = (function () {
 
   // ---------- interface text ----------
   const EN = {
-    tagline: 'your birth sky in 3D', lang: 'Language',
+    tagline: 'your birth sky in 3D', lang: 'Language', fromSpace: "From Space",
       sopt: { orbits: "Orbits", names: "Planet names", rasi: "Rasi directions", zodiac: "Zodiac stars", stars: "Stars" },
       open: "Open", bigSize: "Enlarged", realSize: "Real size", home: "Back to Earth", spaceHint: "Drag to turn · right-drag or two fingers to move · scroll or pinch to zoom · tap a planet to fly there",
       fromEarth: "From Earth", fromSun: "From Sun", logNote: "Distances on a log scale · directions are true", distEarth: "From Earth", distSun: "From Sun", lightTime: "light takes {t}", elong: "{d}° from the Sun in our sky", helioPos: "Seen from the Sun", mkm: "million km", nearEarth: "near Earth", earth: "Earth",
@@ -189,7 +189,7 @@ window.I18N = (function () {
   const UI = {
     en: EN,
     hi: {
-      tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा',
+      tagline: 'आपका जन्म आकाश 3D में', lang: 'भाषा', fromSpace: "अंतरिक्ष से",
       sopt: { orbits: "कक्षाएँ", names: "ग्रहों के नाम", rasi: "राशि दिशाएँ", zodiac: "राशि तारे", stars: "तारे" },
       open: "ओपन", bigSize: "बड़ा करके", realSize: "असली आकार", home: "पृथ्वी पर लौटें", spaceHint: "घुमाने के लिए खींचें · खिसकाने के लिए राइट-ड्रैग या दो उँगलियाँ · ज़ूम के लिए स्क्रॉल या पिंच · ग्रह पर टैप करके वहाँ जाएँ",
       fromEarth: "पृथ्वी से", fromSun: "सूर्य से", logNote: "दूरियाँ लघुगणकीय पैमाने पर · दिशाएँ सटीक", distEarth: "पृथ्वी से दूरी", distSun: "सूर्य से दूरी", lightTime: "प्रकाश को {t} लगते हैं", elong: "हमारे आकाश में सूर्य से {d}°", helioPos: "सूर्य से देखने पर", mkm: "मिलियन किमी", nearEarth: "पृथ्वी के पास", earth: "पृथ्वी",
@@ -233,7 +233,7 @@ window.I18N = (function () {
       searchWorld: 'दुनिया भर में “{q}” खोजें', needsNet: 'इंटरनेट चाहिए', searching: 'खोज रहे हैं…',
     },
     ta: {
-      tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி',
+      tagline: 'உங்கள் பிறப்பு வானம் 3D-யில்', lang: 'மொழி', fromSpace: "விண்வெளியிலிருந்து",
       sopt: { orbits: "சுற்றுப்பாதைகள்", names: "கிரகப் பெயர்கள்", rasi: "ராசி திசைகள்", zodiac: "ராசி நட்சத்திரங்கள்", stars: "நட்சத்திரங்கள்" },
       open: "ஓப்பன்", bigSize: "பெரிதாக்கி", realSize: "உண்மை அளவு", home: "பூமிக்குத் திரும்பு", spaceHint: "சுழற்ற இழுக்கவும் · நகர்த்த வலது இழுப்பு அல்லது இரு விரல்கள் · பெரிதாக்க உருட்டவும் · கிரகத்தைத் தொட்டு அங்கு பறக்கவும்",
       fromEarth: "பூமியிலிருந்து", fromSun: "சூரியனிலிருந்து", logNote: "தூரங்கள் மடக்கை அளவில் · திசைகள் சரியானவை", distEarth: "பூமியிலிருந்து தூரம்", distSun: "சூரியனிலிருந்து தூரம்", lightTime: "ஒளி வர {t} ஆகும்", elong: "நம் வானில் சூரியனிடமிருந்து {d}°", helioPos: "சூரியனிலிருந்து பார்க்கும்போது", mkm: "மில்லியன் கி.மீ", nearEarth: "பூமிக்கு அருகில்", earth: "பூமி",
@@ -277,7 +277,7 @@ window.I18N = (function () {
       searchWorld: 'உலகம் முழுவதும் “{q}” தேடு', needsNet: 'இணையம் தேவை', searching: 'தேடுகிறது…',
     },
     te: {
-      tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష',
+      tagline: 'మీ జన్మ ఆకాశం 3D లో', lang: 'భాష', fromSpace: "అంతరిక్షం నుండి",
       sopt: { orbits: "కక్ష్యలు", names: "గ్రహాల పేర్లు", rasi: "రాశి దిశలు", zodiac: "రాశి నక్షత్రాలు", stars: "నక్షత్రాలు" },
       open: "ఓపెన్", bigSize: "పెద్దదిగా", realSize: "అసలు పరిమాణం", home: "భూమికి తిరిగి", spaceHint: "తిప్పడానికి లాగండి · కదపడానికి కుడి-లాగు లేదా రెండు వేళ్లు · జూమ్‌కు స్క్రోల్ · గ్రహాన్ని తాకి అక్కడికి వెళ్ళండి",
       fromEarth: "భూమి నుండి", fromSun: "సూర్యుని నుండి", logNote: "దూరాలు లాగరిథమిక్ స్కేల్‌లో · దిశలు సరైనవి", distEarth: "భూమి నుండి దూరం", distSun: "సూర్యుని నుండి దూరం", lightTime: "కాంతికి {t} పడుతుంది", elong: "మన ఆకాశంలో సూర్యుని నుండి {d}°", helioPos: "సూర్యుని నుండి చూస్తే", mkm: "మిలియన్ కి.మీ", nearEarth: "భూమికి దగ్గరగా", earth: "భూమి",
@@ -321,7 +321,7 @@ window.I18N = (function () {
       searchWorld: 'ప్రపంచవ్యాప్తంగా “{q}” వెతుకు', needsNet: 'ఇంటర్నెట్ కావాలి', searching: 'వెతుకుతోంది…',
     },
     ml: {
-      tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ',
+      tagline: 'നിങ്ങളുടെ ജന്മ ആകാശം 3D-യിൽ', lang: 'ഭാഷ', fromSpace: "ബഹിരാകാശത്തുനിന്ന്",
       sopt: { orbits: "ഭ്രമണപഥങ്ങൾ", names: "ഗ്രഹനാമങ്ങൾ", rasi: "രാശി ദിശകൾ", zodiac: "രാശി നക്ഷത്രങ്ങൾ", stars: "നക്ഷത്രങ്ങൾ" },
       open: "ഓപ്പൺ", bigSize: "വലുതാക്കി", realSize: "യഥാർത്ഥ വലിപ്പം", home: "ഭൂമിയിലേക്ക് മടങ്ങുക", spaceHint: "തിരിക്കാൻ വലിക്കുക · നീക്കാൻ റൈറ്റ്-ഡ്രാഗ് അല്ലെങ്കിൽ രണ്ട് വിരൽ · സൂമിന് സ്ക്രോൾ · ഗ്രഹത്തിൽ തൊട്ട് അവിടേക്ക് പറക്കുക",
       fromEarth: "ഭൂമിയിൽ നിന്ന്", fromSun: "സൂര്യനിൽ നിന്ന്", logNote: "ദൂരങ്ങൾ ലോഗരിതമിക് സ്കെയിലിൽ · ദിശകൾ കൃത്യം", distEarth: "ഭൂമിയിൽ നിന്നുള്ള ദൂരം", distSun: "സൂര്യനിൽ നിന്നുള്ള ദൂരം", lightTime: "പ്രകാശത്തിന് {t} എടുക്കും", elong: "നമ്മുടെ ആകാശത്ത് സൂര്യനിൽ നിന്ന് {d}°", helioPos: "സൂര്യനിൽ നിന്ന് നോക്കുമ്പോൾ", mkm: "ദശലക്ഷം കി.മീ", nearEarth: "ഭൂമിക്കരികെ", earth: "ഭൂമി",
@@ -365,7 +365,7 @@ window.I18N = (function () {
       searchWorld: 'ലോകമെമ്പാടും “{q}” തിരയുക', needsNet: 'ഇന്റർനെറ്റ് വേണം', searching: 'തിരയുന്നു…',
     },
     kn: {
-      tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ',
+      tagline: 'ನಿಮ್ಮ ಜನ್ಮ ಆಕಾಶ 3D ಯಲ್ಲಿ', lang: 'ಭಾಷೆ', fromSpace: "ಬಾಹ್ಯಾಕಾಶದಿಂದ",
       sopt: { orbits: "ಕಕ್ಷೆಗಳು", names: "ಗ್ರಹಗಳ ಹೆಸರು", rasi: "ರಾಶಿ ದಿಕ್ಕುಗಳು", zodiac: "ರಾಶಿ ನಕ್ಷತ್ರಗಳು", stars: "ನಕ್ಷತ್ರಗಳು" },
       open: "ಓಪನ್", bigSize: "ದೊಡ್ಡದಾಗಿ", realSize: "ನಿಜ ಗಾತ್ರ", home: "ಭೂಮಿಗೆ ಹಿಂತಿರುಗಿ", spaceHint: "ತಿರುಗಿಸಲು ಎಳೆಯಿರಿ · ಸರಿಸಲು ರೈಟ್-ಡ್ರ್ಯಾಗ್ ಅಥವಾ ಎರಡು ಬೆರಳು · ಜೂಮ್‌ಗೆ ಸ್ಕ್ರೋಲ್ · ಗ್ರಹವನ್ನು ತಟ್ಟಿ ಅಲ್ಲಿಗೆ ಹಾರಿ",
       fromEarth: "ಭೂಮಿಯಿಂದ", fromSun: "ಸೂರ್ಯನಿಂದ", logNote: "ದೂರಗಳು ಲಾಗರಿದಮಿಕ್ ಪ್ರಮಾಣದಲ್ಲಿ · ದಿಕ್ಕುಗಳು ನಿಖರ", distEarth: "ಭೂಮಿಯಿಂದ ದೂರ", distSun: "ಸೂರ್ಯನಿಂದ ದೂರ", lightTime: "ಬೆಳಕಿಗೆ {t} ಬೇಕು", elong: "ನಮ್ಮ ಆಕಾಶದಲ್ಲಿ ಸೂರ್ಯನಿಂದ {d}°", helioPos: "ಸೂರ್ಯನಿಂದ ನೋಡಿದಾಗ", mkm: "ಮಿಲಿಯನ್ ಕಿ.ಮೀ", nearEarth: "ಭೂಮಿಯ ಹತ್ತಿರ", earth: "ಭೂಮಿ",
