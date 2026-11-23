@@ -3540,7 +3540,7 @@ window.I18N = (function () {
       if (aeth.free) T.lerp(aeth.free.T, 1 - sstep(lD - aeth.free.lD, 0.3, 1.5));   // stay where the Journey was paused, until you pull far back
     }
     if (aeth.focus && aeth.fk > 0) T.lerp(aeth.focus.pos, easeIO(aeth.fk));
-    const q = qAt(lD);
+    const q = aeth.qf ? aeth.qf.clone() : qAt(lD);   // the view frame tilts from the planets' plane to the galaxy's plane, smoothed in aetherStep
     const cp = Math.cos(aeth.pitch), dir = new THREE.Vector3(cp * Math.cos(aeth.yaw), Math.sin(aeth.pitch), cp * Math.sin(aeth.yaw)).applyQuaternion(q);
     const P = T.clone().addScaledVector(dir, d);
     A.camL.position.copy(P); A.camL.up.set(0, 1, 0).applyQuaternion(q); A.camL.lookAt(T);
@@ -3607,7 +3607,7 @@ window.I18N = (function () {
     const moon = { T: lyv(Mo), lD: lA(fitDist('Moon') * 2.6), yaw: lit(Mo, 0.45), pitch: 0.16, cap: () => bodyName('Moon'), subLy: geoLy('Moon') };
     add('moon', Object.assign({ hold: 2.2 }, moon));
     add('earthMoon', { T: lyv(E.clone().lerp(Mo, 0.4)), lD: lA(E.distanceTo(Mo) * 2.6), pitch: 0.6, hold: 1.2, sub: () => ' ' });
-    const sun = { T: O(), lD: lA(fitDist('Sun') * 2.3), yaw: Math.atan2(E.z, E.x) + 0.5, pitch: 0.15, cap: () => bodyName('Sun'), subLy: geoLy('Sun') };
+    const sun = { T: O(), lD: lA(fitDist('Sun') * 2.3), yaw: lit(E, 1.2), pitch: 0.18, cap: () => bodyName('Sun'), subLy: geoLy('Sun') };
     add('sun', Object.assign({ hold: 2.6 }, sun));
     add('aether', { T: O(), lD: AETH_MAX, hold: 3.5, cruise: true, sub: () => L.ui.aetherLine });
     // the way back: one flight in to the Sun, then the Moon, then home (the Earth button flies straight home)
@@ -3628,11 +3628,13 @@ window.I18N = (function () {
   function setupSeg() {
     const t = aeth.tour, a = t.from, b = t.route[t.i], v = AETH_SPEED[t.rush ? 'home' : aeth.speed] * (t.dir < 0 ? 1.6 : 1);   // the way home is quicker
     const hi = Math.max(a.lD, b.lD);
-    t.bump = Math.max(0, Math.log10(Math.max(a.T.distanceTo(b.T), 1e-30) * 1.3) - hi);
+    t.bump = Math.max(0, Math.log10(Math.max(a.T.distanceTo(b.T), 1e-30) * 2.0) - hi);
     t.da = Math.pow(10, a.lD); t.db = Math.pow(10, b.lD); t.dp = Math.pow(10, hi + t.bump);
-    t.dur = Math.max(2.6 * Math.pow(0.95 / v, 0.7), (Math.abs(a.lD - b.lD) + 2 * t.bump) / v * 1.25);
+    t.dur = Math.max(3.4 * Math.pow(0.95 / v, 0.7), (Math.abs(a.lD - b.lD) + 2 * t.bump) / v * 1.5);
     t.wy = b.yaw; t.wp = b.pitch != null ? b.pitch : aetherPitch(b.lD);
-    t.u = 0; t.hold = 0;
+    const turn = Math.hypot(t.wy != null ? angWrap(t.wy - a.yaw) : 0, t.wp - a.pitch + Math.min(0.45, t.bump * 0.9));
+    t.dur = Math.max(t.dur, turn / 0.18 * Math.pow(0.95 / AETH_SPEED[t.rush ? 'home' : aeth.speed], 0.7));   // never turn faster than ~20°/s at the peak (Normal)
+    t.u = 0; t.hold = 0; t.he = 0;
   }
   function finishTour() {
     Object.assign(aeth, { playing: false, rush: false, tour: null, tourT: null, free: null, dir: 1, lD: aeth.lD0 });
@@ -3641,7 +3643,13 @@ window.I18N = (function () {
   function tourStep(dt, now) {
     const t = aeth.tour, a = t.from, b = t.route[t.i], v = AETH_SPEED[t.rush ? 'home' : aeth.speed];
     if (t.hold > 0) {
-      t.hold -= dt; aeth.yaw += dt * 0.035;   // a slow turn while stopped, to look around
+      t.hold -= dt;   // while stopped: settle into the final angle, then turn slowly to look around
+      if (t.wy != null) t.wy += dt * 0.035; else aeth.yaw += dt * 0.035;
+      t.he = (t.he || 0) + dt;
+      if (now - aeth.userAt > 2500) {   // the same steering the flight ended with, so the motion carries on without a jolt
+        const k = Math.min(1, dt * (b.cruise ? 1.5 : 2.5)), cap = b.cruise ? 0.35 * dt : Infinity;
+        if (t.wy != null) aeth.yaw += clampV(angWrap(t.wy - aeth.yaw) * k, -cap, cap); aeth.pitch += clampV((t.wp - aeth.pitch) * k, -cap, cap);
+      }
       if (t.hold <= 0) {
         const from = { key: b.key, T: aeth.tourT.clone(), lD: aeth.lD, yaw: aeth.yaw, pitch: aeth.pitch, cap: capOf(b), sub: subOf(b) };
         if (t.i + 1 < t.route.length) { t.from = from; t.i++; setupSeg(); }
@@ -3652,7 +3660,7 @@ window.I18N = (function () {
     }
     if (b.cruise) { cruiseStep(t, a, b, dt, now); return; }
     t.u = Math.min(1, t.u + dt / t.dur);
-    const e = easeIO(t.u);
+    const e = 0.5 - 0.5 * Math.cos(Math.PI * t.u);
     aeth.lD = a.lD + (b.lD - a.lD) * e + t.bump * Math.sin(Math.PI * e);
     const d = Math.pow(10, aeth.lD);
     // the target slides over in step with the zoom, so it never races across the screen
@@ -3664,7 +3672,7 @@ window.I18N = (function () {
     if (now - aeth.userAt > 2500) {
       if (t.wy != null) { const want = a.yaw + angWrap(t.wy - a.yaw) * e; aeth.yaw += angWrap(want - aeth.yaw) * Math.min(1, dt * 2.5); }
       else aeth.yaw += dt * 0.04;
-      const wantP = a.pitch + (t.wp - a.pitch) * e; aeth.pitch += (wantP - aeth.pitch) * Math.min(1, dt * 2.5);
+      const wantP = a.pitch + (t.wp - a.pitch) * e + Math.min(0.45, t.bump * 0.9) * Math.sin(Math.PI * e); aeth.pitch += (wantP - aeth.pitch) * Math.min(1, dt * 2.5);
     }
     if (t.u >= 1) t.hold = t.rush ? 0.05 : b.hold * Math.pow(0.95 / v, 0.5) ;
   }
@@ -3678,15 +3686,17 @@ window.I18N = (function () {
     const done = (b.lD - aeth.lD) * sg <= 0.002;
     if (done) aeth.lD = b.lD;
     aeth.tourT = a.T.clone().lerp(pathT(aeth.lD), sstep(Math.abs(aeth.lD - a.lD), 0, 0.8)).lerp(b.T, 1 - sstep(Math.abs(b.lD - aeth.lD), 0, 0.8));
+    const ramp = sstep(Math.abs(aeth.lD - a.lD), 0, 0.5);   // ease into the turning as the flight begins
     if (now - aeth.userAt > 2500) {
       if (aeth.lD > 5.4) {   // among the galaxies: turn side-on to the line from us to Andromeda, so both are in view
         const u = AET.LGCly.clone().normalize().applyQuaternion(AET.qGal.clone().invert());
-        aeth.yaw += angWrap(Math.atan2(u.z, u.x) + Math.PI / 2 - aeth.yaw) * Math.min(1, dt * 0.8) * sstep(aeth.lD, 5.4, 6.0);
-      } else aeth.yaw += dt * 0.045;
-      aeth.pitch += (aetherPitch(aeth.lD) - aeth.pitch) * Math.min(1, dt * 0.6);
+        const step = angWrap(Math.atan2(u.z, u.x) + Math.PI / 2 - aeth.yaw) * Math.min(1, dt * 0.8) * sstep(aeth.lD, 5.4, 6.0);
+        aeth.yaw += clampV(step, -0.22 * dt, 0.22 * dt) * ramp;   // a slow, steady turn (at most ~13°/s)
+      } else aeth.yaw += dt * 0.045 * ramp;
+      aeth.pitch += (aetherPitch(aeth.lD) - aeth.pitch) * Math.min(1, dt * 0.6) * ramp;
       if (b.yaw != null) {   // coming home: settle into the starting view of Earth
-        const w = 1 - sstep(aeth.lD, b.lD + 0.3, b.lD + 1.6);
-        aeth.yaw += angWrap(b.yaw - aeth.yaw) * Math.min(1, dt * 2.5) * w; aeth.pitch += (b.pitch - aeth.pitch) * Math.min(1, dt * 2.5) * w;
+        const w = 1 - sstep(aeth.lD, b.lD + 0.3, b.lD + 2.6), cap = 0.35 * dt;   // line up early and gently
+        aeth.yaw += clampV(angWrap(b.yaw - aeth.yaw) * Math.min(1, dt * 1.5) * w, -cap, cap); aeth.pitch += clampV((b.pitch - aeth.pitch) * Math.min(1, dt * 1.5) * w, -cap, cap);
       }
     }
     if (done) t.hold = t.rush ? 0.05 : b.key === 'aether' ? b.hold * Math.pow(0.95 / AETH_SPEED[aeth.speed], 0.5) + 5 : b.hold;   // linger 5 s more in the void before turning home
@@ -3703,6 +3713,8 @@ window.I18N = (function () {
     const fkT = aeth.focusOn ? 1 : 0;
     if (aeth.focus && Math.abs(aeth.fk - fkT) > 0.002) { aeth.fk = clampV(aeth.fk + Math.sign(fkT - aeth.fk) * dt / 2.2, 0, 1); moving = true; }
     else { aeth.fk = fkT; if (!fkT) aeth.focus = null; }
+    // tilt the view frame gently (at most ~18°/s), however fast the zoom passes the change-over
+    if (AET) { const qT = qAt(aeth.lD); if (!aeth.qf) aeth.qf = qT.clone(); else { aeth.qf.rotateTowards(qT, Math.min(0.32, aeth.qf.angleTo(qT) * 1.2) * dt); if (aeth.qf.angleTo(qT) > 0.002) moving = true; } }
     return moving || !!(AET && AET.sunAnim) || now - aeth.capT < 700;
   }
 
@@ -3857,7 +3869,7 @@ window.I18N = (function () {
     if (!AET) AET = buildAether();
     const e = SP.bodies.Earth.mesh.position;
     aeth.lD0 = Math.log10(fitDist('Earth') * 2.4 / LY_AU);
-    Object.assign(aeth, { lD: aeth.lD0, lDT: null, yaw: Math.atan2(-e.z, -e.x) + 0.6, pitch: 0.3, playing: false, rush: false, dir: 1, hold: 0, focus: null, focusOn: false, fk: 0, lastT: performance.now(), cap: '', tour: null, tourT: null, free: null });
+    Object.assign(aeth, { lD: aeth.lD0, lDT: null, yaw: Math.atan2(-e.z, -e.x) + 0.6, pitch: 0.3, playing: false, rush: false, dir: 1, hold: 0, focus: null, focusOn: false, fk: 0, lastT: performance.now(), cap: '', tour: null, tourT: null, free: null, qf: null });
     SP.back.visible = false; SP.scn.getObjectByName('spokes').visible = false; SP.ren.setClearColor(0x000000, 1);
     syncJourney();
   }
